@@ -1,0 +1,18 @@
+Interpret podmnožiny jazyka Scheme z rodiny Lispů naprogramovaný v čistém C99.
+
+Předpokládané featury:
+* Interpretace programů
+* Čtení a vypisování objektů
+* Základní garbage collection
+* Jednoduchá optimalizace výrazů
+* Přiložená knihovna napsaná přímo v jazyce
+
+Když bude čas:
+* Jednoduchý způsob jak jazyk vestavět do vlastního programu
+* NaN tagging
+* Unicode stringy
+* Využití mezikódu 
+* Větší přiložená knihovna
+* Dodatečné datové struktury
+* Složitější optimalizace výrazů
+* call/cc (Call-with-current-continuation)
