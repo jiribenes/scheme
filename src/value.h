@@ -42,7 +42,7 @@ typedef struct {
 #define QUIET_NAN ((uint64_t) 0x7ffc000000000000)
 
 #define IS_NUM(val) (((val) & QUIET_NAN) != QUIET_NAN)
-#define IS_PTR(val) (((val) & (QUIET_NAN | SIGN_BIT) == (QUIET_NAN | SIGN_BIT)))
+#define IS_PTR(val) (((val) & (QUIET_NAN | SIGN_BIT)) == (QUIET_NAN | SIGN_BIT))
 
 #define IS_TRUE(val) (val == TRUE_VAL)
 #define IS_NIL(val) (val == NIL_VAL)
