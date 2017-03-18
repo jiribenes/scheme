@@ -9,7 +9,7 @@ typedef uint64_t value_t;
 
 typedef enum {
     T_CONS,
-    T_SYMBOL,
+    T_STRING,
     //T_VECTOR
 } ptrvalue_type_t;
 
@@ -27,7 +27,7 @@ typedef struct {
     uint32_t len, hash;
     //C99 only - flexible array
     char value[];
-} symbol_t;
+} string_t;
 
 typedef struct {
     ptrvalue_t p;
@@ -50,7 +50,7 @@ typedef struct {
 #define IS_DOUBLE(val) (IS_NUM(val) && !(trunc(val) == val))
 
 #define IS_CONS(val) (val_is_ptr(val, T_CONS))
-#define IS_SYMBOL(sym) (val_is_ptr(val, T_SYMBOL))
+#define IS_STRING(str) (val_is_ptr(val, T_STRING))
 
 // used for singletons
 // --------------------------------------------------------------11
@@ -81,7 +81,7 @@ typedef struct {
 
 // doesn't check anything
 #define AS_CONS(val) ((cons_t*) AS_PTR(val))
-#define AS_SYMBOL(val) ((symbol_t*) AS_PTR(val))
+#define AS_STRING(val) ((string_t*) AS_PTR(val))
 
 typedef union {
 	uint64_t bits;
