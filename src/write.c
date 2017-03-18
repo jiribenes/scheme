@@ -11,10 +11,7 @@ void print(FILE *f, value_t val) {
         fprintf(f, "()");
     } else if (IS_TRUE(val)) {
         fprintf(f, "T");
-    } else if (!IS_PTR(val)) {
-        // TODO: Better error handling
-        fprintf(stderr, "Error: invalid value in print");
-    } else {
+    } else if (IS_PTR(val)) {
         if (IS_CONS(val)) {
             cons_t *cons = AS_CONS(val);
             print_cons(f, cons);
@@ -56,4 +53,5 @@ static void print_cons(FILE *f, cons_t *cons) {
         fprintf(f, " . ");
         print(f, cdr);
     }
+    fprintf(f, ")");
 }
