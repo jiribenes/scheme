@@ -89,19 +89,19 @@ typedef union {
 } value_conv_t;
 // a conversion type from double to uint64_t
 
-inline double val_to_num(value_t val) {
+static inline double val_to_num(value_t val) {
     value_conv_t data;
     data.bits = val;
     return data.num;
 }
 
-inline value_t num_to_val(double num) {
+static inline value_t num_to_val(double num) {
     value_conv_t data;
     data.num = num;
     return data.bits;
 }
 
-inline value_t ptr_to_val(ptrvalue_t *ptr) {
+static inline value_t ptr_to_val(ptrvalue_t *ptr) {
     return (value_t) (SIGN_BIT | QUIET_NAN | (uint64_t)(uintptr_t) (ptr));
 }
 
