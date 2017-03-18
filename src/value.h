@@ -2,6 +2,7 @@
 #define _value_h
 
 #include <stdint.h> // uint64_t, uintptr_t
+#include <stdbool.h> // bool
 #include <math.h> // trunc
 
 // a generic value
@@ -38,8 +39,7 @@ typedef struct {
 // 1--------------------------------------------------------------- 
 #define SIGN_BIT ((uint64_t) 1 << 63)
 // -1111111111111--------------------------------------------------
-#define QUIET_NAN ((uint64_t) 0x7ffc000000000000)#define 
-
+#define QUIET_NAN ((uint64_t) 0x7ffc000000000000)
 
 #define IS_NUM(val) (((val) & QUIET_NAN) != QUIET_NAN)
 #define IS_PTR(val) (((val) & (QUIET_NAN | SIGN_BIT) == (QUIET_NAN | SIGN_BIT)))
@@ -105,7 +105,7 @@ inline value_t ptr_to_val(ptrvalue_t *ptr) {
     return (value_t) (SIGN_BIT | QUIET_NAN | (uint64_t)(uintptr_t) (ptr));
 }
 
-static inline val_is_ptr(value val, ptrvalue_type_t t) {
+static inline bool val_is_ptr(value_t val, ptrvalue_type_t t) {
     return IS_PTR(val) && AS_PTR(val)->type == t;
 }
 
