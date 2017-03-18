@@ -6,7 +6,7 @@
 
 void print(FILE *f, value_t val) {
     if (IS_NUM(val)) {
-        fprintf(f, "%ld", AS_NUM(val));
+        fprintf(f, "%.14g", AS_NUM(val));
     } else if (IS_NIL(val)) {
         fprintf(f, "()");
     } else if (IS_TRUE(val)) {
