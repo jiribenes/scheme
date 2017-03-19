@@ -1,6 +1,8 @@
 #ifndef _scheme_h
 #define _scheme_h
 
+#include <stdlib.h> // size_t
+
 typedef struct vm_t vm_t;
 
 vm_t *vm_new();

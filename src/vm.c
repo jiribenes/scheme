@@ -48,4 +48,6 @@ void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size) {
 }
 
 // TODO: Implement GC
-void gc(vm_t *vm);
+void gc(vm_t *vm) {
+    return;
+}
