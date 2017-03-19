@@ -5,8 +5,6 @@
 
 #include "value.h" // value_t
 
-static void print_cons(FILE *f, cons_t *cons);
-
-void print(FILE *f, value_t val); 
+void write(FILE *f, value_t val); 
 
 #endif // _write_h
