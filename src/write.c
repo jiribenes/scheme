@@ -11,10 +11,9 @@ static void write_cons(FILE *f, cons_t *cons) {
 
     if (IS_CONS(cdr)) {
         cons_t *cons_cdr = AS_CONS(cdr);
+        fprintf(f, " ");
         write_cons(f, cons_cdr);
-    } else if (IS_NIL(cdr)) {
-       return; 
-    } else {
+    } else if (!IS_NIL(cdr)){
         fprintf(f, " . ");
         write(f, cdr);
     }
@@ -28,7 +27,7 @@ void write(FILE *f, value_t val) {
     } else if (IS_NIL(val)) {
         fprintf(f, "()");
     } else if (IS_TRUE(val)) {
-        fprintf(f, "T");
+        fprintf(f, "#t");
     } else if (IS_PTR(val)) {
         if (IS_CONS(val)) {
             cons_t *cons = AS_CONS(val);
