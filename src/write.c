@@ -34,6 +34,19 @@ void print(FILE *f, value_t val) {
             }
 
             fprintf(f, "\"");
+        } else if (IS_VECTOR(val)) {
+            vector_t *vec = AS_VECTOR(val);
+            
+            fprintf(f, "#(");
+
+            for (uint32_t i = 0; i < vec->count; i++) {
+                print(f, vec->data[i]);
+                if (i != vec->count - 1) {
+                    fprintf(f, " ");
+                }
+            }
+
+            fprintf(f, ")");
         }
     }
 }

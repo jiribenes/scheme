@@ -1,3 +1,5 @@
+#include <string.h> // memcpy
+
 #include "vm.h" // vm_t, vm_realloc
 #include "value.h" 
 
@@ -21,6 +23,15 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
             ptr_free(vm, AS_PTR(cdr));
         }
         vm_realloc(vm, ptr, 0, 0);
+    } else if (ptr->type == T_VECTOR) {
+        vector_t *vec = (vector_t*) ptr;
+        
+        vm_realloc(vm, vec->data, 0, 0);
+        vec->data = NULL;
+        vec->capacity = 0;
+        vec->count = 0;
+        
+        vm_realloc(vm, ptr, 0, 0);
     }
 }
 
@@ -37,7 +48,7 @@ static uint32_t hash_ptr(ptrvalue_t *ptr) {
     if (ptr->type == T_STRING) {
         return ((string_t*) ptr)->hash;
     } else {
-        return 0; //TODO: log error
+        return 0; //TODO: log error - mutable
     }      
 }
 
@@ -77,5 +88,50 @@ static uint32_t hash_value(value_t val) {
         data.bits = val;
         return hash_number(data.bits);
     } 
+}
+/* *** ptrvalue creating *** */
+cons_t *cons_new(vm_t *vm) {
+    cons_t *cons = (cons_t*) vm_realloc(vm, NULL, 0, sizeof(cons_t));
+
+    ptr_init(vm, &cons->p, T_CONS);
+
+    cons->car = NIL_VAL;
+    cons->cdr = NIL_VAL;
+
+    return cons;
+}
+
+string_t *string_new(vm_t *vm, const char *text, size_t len) {
+    string_t *str = (string_t*) vm_realloc(vm, NULL, 0, sizeof(string_t) + sizeof(char) * (len + 1));
+
+    ptr_init(vm, &str->p, T_STRING);
+
+    str->len = (uint32_t)len;
+    str->value[len] = '\0';
+
+    if (len > 0 && text != NULL) {
+        memcpy(str->value, text, len);
+    }
+
+    hash_string(str);
+    
+    return str; 
+}
+
+vector_t *vector_new(vm_t *vm, uint32_t count) {
+    value_t *data = NULL;
+    if (count > 0) {
+        data = (value_t*) vm_realloc(vm, NULL, 0, sizeof(value_t) * count);
+    }
+
+    vector_t *vec = (vector_t*) vm_realloc(vm, NULL, 0, sizeof(value_t));
+
+    ptr_init(vm, &vec->p, T_VECTOR);
+
+    vec->capacity = count;
+    vec->count = count;
+    vec->data = data;
+    
+    return vec;
 }
 

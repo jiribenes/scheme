@@ -13,7 +13,7 @@ typedef uint64_t value_t;
 typedef enum {
     T_CONS,
     T_STRING,
-    //T_VECTOR
+    T_VECTOR
 } ptrvalue_type_t;
 
 // ptrvalue is a heap allocated object
@@ -27,6 +27,12 @@ typedef struct _ptrvalue {
 typedef struct {
     ptrvalue_t p;
 
+    value_t car, cdr;
+} cons_t;
+
+typedef struct {
+    ptrvalue_t p;
+
     uint32_t len, hash;
     //C99 only - flexible array
     char value[];
@@ -35,8 +41,9 @@ typedef struct {
 typedef struct {
     ptrvalue_t p;
 
-    value_t car, cdr;
-} cons_t;
+    value_t *data;
+    uint32_t count, capacity;
+} vector_t;
 
 // 1--------------------------------------------------------------- 
 #define SIGN_BIT ((uint64_t) 1 << 63)
@@ -53,6 +60,7 @@ typedef struct {
 
 #define IS_CONS(val) (val_is_ptr(val, T_CONS))
 #define IS_STRING(str) (val_is_ptr(val, T_STRING))
+#define IS_VECTOR(str) (val_is_ptr(val, T_VECTOR))
 
 // used for singletons
 // --------------------------------------------------------------11
@@ -84,10 +92,15 @@ typedef struct {
 // doesn't check anything
 #define AS_CONS(val) ((cons_t*) AS_PTR(val))
 #define AS_STRING(val) ((string_t*) AS_PTR(val))
+#define AS_VECTOR(val) ((vector_t*) AS_PTR(val))
 
 // GC (memory management) functions
 
 void ptr_free(vm_t *vm, ptrvalue_t *ptr);
+
+cons_t *cons_new(vm_t *vm);
+string_t *string_new(vm_t *vm, const char *text, size_t len);
+vector_t *vector_new(vm_t *vm, uint32_t count);
 
 
 typedef union {
