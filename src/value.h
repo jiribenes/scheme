@@ -102,6 +102,7 @@ cons_t *cons_new(vm_t *vm);
 string_t *string_new(vm_t *vm, const char *text, size_t len);
 vector_t *vector_new(vm_t *vm, uint32_t count);
 
+void vector_insert(vm_t *vm, vector_t *vec, value_t val, uint32_t index);
 
 typedef union {
 	uint64_t bits;

@@ -135,3 +135,20 @@ vector_t *vector_new(vm_t *vm, uint32_t count) {
     return vec;
 }
 
+void vector_insert(vm_t *vm, vector_t *vec, value_t val, uint32_t index) {
+    // we should worry about GC doing mad things here
+    if (vec->capacity < vec->count + 1) {
+        int capacity = (vec->count + 1) * 2; // round to power of two !!
+        vec->data = (value_t*) vm_realloc(vm, vec->data, vec->capacity * sizeof(value_t), capacity * sizeof(value_t));
+
+        vec->capacity = capacity;
+    }
+    
+    vec->data[vec->count++] = NIL_VAL;
+    
+    for (uint32_t i = vec->count - 1; i > index; i--) {
+        vec->data[i] = vec->data[i - 1];
+    }
+
+    vec->data[index] = val;
+}
