@@ -1,4 +1,5 @@
 #include <string.h> // memcpy
+#include <stdio.h>
 
 #include "vm.h" // vm_t, vm_realloc
 #include "value.h" 
@@ -118,7 +119,7 @@ vector_t *vector_new(vm_t *vm, uint32_t count) {
         data = (value_t*) vm_realloc(vm, NULL, 0, sizeof(value_t) * count);
     }
 
-    vector_t *vec = (vector_t*) vm_realloc(vm, NULL, 0, sizeof(value_t));
+    vector_t *vec = (vector_t*) vm_realloc(vm, NULL, 0, sizeof(vector_t));
 
     ptr_init(vm, &vec->p, T_VECTOR);
 
@@ -130,16 +131,17 @@ vector_t *vector_new(vm_t *vm, uint32_t count) {
 }
 
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
-    if (len == 0 && name != NULL) {
-        len = strlen(name);
+    if (len == 0 || name == NULL) { //TODO: better logging
+        fprintf(stderr, "Error: NULL/0-len symbols are not allowed");
     }
-    
+   
     symbol_t *sym = (symbol_t*) vm_realloc(vm, NULL, 0, sizeof(symbol_t) + sizeof(char) * (len + 1));
 
     ptr_init(vm, &sym->p, T_SYMBOL);
 
     sym->len = (uint32_t) len;
     sym->name[len] = '\0';
+    
     memcpy(sym->name, name, len);
 
     return sym;

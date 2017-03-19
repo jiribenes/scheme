@@ -46,12 +46,12 @@ typedef struct {
     uint32_t count, capacity;
 } vector_t;
 
-typedef struct { //const?
+typedef struct { 
     ptrvalue_t p;
 
     uint32_t len;
-    
-    char *name;
+    // TODO: couldn't this be const/ regular char*?
+    char name[];
 } symbol_t;
 
 // 1--------------------------------------------------------------- 
