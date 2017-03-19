@@ -205,5 +205,8 @@ static bool val_equal(value_t a, value_t b) {
         //TODO: Better logging
         // we should never get here! - two symbols with same name are eq?
         fprintf(stderr, "Error: symbol not interned!");
+        return false;
     }
+
+    return false;
 }
