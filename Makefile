@@ -15,8 +15,11 @@ debug: $(SOURCES)
 release: $(SOURCES)
 	$(CC) $(C_OPTIONS) $(C_WARNINGS) $(RELEASE_OPTIONS) $(HEADERS) $(SOURCES) -o $(BIN) $(C_LIBS)
 
-run: 
+run: debug 
 	./$(BIN)
+
+valgrind: debug
+	valgrind --leak-check=full ./$(BIN)
 
 clean: 
 	rm -rf $(BIN)
