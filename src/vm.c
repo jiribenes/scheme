@@ -1,21 +1,11 @@
-#include <stdlib.h>
+#include <stdlib.h> // realloc
+#include <string.h> // memset
 
+#include "scheme.h"
 #include "vm.h"
 #include "value.h"
 
-// TODO: Finish VM implementation
-vm_t *vm_new() {
-    vm_t *vm = malloc(sizeof(vm_t));
-
-    vm->allocated = 0;
-    vm->gc_threshold = 8;
-    
-    return vm;
-}
-
-void vm_free(vm_t *vm);
-
-static void *scm_alloc(void *ptr, size_t size) {
+static void *scm_realloc(void *ptr, size_t size) {
     if (size == 0) {
         free(ptr);
         return NULL;
@@ -24,6 +14,29 @@ static void *scm_alloc(void *ptr, size_t size) {
     return realloc(ptr, size);
 }
 
+vm_t *vm_new() {
+    vm_t *vm = (vm_t*) scm_realloc(NULL, sizeof(vm_t));
+
+    memset(vm, 0, sizeof(vm_t));
+
+    vm->allocated = 0;
+    vm->gc_threshold = 8;
+    
+    return vm;
+}
+
+void vm_free(vm_t *vm) {
+    ptrvalue_t *ptr = vm->head;
+    while (ptr != NULL) {
+        ptrvalue_t *next = ptr->next;
+        ptr_free(vm, ptr);
+        ptr = next;
+    }
+
+    vm_realloc(vm, vm, 0, 0);
+}
+
+
 void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size) {
     vm->allocated += new_size - old_size;
 
@@ -31,7 +44,7 @@ void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size) {
         gc(vm);
     }
 
-    return scm_alloc(ptr, new_size);
+    return scm_realloc(ptr, new_size);
 }
 
 // TODO: Implement GC
