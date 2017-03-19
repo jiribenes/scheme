@@ -59,8 +59,8 @@ typedef struct {
 #define IS_DOUBLE(val) (IS_NUM(val) && !(trunc(val) == val))
 
 #define IS_CONS(val) (val_is_ptr(val, T_CONS))
-#define IS_STRING(str) (val_is_ptr(val, T_STRING))
-#define IS_VECTOR(str) (val_is_ptr(val, T_VECTOR))
+#define IS_STRING(val) (val_is_ptr(val, T_STRING))
+#define IS_VECTOR(val) (val_is_ptr(val, T_VECTOR))
 
 // used for singletons
 // --------------------------------------------------------------11
@@ -84,7 +84,7 @@ typedef struct {
 #define PTR_VAL(ptr) (ptr_to_val((ptrvalue_t*) (ptr)))
 
 // value -> C value
-#define AS_BOOL(val) ((val) == TRUE_VAL)
+#define AS_BOOL(val) ((val) != NIL_VAL)
 #define AS_PTR(val) ((ptrvalue_t*)(uintptr_t) ((val) & ~(SIGN_BIT | QUIET_NAN)))
 
 #define AS_NUM(val) (val_to_num(val))
