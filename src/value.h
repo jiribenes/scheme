@@ -13,7 +13,8 @@ typedef uint64_t value_t;
 typedef enum {
     T_CONS,
     T_STRING,
-    T_VECTOR
+    T_VECTOR,
+    T_SYMBOL
 } ptrvalue_type_t;
 
 // ptrvalue is a heap allocated object
@@ -45,6 +46,14 @@ typedef struct {
     uint32_t count, capacity;
 } vector_t;
 
+typedef struct { //const?
+    ptrvalue_t p;
+
+    uint32_t len;
+    
+    char *name;
+} symbol_t;
+
 // 1--------------------------------------------------------------- 
 #define SIGN_BIT ((uint64_t) 1 << 63)
 // -1111111111111--------------------------------------------------
@@ -61,6 +70,7 @@ typedef struct {
 #define IS_CONS(val) (val_is_ptr(val, T_CONS))
 #define IS_STRING(val) (val_is_ptr(val, T_STRING))
 #define IS_VECTOR(val) (val_is_ptr(val, T_VECTOR))
+#define IS_SYMBOL(val) (val_is_ptr(val, T_SYMBOL))
 
 // used for singletons
 // --------------------------------------------------------------11
@@ -93,6 +103,7 @@ typedef struct {
 #define AS_CONS(val) ((cons_t*) AS_PTR(val))
 #define AS_STRING(val) ((string_t*) AS_PTR(val))
 #define AS_VECTOR(val) ((vector_t*) AS_PTR(val))
+#define AS_SYMBOL(val) ((symbol_t*) AS_PTR(val))
 
 // GC (memory management) functions
 
@@ -101,6 +112,7 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr);
 cons_t *cons_new(vm_t *vm);
 string_t *string_new(vm_t *vm, const char *text, size_t len);
 vector_t *vector_new(vm_t *vm, uint32_t count);
+symbol_t *symbol_new(vm_t *vm, const char *name, size_t len);
 
 void vector_insert(vm_t *vm, vector_t *vec, value_t val, uint32_t index);
 

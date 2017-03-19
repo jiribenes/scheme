@@ -32,6 +32,8 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
         vec->count = 0;
         
         vm_realloc(vm, ptr, 0, 0);
+    } else if (ptr->type == T_SYMBOL) {
+        vm_realloc(vm, ptr, 0, 0);
     }
 }
 
@@ -133,6 +135,22 @@ vector_t *vector_new(vm_t *vm, uint32_t count) {
     vec->data = data;
     
     return vec;
+}
+
+symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
+    if (len == 0 && name != NULL) {
+        len = strlen(name);
+    }
+    
+    symbol_t *sym = (symbol_t*) vm_realloc(vm, NULL, 0, sizeof(symbol_t) + sizeof(char) * (len + 1));
+
+    ptr_init(vm, &sym->p, T_SYMBOL);
+
+    sym->len = (uint32_t) len;
+    sym->name[len] = '\0';
+    memcpy(sym->name, name, len);
+
+    return sym;
 }
 
 void vector_insert(vm_t *vm, vector_t *vec, value_t val, uint32_t index) {

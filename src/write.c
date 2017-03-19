@@ -20,7 +20,7 @@ void print(FILE *f, value_t val) {
 
             fprintf(f, "\"");
 
-            for (size_t i = 0; i < str->len; i++) {
+            for (uint32_t i = 0; i < str->len; i++) {
                 char c = str->value[i];
                 if (c == '\n') {
                     fprintf(f, "\\n");
@@ -47,6 +47,9 @@ void print(FILE *f, value_t val) {
             }
 
             fprintf(f, ")");
+        } else if (IS_SYMBOL(val)) {
+            symbol_t *sym = AS_SYMBOL(val);
+            fprintf(f, "%s", sym->name);
         }
     }
 }
