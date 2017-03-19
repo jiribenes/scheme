@@ -4,18 +4,24 @@
 #include "write.h"
 
 static void write_cons(FILE *f, cons_t *cons) {
-    value_t car = cons->car;
-    value_t cdr = cons->cdr;
     fprintf(f, "(");
-    write(f, car);
+    cons_t *temp = cons;
+    while (!IS_NIL(temp->car)) {
+        write(f, temp->car);
+        
+        if (!IS_NIL(temp->cdr)) {
+            fprintf(f, " ");
+        } else {
+            break;
+        }
 
-    if (IS_CONS(cdr)) {
-        cons_t *cons_cdr = AS_CONS(cdr);
-        fprintf(f, " ");
-        write_cons(f, cons_cdr);
-    } else if (!IS_NIL(cdr)){
-        fprintf(f, " . ");
-        write(f, cdr);
+        if (!IS_CONS(temp->cdr)) {
+            fprintf(f, ". ");
+            write(f, temp->cdr);
+            break;
+        } else {
+            temp = AS_CONS(temp->cdr);
+        } 
     }
     fprintf(f, ")");
 }
@@ -25,7 +31,7 @@ void write(FILE *f, value_t val) {
     if (IS_NUM(val)) {
         fprintf(f, "%.14g", AS_NUM(val));
     } else if (IS_NIL(val)) {
-        fprintf(f, "()");
+        fprintf(f, "nil"); //TODO: this is only for testing
     } else if (IS_TRUE(val)) {
         fprintf(f, "#t");
     } else if (IS_PTR(val)) {
