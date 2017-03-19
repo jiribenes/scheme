@@ -5,6 +5,9 @@
 #include <stdbool.h> // bool
 #include <math.h> // trunc
 
+#include "scheme.h"
+#include "vm.h"
+
 // a generic value
 typedef uint64_t value_t;
 
@@ -82,6 +85,11 @@ typedef struct {
 // doesn't check anything
 #define AS_CONS(val) ((cons_t*) AS_PTR(val))
 #define AS_STRING(val) ((string_t*) AS_PTR(val))
+
+// GC (memory management) functions
+
+void ptr_free(vm_t *vm, ptrvalue_t *ptr);
+
 
 typedef union {
 	uint64_t bits;

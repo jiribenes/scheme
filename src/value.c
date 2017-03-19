@@ -1,5 +1,28 @@
-#include "value.h"
+#include "vm.h" // vm_t, vm_realloc
+#include "value.h" 
 
+static void ptr_init(vm_t *vm, ptrvalue_t *ptr, ptrvalue_type_t type) {
+    ptr->type = type;
+    ptr->gcmark = false;
+    ptr->next = vm->head;
+    vm->head = ptr;
+} 
+
+void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
+    if (ptr->type == T_STRING) {
+        vm_realloc(vm, ptr, 0, 0);
+    } else if (ptr->type == T_CONS) { //TODO: is this a good idea?
+        value_t car = ((cons_t*) ptr)->car;
+        value_t cdr = ((cons_t*) ptr)->cdr;
+        if (IS_PTR(car)) {
+            ptr_free(vm, AS_PTR(car));
+        }
+        if (IS_PTR(cdr)) {
+            ptr_free(vm, AS_PTR(cdr));
+        }
+        vm_realloc(vm, ptr, 0, 0);
+    }
+}
 
 /* *** HASHING *** */
 
