@@ -14,14 +14,6 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
     if (ptr->type == T_STRING) {
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_CONS) { //TODO: is this a good idea?
-        value_t car = ((cons_t*) ptr)->car;
-        value_t cdr = ((cons_t*) ptr)->cdr;
-        if (IS_PTR(car)) {
-            ptr_free(vm, AS_PTR(car));
-        }
-        if (IS_PTR(cdr)) {
-            ptr_free(vm, AS_PTR(cdr));
-        }
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_VECTOR) {
         vector_t *vec = (vector_t*) ptr;
