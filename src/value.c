@@ -36,6 +36,8 @@ const uint32_t HASH_SEED = 2166136261u;
 static uint32_t hash_ptr(ptrvalue_t *ptr) {
     if (ptr->type == T_STRING) {
         return ((string_t*) ptr)->hash;
+    } else {
+        return 0; //TODO: log error
     }      
 }
 
@@ -63,6 +65,8 @@ static inline uint32_t hash_number(uint64_t num) {
         hash ^= *ptr++;
         hash *= HASH_PRIME;
     }
+
+    return hash;
 }
 
 static uint32_t hash_value(value_t val) {

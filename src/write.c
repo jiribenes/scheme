@@ -20,7 +20,7 @@ void print(FILE *f, value_t val) {
 
             fprintf(f, "\"");
 
-            for (int i = 0; i < str->len; i++) {
+            for (size_t i = 0; i < str->len; i++) {
                 char c = str->value[i];
                 if (c == '\n') {
                     fprintf(f, "\\n");

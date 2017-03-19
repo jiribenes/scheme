@@ -3,7 +3,7 @@
 
 #include <stdlib.h> // size_t, malloc, realloc
 
-#include "value.h" // value_t
+#include "value.h" // ptrvalue_t
 
 struct vm_t {
     ptrvalue_t *head; // most recent allocated

@@ -6,7 +6,6 @@
 #include <math.h> // trunc
 
 #include "scheme.h"
-#include "vm.h"
 
 // a generic value
 typedef uint64_t value_t;
