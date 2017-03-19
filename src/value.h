@@ -138,8 +138,20 @@ static inline value_t ptr_to_val(ptrvalue_t *ptr) {
     return (value_t) (SIGN_BIT | QUIET_NAN | (uint64_t)(uintptr_t) (ptr));
 }
 
+/* *** equality *** */
+
 static inline bool val_is_ptr(value_t val, ptrvalue_type_t t) {
     return IS_PTR(val) && AS_PTR(val)->type == t;
 }
 
+// scm: equal?
+// true for both ptrvalues and values when they are equal by value
+static bool val_equal(value_t a, value_t b);
+
+// scm: eq? or eqv?
+// true for ptrvalues when they are identical
+// true for values when they are equal
+static inline bool val_eq(value_t a, value_t b) {
+    return a == b;
+}
 #endif // _value_h 

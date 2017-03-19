@@ -1,4 +1,4 @@
-#include <string.h> // memcpy
+#include <string.h> // memcpy, memcmp
 #include <stdio.h>
 
 #include "vm.h" // vm_t, vm_realloc
@@ -163,4 +163,47 @@ void vector_insert(vm_t *vm, vector_t *vec, value_t val, uint32_t index) {
     }
 
     vec->data[index] = val;
+}
+
+/* *** equality *** */
+static bool val_equal(value_t a, value_t b) {
+    if (val_eq(a, b)) {
+        return true;
+    }
+
+    if (!IS_PTR(a) || !IS_PTR(b)) {
+        return false;
+    }
+
+    ptrvalue_t *pa = AS_PTR(a);
+    ptrvalue_t *pb = AS_PTR(b);
+
+    if (pa->type != pb->type) {
+        return false;
+    }
+
+    if (pa->type == T_CONS) {
+        cons_t *consa = (cons_t*) pa;
+        cons_t *consb = (cons_t*) pb;
+    
+        return val_equal(consa->car, consb->car) && val_equal(consa->cdr, consb->cdr); 
+    } else if (pa->type == T_STRING) {
+        string_t *stra = (string_t*) pa;
+        string_t *strb = (string_t*) pb;
+
+        return stra->len == strb->len && stra->hash == strb->hash && 
+            memcmp(stra->value, strb->value, stra->len * sizeof(char)) == 0;
+    
+    } else if (pa->type == T_VECTOR) {
+        vector_t *veca = (vector_t*) pa;
+        vector_t *vecb = (vector_t*) pb;
+
+        return veca->count == vecb->count &&
+            memcmp(veca->data, vecb->data, veca->count * sizeof(value_t)) == 0;
+    
+    } else if (pa->type == T_SYMBOL) {
+        //TODO: Better logging
+        // we should never get here! - two symbols with same name are eq?
+        fprintf(stderr, "Error: symbol not interned!");
+    }
 }
