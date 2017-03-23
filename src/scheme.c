@@ -143,7 +143,7 @@ void test(vm_t *vm) {
 
 // not a typo, just a READ-PRINT-LOOP :)
 void rpl(vm_t *vm) {
-    fprintf(stdout, "|Scheme 0.0 - RPL|\n");
+    fprintf(stdout, "|Scheme 0.0 - RPL|\n|Use ^D to exit !|\n");
     char buf[256];
     while (true) {
         fprintf(stdout, ">> ");
@@ -153,6 +153,7 @@ void rpl(vm_t *vm) {
         value_t val = read_source(vm, buf);
         test_write(val);
     }
+    fprintf(stdout, "\nQuiting!\n");
 }
 
 int main(void) {
