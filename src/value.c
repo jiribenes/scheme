@@ -16,16 +16,7 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_CONS) { //TODO: is this a good idea?
         vm_realloc(vm, ptr, 0, 0);
-    } else if (ptr->type == T_VECTOR) {
-        vector_t *vec = (vector_t*) ptr;
-        
-        vm_realloc(vm, vec->data, 0, 0);
-        vec->data = NULL;
-        vec->capacity = 0;
-        vec->count = 0;
-        
-        vm_realloc(vm, ptr, 0, 0);
-    } else if (ptr->type == T_SYMBOL) {
+    }  else if (ptr->type == T_SYMBOL) {
         vm_realloc(vm, ptr, 0, 0);
     }
 }
@@ -113,23 +104,6 @@ string_t *string_new(vm_t *vm, const char *text, size_t len) {
     return str; 
 }
 
-vector_t *vector_new(vm_t *vm, uint32_t count) {
-    value_t *data = NULL;
-    if (count > 0) {
-        data = (value_t*) vm_realloc(vm, NULL, 0, sizeof(value_t) * count);
-    }
-
-    vector_t *vec = (vector_t*) vm_realloc(vm, NULL, 0, sizeof(vector_t));
-
-    ptr_init(vm, &vec->p, T_VECTOR);
-
-    vec->capacity = count;
-    vec->count = count;
-    vec->data = data;
-    
-    return vec;
-}
-
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
     if (len == 0 || name == NULL) { //TODO: better logging
         fprintf(stderr, "Error: NULL/0-len symbols are not allowed");
@@ -145,24 +119,6 @@ symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
     memcpy(sym->name, name, len);
 
     return sym;
-}
-
-void vector_insert(vm_t *vm, vector_t *vec, value_t val, uint32_t index) {
-    // we should worry about GC doing mad things here
-    if (vec->capacity < vec->count + 1) {
-        int capacity = (vec->count + 1) * 2; // round to power of two !!
-        vec->data = (value_t*) vm_realloc(vm, vec->data, vec->capacity * sizeof(value_t), capacity * sizeof(value_t));
-
-        vec->capacity = capacity;
-    }
-    
-    vec->data[vec->count++] = NIL_VAL;
-    
-    for (uint32_t i = vec->count - 1; i > index; i--) {
-        vec->data[i] = vec->data[i - 1];
-    }
-
-    vec->data[index] = val;
 }
 
 /* *** equality *** */
@@ -194,14 +150,7 @@ static bool val_equal(value_t a, value_t b) {
         return stra->len == strb->len && stra->hash == strb->hash && 
             memcmp(stra->value, strb->value, stra->len * sizeof(char)) == 0;
     
-    } else if (pa->type == T_VECTOR) {
-        vector_t *veca = (vector_t*) pa;
-        vector_t *vecb = (vector_t*) pb;
-
-        return veca->count == vecb->count &&
-            memcmp(veca->data, vecb->data, veca->count * sizeof(value_t)) == 0;
-    
-    } else if (pa->type == T_SYMBOL) {
+    }  else if (pa->type == T_SYMBOL) {
         //TODO: Better logging
         // we should never get here! - two symbols with same name are eq?
         fprintf(stderr, "Error: symbol not interned!");
