@@ -51,18 +51,6 @@ typedef struct {
 // -1111111111111--------------------------------------------------
 #define QUIET_NAN ((uint64_t) 0x7ffc000000000000)
 
-#define IS_NUM(val) (((val) & QUIET_NAN) != QUIET_NAN)
-#define IS_PTR(val) (((val) & (QUIET_NAN | SIGN_BIT)) == (QUIET_NAN | SIGN_BIT))
-
-#define IS_TRUE(val) (val == TRUE_VAL)
-#define IS_NIL(val) (val == NIL_VAL)
-#define IS_INT(val) (IS_NUM(val) && (trunc(val) == val))
-#define IS_DOUBLE(val) (IS_NUM(val) && !(trunc(val) == val))
-
-#define IS_CONS(val) (val_is_ptr(val, T_CONS))
-#define IS_STRING(val) (val_is_ptr(val, T_STRING))
-#define IS_SYMBOL(val) (val_is_ptr(val, T_SYMBOL))
-
 // used for singletons
 // --------------------------------------------------------------11
 #define MASK_TAG (3)
@@ -74,18 +62,36 @@ typedef struct {
 
 #define TAG_NIL (1)
 #define TAG_TRUE (2)
-#define TAG_UNUSED (3)
+#define TAG_FALSE (3)
 
 #define NIL_VAL ((value_t)(uint64_t) (QUIET_NAN | TAG_NIL))
 #define TRUE_VAL ((value_t)(uint64_t) (QUIET_NAN | TAG_TRUE))
+#define FALSE_VAL ((value_t)(uint64_t) (QUIET_NAN | TAG_FALSE))
+
+// returns true if val is type <X> in IS_<X>
+#define IS_NUM(val) (((val) & QUIET_NAN) != QUIET_NAN)
+#define IS_PTR(val) (((val) & (QUIET_NAN | SIGN_BIT)) == (QUIET_NAN | SIGN_BIT))
+
+#define IS_TRUE(val) ((val) == TRUE_VAL)
+#define IS_FALSE(val) ((val) == FALSE_VAL)
+#define IS_BOOL(val) (IS_FALSE(val) || IS_TRUE(val))
+
+#define IS_NIL(val) (val == NIL_VAL)
+
+#define IS_INT(val) (IS_NUM(val) && (trunc(val) == val))
+#define IS_DOUBLE(val) (IS_NUM(val) && !(trunc(val) == val))
+
+#define IS_CONS(val) (val_is_ptr(val, T_CONS))
+#define IS_STRING(val) (val_is_ptr(val, T_STRING))
+#define IS_SYMBOL(val) (val_is_ptr(val, T_SYMBOL))
 
 // C value -> value
-#define BOOL_VAL(b) (b ? TRUE_VAL : NIL_VAL)
+#define BOOL_VAL(b) (b ? TRUE_VAL : FALSE_VAL)
 #define NUM_VAL(num) (num_to_val(num))
 #define PTR_VAL(ptr) (ptr_to_val((ptrvalue_t*) (ptr)))
 
 // value -> C value
-#define AS_BOOL(val) ((val) != NIL_VAL)
+#define AS_BOOL(val) ((val) != TRUE_VAL)
 #define AS_PTR(val) ((ptrvalue_t*)(uintptr_t) ((val) & ~(SIGN_BIT | QUIET_NAN)))
 
 #define AS_NUM(val) (val_to_num(val))

@@ -181,6 +181,10 @@ static void read1(reader_t *reader) {
             next_char(reader);
             next_char(reader);
             reader->tokval = TRUE_VAL;
+        } else if (peek_next_char(reader) == 'f') {
+            next_char(reader);
+            next_char(reader);
+            reader->tokval = FALSE_VAL;
         } else {
             fprintf(stderr, "Invalid token: #t is only symbol that can begin with #\n");
         }

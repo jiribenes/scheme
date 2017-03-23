@@ -36,9 +36,11 @@ void write(FILE *f, value_t val) {
     if (IS_NUM(val)) {
         fprintf(f, "%.14g", AS_NUM(val));
     } else if (IS_NIL(val)) {
-        fprintf(f, "()"); //TODO: this is only for testing
+        fprintf(f, "()");
     } else if (IS_TRUE(val)) {
         fprintf(f, "#t");
+    } else if (IS_FALSE(val)) {
+        fprintf(f, "#f");
     } else if (IS_PTR(val)) {
         if (IS_CONS(val)) {
             cons_t *cons = AS_CONS(val);

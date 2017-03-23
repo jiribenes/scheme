@@ -96,6 +96,10 @@ void test2(vm_t *vm) {
     value_t str2 = read_source(vm, "(define hello (display \"Hello\"))");
     test_write(str2);
     puts("");
+
+    value_t f = read_source(vm, "#f");
+    test_write(f);
+    puts("");
 }
 
 void test(vm_t *vm) {
@@ -132,6 +136,9 @@ void test(vm_t *vm) {
     c = together(vm, NUM_VAL(15), PTR_VAL(c));
     c = together(vm, NUM_VAL(16), PTR_VAL(c));
     test_write(PTR_VAL(c)); // (14 15 16)
+
+    value_t f = FALSE_VAL;
+    test_write(f);
 }
 
 int main(void) {
