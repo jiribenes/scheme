@@ -121,6 +121,13 @@ symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
     return sym;
 }
 
+value_t cons_fn(vm_t *vm, value_t a, value_t b) {
+    cons_t *result = cons_new(vm);
+    result->car = a;
+    result->cdr = b;
+    return PTR_VAL(result);
+}
+
 /* *** equality *** */
 static bool val_equal(value_t a, value_t b) {
     if (val_eq(a, b)) {
