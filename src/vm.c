@@ -1,5 +1,7 @@
 #include <stdlib.h> // realloc
 #include <string.h> // memset
+#include <stdio.h>
+
 
 #include "scheme.h"
 #include "vm.h"
@@ -21,7 +23,9 @@ vm_t *vm_new() {
 
     vm->allocated = 0;
     vm->gc_threshold = 8;
-    
+   
+    vm->symbol_table = NULL;
+
     return vm;
 }
 

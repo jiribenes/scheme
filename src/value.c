@@ -115,8 +115,24 @@ symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
 
     sym->len = (uint32_t) len;
     sym->name[len] = '\0';
-    
+    sym->next = NULL;
+
     memcpy(sym->name, name, len);
+
+    return sym;
+}
+
+symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len) {
+    for (symbol_t *s = vm->symbol_table; s != NULL; s = s->next) {
+        if (s->len == len && memcmp(s->name, name, len * sizeof(char)) == 0) {
+            return s;    
+        }
+    }
+
+    symbol_t *sym = symbol_new(vm, name, len);
+
+    sym->next = vm->symbol_table;
+    vm->symbol_table = sym;
 
     return sym;
 }
@@ -157,10 +173,13 @@ static bool val_equal(value_t a, value_t b) {
         return stra->len == strb->len && stra->hash == strb->hash && 
             memcmp(stra->value, strb->value, stra->len * sizeof(char)) == 0;
     
-    }  else if (pa->type == T_SYMBOL) {
-        //TODO: Better logging
-        // we should never get here! - two symbols with same name are eq?
-        fprintf(stderr, "Error: symbol not interned!");
+    }  else if (pa->type == T_SYMBOL) { 
+        symbol_t *syma = (symbol_t*) pa;
+        symbol_t *symb = (symbol_t*) pb;
+        if ((syma->len == symb->len) && (memcmp(syma->name, symb->name, syma->len * sizeof(char)) == 0)) {
+            // we should never get here! - two symbols with same name are eq?
+            fprintf(stderr, "Error: symbol not interned!");
+            }
         return false;
     }
 

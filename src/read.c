@@ -127,8 +127,8 @@ static void read_number(reader_t *reader){
 static void read_quote(reader_t *reader) {
     next_char(reader);
     next_token(reader);
-    //TODO: symbol interning!!
-    symbol_t *s = symbol_new(reader->vm, "quote", 5);
+    
+    symbol_t *s = symbol_intern(reader->vm, "quote", 5);
 
     read1(reader);
     value_t val = reader->tokval;
@@ -158,9 +158,7 @@ static void read_symbol(reader_t *reader) {
 
     size_t len = reader->cur - reader->tokstart;
 
-    // check for symbols in symbol table
-    
-    symbol_t *sym = symbol_new(reader->vm, reader->tokstart, len);
+    symbol_t *sym = symbol_intern(reader->vm, reader->tokstart, len);
     reader->tokval = PTR_VAL(sym);
 }
 
