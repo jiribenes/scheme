@@ -3,10 +3,58 @@
 #include "scheme.h"
 #include "value.h"
 #include "write.h"
+#include "read.h"
 
 // write to stdout with newline
 static void test_write(value_t val) {
     write(stdout, val);
+    puts("");
+}
+
+static cons_t *together(vm_t *vm, value_t a, value_t b) {
+    cons_t *c = cons_new(vm);
+    c->car = a;
+    c->cdr = b;
+    return c;
+}
+
+void test2(vm_t *vm) {
+    puts("----\nTest 2");
+
+    value_t eof = read_source(vm, "");
+    test_write(eof);
+    puts("");
+
+    value_t val = read_source(vm, "42");
+    test_write(val);
+    puts("");
+
+    value_t nil = read_source(vm, "()");
+    test_write(nil);
+    puts("");
+
+    value_t twice = read_source(vm, "(())");
+    test_write(twice);
+    puts("");
+
+    value_t list = read_source(vm, "(42 43 45)");
+    test_write(list);
+    puts("");
+
+    value_t anotherlist = read_source(vm, "(42 (43 44 45 46) (47 48 49))");
+    test_write(anotherlist);
+    puts("");
+
+    value_t bignumberlist = read_source(vm, "(0 (1.3 5.42 59.9999 (1.0 2.0 3.0)) (3 (4 (5 6))))");
+    test_write(bignumberlist);
+    puts("");
+
+    value_t sym = read_source(vm, "symb");
+    test_write(sym);
+    puts("");
+    
+    value_t func = read_source(vm, "(define (square x) (* x x))");
+    test_write(func);
     puts("");
 }
 
@@ -49,7 +97,9 @@ void test(vm_t *vm) {
 int main(void) {
     vm_t *vm = vm_new();
 
-    test(vm);
+//    test(vm);
+
+    test2(vm);
 
     vm_free(vm);
     return 0;
