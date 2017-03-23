@@ -111,6 +111,9 @@ static void next_token(reader_t *reader) {
     } else if ((*reader->cur) == '#') {
         reader->toktype = TOK_HASH;
         reader->tokstart = reader->cur;
+    } else if ((*reader->cur) == '.') {
+        reader->toktype = TOK_DOT;
+        reader->tokstart = reader->cur;
     } else if (is_digit(*reader->cur)) {
         reader->toktype = TOK_NUMBER;  
         reader->tokstart = reader->cur;  
@@ -143,6 +146,11 @@ static void read1(reader_t *reader) {
             fprintf(stderr, "Invalid token: #t is only symbol that can begin with #\n");
         }
     } else if (reader->toktype == TOK_RPAREN) {
+        fprintf(stderr, "Unexpected ')'\n");
+        next_char(reader);
+        return;
+    } else if (reader->toktype == TOK_DOT) {
+        fprintf(stderr, "Unexpected '.'\n");
         next_char(reader);
         return;
     } else if (reader->toktype == TOK_SYMBOL) {
@@ -169,6 +177,9 @@ static void read_list(reader_t *reader) {
     } else if (reader->toktype == TOK_EOF) {
         fprintf(stderr, "Unexpected EOF while parsing\n");
         return;
+    } else if (reader->toktype == TOK_DOT) {
+        fprintf(stderr, "Unexpected dot in list\n");
+        return;
     }
    
     read1(reader);
@@ -186,6 +197,17 @@ static void read_list(reader_t *reader) {
         } else if (reader->toktype == TOK_EOF) {
             fprintf(stderr, "Unexpected EOF while parsing\n");
             return;
+        } else if (reader->toktype == TOK_DOT) {
+            next_char(reader); 
+            next_token(reader);
+           
+            read1(reader);
+            
+            tail->cdr = reader->tokval;
+            reader->tokval = PTR_VAL(head);
+            
+            next_char(reader);
+            return;
         }
         
         read1(reader);
@@ -195,7 +217,6 @@ static void read_list(reader_t *reader) {
         tail = AS_CONS(tail->cdr);
     }
 }
-
 
 value_t read_source(vm_t *vm, const char *source) {
     reader_t reader;

@@ -68,6 +68,18 @@ void test2(vm_t *vm) {
     value_t arith_fn = read_source(vm, "(+ (* 20 0.55) (/ 2 3))");
     test_write(arith_fn);
     puts("");
+
+    value_t dotted = read_source(vm, "((2 3) . 1");
+    test_write(dotted);
+    puts("");
+
+    value_t dotted2 = read_source(vm, "(0 . (1 . 2))");
+    test_write(dotted2);
+    puts("");
+
+    value_t dotted_simple = read_source(vm, "(2 . 1)");
+    test_write(dotted_simple);
+    puts("");
 }
 
 void test(vm_t *vm) {
@@ -109,7 +121,7 @@ void test(vm_t *vm) {
 int main(void) {
     vm_t *vm = vm_new();
 
-//    test(vm);
+    //test(vm);
 
     test2(vm);
 
