@@ -141,12 +141,28 @@ void test(vm_t *vm) {
     test_write(f);
 }
 
+// not a typo, just a READ-PRINT-LOOP :)
+void rpl(vm_t *vm) {
+    fprintf(stdout, "|Scheme 0.0 - RPL|\n");
+    char buf[256];
+    while (true) {
+        fprintf(stdout, ">> ");
+        if (fgets(buf, 256, stdin) == NULL) {
+            return;
+        }
+        value_t val = read_source(vm, buf);
+        test_write(val);
+    }
+}
+
 int main(void) {
     vm_t *vm = vm_new();
 
     //test(vm);
 
-    test2(vm);
+    //test2(vm);
+
+    rpl(vm);
 
     vm_free(vm);
     return 0;
