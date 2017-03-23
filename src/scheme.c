@@ -56,6 +56,18 @@ void test2(vm_t *vm) {
     value_t func = read_source(vm, "(define (square x) (* x x))");
     test_write(func);
     puts("");
+
+    value_t truth = read_source(vm, "#t");
+    test_write(truth);
+    puts("");
+
+    value_t truthy_fn = read_source(vm, "(define (truthy_fn)\n (#t))");
+    test_write(truthy_fn);
+    puts("");
+
+    value_t arith_fn = read_source(vm, "(+ (* 20 0.55) (/ 2 3))");
+    test_write(arith_fn);
+    puts("");
 }
 
 void test(vm_t *vm) {

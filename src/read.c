@@ -5,7 +5,7 @@
 #include "read.h"
 
 inline static bool is_space(char c) {
-    return c == ' ' || c == '\r' || c == '\t';
+    return c == ' ' || c == '\r' || c == '\n' || c == '\t';
 }
 
 inline static bool is_digit(char c) {
@@ -16,19 +16,14 @@ inline static bool is_letter(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
-// *variable* is usually global
-inline static bool is_symbol_beginning(char c) {
-    return is_letter(c) || (c == '*') || (c == '_');
-}
-
-// R5RS without following: . / @
+// R5RS without following: . @
 // http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-5.html#%_sec_2.1
 inline static bool is_symbol(char c) {
-    return is_digit(c) || is_symbol_beginning(c) || 
+    return is_digit(c) || is_letter(c) || 
         (c == '!') || (c == '$') || (c == '%') || (c == '&') || 
         (c == '*') || (c == '+') || (c == '-') || (c == ':') || 
         (c == '<') || (c == '=') || (c == '>') || (c == '?') || 
-        (c == '^') || (c == '_') || (c == '~');
+        (c == '^') || (c == '_') || (c == '~') || (c == '/');
 }
 
 /* *** */
@@ -79,7 +74,6 @@ static void read_number(reader_t *reader){
 
     if (*reader->cur == 'e' || *reader->cur == 'E') {
         next_char(reader);
-
         if (*reader->cur == '-' || *reader->cur == '+') {
             next_char(reader);
         }
@@ -88,7 +82,6 @@ static void read_number(reader_t *reader){
             next_char(reader);
         }
     }
-
 
     reader->tokval = NUM_VAL(d);
 }
@@ -115,17 +108,20 @@ static void next_token(reader_t *reader) {
     } else if ((*reader->cur) == ')') {
         reader->toktype = TOK_RPAREN;
         reader->tokstart = reader->cur;
+    } else if ((*reader->cur) == '#') {
+        reader->toktype = TOK_HASH;
+        reader->tokstart = reader->cur;
     } else if (is_digit(*reader->cur)) {
         reader->toktype = TOK_NUMBER;  
         reader->tokstart = reader->cur;  
     } else if ((*reader->cur) == '\0') {
         reader->toktype = TOK_EOF;
         reader->tokstart = reader->cur;
-    } else if (is_symbol_beginning(*reader->cur)) {
+    } else if (is_symbol(*reader->cur)) {
         reader->toktype = TOK_SYMBOL;
         reader->tokstart = reader->cur;
     } else {
-        fprintf(stderr, "Error: Unknown token at line %d (starts with %c)", reader->line, *reader->cur);
+        fprintf(stderr, "Error: Unknown token at line %d (starts with '%c')", reader->line, *reader->cur);
     }
 }
 static void read_list(reader_t *reader);
@@ -138,6 +134,14 @@ static void read1(reader_t *reader) {
         read_list(reader);
     } else if (reader->toktype == TOK_NUMBER) {
         read_number(reader);
+    } else if (reader->toktype == TOK_HASH) {
+        if (peek_next_char(reader) == 't') {
+            next_char(reader);
+            next_char(reader);
+            reader->tokval = TRUE_VAL;
+        } else {
+            fprintf(stderr, "Invalid token: #t is only symbol that can begin with #\n");
+        }
     } else if (reader->toktype == TOK_RPAREN) {
         next_char(reader);
         return;
