@@ -6,6 +6,11 @@
 static void write_cons(FILE *f, cons_t *cons) {
     fprintf(f, "(");
     cons_t *temp = cons;
+    
+    if (IS_NIL(temp->car)) {
+        fprintf(f, "()"); //write(f, temp->car);
+    }
+
     while (!IS_NIL(temp->car)) {
         write(f, temp->car);
         
@@ -31,7 +36,7 @@ void write(FILE *f, value_t val) {
     if (IS_NUM(val)) {
         fprintf(f, "%.14g", AS_NUM(val));
     } else if (IS_NIL(val)) {
-        fprintf(f, "nil"); //TODO: this is only for testing
+        fprintf(f, "()"); //TODO: this is only for testing
     } else if (IS_TRUE(val)) {
         fprintf(f, "#t");
     } else if (IS_PTR(val)) {
@@ -57,19 +62,6 @@ void write(FILE *f, value_t val) {
             }
 
             fprintf(f, "\"");
-        } else if (IS_VECTOR(val)) {
-            vector_t *vec = AS_VECTOR(val);
-            
-            fprintf(f, "#(");
-
-            for (uint32_t i = 0; i < vec->count; i++) {
-                write(f, vec->data[i]);
-                if (i != vec->count - 1) {
-                    fprintf(f, " ");
-                }
-            }
-
-            fprintf(f, ")");
         } else if (IS_SYMBOL(val)) {
             symbol_t *sym = AS_SYMBOL(val);
             fprintf(f, "%s", sym->name);
