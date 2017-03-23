@@ -80,6 +80,22 @@ void test2(vm_t *vm) {
     value_t dotted_simple = read_source(vm, "(2 . 1)");
     test_write(dotted_simple);
     puts("");
+
+    value_t quoted = read_source(vm, "\'(a b)");
+    test_write(quoted);
+    puts("");
+
+    value_t quotedsym = read_source(vm, "\'lambda");
+    test_write(quotedsym);
+    puts("");
+
+    value_t str = read_source(vm, "\"str\"");
+    test_write(str);
+    puts("");
+
+    value_t str2 = read_source(vm, "(define hello (display \"Hello\"))");
+    test_write(str2);
+    puts("");
 }
 
 void test(vm_t *vm) {

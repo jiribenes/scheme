@@ -58,6 +58,44 @@ static void eat_whitespace(reader_t* reader) {
     }
 }
 
+static void next_token(reader_t *reader) {
+    eat_whitespace(reader);
+    
+    if ((*reader->cur) == '(') {
+        reader->toktype = TOK_LPAREN;
+        reader->tokstart = reader->cur;
+    } else if ((*reader->cur) == ')') {
+        reader->toktype = TOK_RPAREN;
+        reader->tokstart = reader->cur;
+    } else if ((*reader->cur) == '#') {
+        reader->toktype = TOK_HASH;
+        reader->tokstart = reader->cur;
+    } else if ((*reader->cur) == '.') {
+        reader->toktype = TOK_DOT;
+        reader->tokstart = reader->cur;
+    } else if ((*reader->cur) == '\'') {
+        reader->toktype = TOK_QUOTE;
+        reader->tokstart = reader->cur;
+    } else if ((*reader->cur) == '\"') {
+        reader->toktype = TOK_STRING;
+        reader->tokstart = reader->cur;
+    } else if (is_digit(*reader->cur)) {
+        reader->toktype = TOK_NUMBER;  
+        reader->tokstart = reader->cur;  
+    } else if ((*reader->cur) == '\0') {
+        reader->toktype = TOK_EOF;
+        reader->tokstart = reader->cur;
+    } else if (is_symbol(*reader->cur)) {
+        reader->toktype = TOK_SYMBOL;
+        reader->tokstart = reader->cur;
+    } else {
+        fprintf(stderr, "Error: Unknown token at line %d (starts with '%c')", reader->line, *reader->cur);
+    }
+}
+
+static void read1(reader_t *reader);
+static void read_list(reader_t *reader);
+
 static void read_number(reader_t *reader){
     double d = strtod(reader->tokstart, NULL);
     
@@ -86,6 +124,33 @@ static void read_number(reader_t *reader){
     reader->tokval = NUM_VAL(d);
 }
 
+static void read_quote(reader_t *reader) {
+    next_char(reader);
+    next_token(reader);
+    //TODO: symbol interning!!
+    symbol_t *s = symbol_new(reader->vm, "quote", 5);
+
+    read1(reader);
+    value_t val = reader->tokval;
+
+    reader->tokval = cons_fn(reader->vm, PTR_VAL(s), cons_fn(reader->vm, val, NIL_VAL));
+}
+
+// TODO: add escape characters
+static void read_string(reader_t *reader) {
+    next_char(reader);
+    reader->tokstart = reader->cur;
+    while ((*reader->cur) != '\"') {
+        next_char(reader);
+    }
+
+    next_char(reader);
+    size_t len = reader->cur - reader->tokstart - 1;
+
+    string_t *str = string_new(reader->vm, reader->tokstart, len);
+    reader->tokval = PTR_VAL(str);
+}
+
 static void read_symbol(reader_t *reader) {
     while (is_symbol(*reader->cur)) {
         next_char(reader);
@@ -99,36 +164,6 @@ static void read_symbol(reader_t *reader) {
     reader->tokval = PTR_VAL(sym);
 }
 
-static void next_token(reader_t *reader) {
-    eat_whitespace(reader);
-    
-    if ((*reader->cur) == '(') {
-        reader->toktype = TOK_LPAREN;
-        reader->tokstart = reader->cur;
-    } else if ((*reader->cur) == ')') {
-        reader->toktype = TOK_RPAREN;
-        reader->tokstart = reader->cur;
-    } else if ((*reader->cur) == '#') {
-        reader->toktype = TOK_HASH;
-        reader->tokstart = reader->cur;
-    } else if ((*reader->cur) == '.') {
-        reader->toktype = TOK_DOT;
-        reader->tokstart = reader->cur;
-    } else if (is_digit(*reader->cur)) {
-        reader->toktype = TOK_NUMBER;  
-        reader->tokstart = reader->cur;  
-    } else if ((*reader->cur) == '\0') {
-        reader->toktype = TOK_EOF;
-        reader->tokstart = reader->cur;
-    } else if (is_symbol(*reader->cur)) {
-        reader->toktype = TOK_SYMBOL;
-        reader->tokstart = reader->cur;
-    } else {
-        fprintf(stderr, "Error: Unknown token at line %d (starts with '%c')", reader->line, *reader->cur);
-    }
-}
-static void read_list(reader_t *reader);
-
 static void read1(reader_t *reader) {
     if (reader->toktype == TOK_EOF) {
         return;
@@ -137,6 +172,10 @@ static void read1(reader_t *reader) {
         read_list(reader);
     } else if (reader->toktype == TOK_NUMBER) {
         read_number(reader);
+    } else if (reader->toktype == TOK_STRING) {
+        read_string(reader);
+    } else if (reader->toktype == TOK_QUOTE) {
+        read_quote(reader);
     } else if (reader->toktype == TOK_HASH) {
         if (peek_next_char(reader) == 't') {
             next_char(reader);
@@ -159,13 +198,6 @@ static void read1(reader_t *reader) {
     }
 
     next_token(reader);
-}
-
-static value_t cons_fn(vm_t *vm, value_t a, value_t b) {
-    cons_t *result = cons_new(vm);
-    result->car = a;
-    result->cdr = b;
-    return PTR_VAL(result);
 }
 
 static void read_list(reader_t *reader) {
