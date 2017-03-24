@@ -203,15 +203,28 @@ static value_t list(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t define(vm_t *vm, env_t *env, value_t args) {
-    if (!IS_CONS(args) || cons_len(args) != 2 || !IS_SYMBOL(AS_CONS(args)->car)) {
-        fprintf(stderr, "Error: define: is wrong (define <name> <body>)\n");
+    if (!IS_CONS(args) || cons_len(args) != 2) {
+        fprintf(stderr, "Error: define: is wrong (define <name> <body>) or (define (<name> <params> ...) <body>\n");
     }
     cons_t *rest = AS_CONS(args);
-    symbol_t *sym = AS_SYMBOL(rest->car);
-    cons_t *body = AS_CONS(rest->cdr);
-    value_t val = eval(vm, env, body->car);
-    variable_add(vm, env, sym, val);
-    return val;
+    if (IS_SYMBOL(rest->car)) {
+        symbol_t *sym = AS_SYMBOL(rest->car);
+        cons_t *body = AS_CONS(rest->cdr);
+        value_t val = eval(vm, env, body->car);
+        variable_add(vm, env, sym, val);
+        return val;
+    } else if (IS_CONS(rest->car)) {
+        symbol_t *sym = AS_SYMBOL(AS_CONS(rest->car)->car);
+        value_t params = AS_CONS(rest->car)->cdr;
+        cons_t *body = AS_CONS(rest->cdr);
+        function_t *func = function_new(vm, env, params, PTR_VAL(body));
+        value_t val = eval(vm, env, PTR_VAL(func));
+        variable_add(vm, env, sym, val);
+        return val; 
+     } else {
+        fprintf(stderr, "Error: define: is wrong - second argument has to be either a list or a symbol!\n");
+        return NIL_VAL;
+     }
 }
 
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
