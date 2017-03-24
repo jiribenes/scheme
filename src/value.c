@@ -174,17 +174,28 @@ value_t cons_fn(vm_t *vm, value_t a, value_t b) {
     return PTR_VAL(result);
 }
 
-uint32_t cons_len(cons_t *cons) {
-    uint32_t len = 0;
 
-    cons_t *temp = cons;
+//TODO: rewrite this to be more readable
+uint32_t cons_len(value_t val) {
+    uint32_t len = 0;
+    
+    if (IS_NIL(val)) {
+        return 0;
+    } 
+
+    cons_t *temp = AS_CONS(val);
+    
+    if (IS_NIL(temp->cdr)) {
+        return 1;
+    }
+
     while (true) { // this could be a little dangerous...
         if (!IS_CONS(temp->cdr)) {
             fprintf(stderr, "Error: Can't find the length of a dotted list!");
             return 0;
         }
-        temp = AS_CONS(temp->cdr);
 
+        temp = AS_CONS(temp->cdr);
         len++;
 
         if (IS_NIL(temp->cdr)) {

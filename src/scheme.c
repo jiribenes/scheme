@@ -142,7 +142,6 @@ void test(vm_t *vm) {
     test_write(f);
 }
 
-// not a typo, just a READ-PRINT-LOOP :)
 void repl(vm_t *vm, env_t *env) {
     fprintf(stdout, "|Scheme 0.0 - REPL|\n|Use ^D to exit!:)|\n");
     char buf[512];
@@ -173,13 +172,9 @@ void repl(vm_t *vm, env_t *env) {
 
 static value_t add(vm_t *vm, env_t *env, value_t args) {
     double result = 0.0F;
-    if (IS_NIL(args)) {
-        fprintf(stderr, "Error: +: nil input");
-        return NIL_VAL;
-    }
     value_t eargs = eval_list(vm, env, args);
-    if (cons_len(AS_CONS(eargs)) < 2) {
-        fprintf(stderr, "Error: +: not enough args (has %d)\n", cons_len(AS_CONS(eargs)));
+    if (cons_len(eargs) < 2) {
+        fprintf(stderr, "Error: +: not enough args (has %d)\n", cons_len(eargs));
         test_write(eargs);
         return NIL_VAL;
     }

@@ -144,7 +144,7 @@ env_t *env_new(vm_t *vm, value_t variables, env_t *up);
 symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len);
 value_t cons_fn(vm_t *vm, value_t a, value_t b);
 
-uint32_t cons_len(cons_t *cons);
+uint32_t cons_len(value_t val);
 
 typedef union {
 	uint64_t bits;
