@@ -264,9 +264,11 @@ value_t read_source(vm_t *vm, const char *source) {
     reader.toktype = TOK_NONE;
     /* new here */
     next_token(&reader);
-
+    
+    symbol_t *eof = symbol_intern(vm, "eof", 3);
+    
     if (reader.toktype == TOK_EOF) {
-        fprintf(stdout, "Got EOF as first token\n");
+        reader.tokval = PTR_VAL(eof);
     } else {
         read1(&reader);
     }
