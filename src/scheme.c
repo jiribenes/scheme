@@ -4,6 +4,7 @@
 #include "value.h"
 #include "write.h"
 #include "read.h"
+#include "vm.h"
 
 // write to stdout with newline
 static void test_write(value_t val) {
@@ -142,32 +143,76 @@ void test(vm_t *vm) {
 }
 
 // not a typo, just a READ-PRINT-LOOP :)
-void rpl(vm_t *vm) {
-    fprintf(stdout, "|Scheme 0.0 - RPL|\n|Use ^D to exit !|\n");
+void repl(vm_t *vm, env_t *env) {
+    fprintf(stdout, "|Scheme 0.0 - REPL|\n|Use ^D to exit!:)|\n");
     char buf[512];
 
     while (true) {
         fprintf(stdout, ">> ");
-        
+
         if (fgets(buf, 512, stdin) == NULL) {
             break;
         }
-
         value_t val = read_source(vm, buf);
-        test_write(val);
+
+        fprintf(stdout, "symbol table:\n");
+        for (symbol_t *s = vm->symbol_table; s != NULL; s = s->next) {
+            test_write(PTR_VAL(s));
+        }
+        fprintf(stdout, "env: ");
+        test_write(env->variables);
+        
+        value_t result = eval(vm, env, val); 
+        fprintf(stdout, "Your result:");
+ 
+        test_write(result);
     }
     
     fprintf(stdout, "\nQuiting!\n");
 }
 
+static value_t add(vm_t *vm, env_t *env, value_t args) {
+    double result = 0.0F;
+    if (IS_NIL(args)) {
+        fprintf(stderr, "Error: +: nil input");
+        return NIL_VAL;
+    }
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(AS_CONS(eargs)) < 2) {
+        fprintf(stderr, "Error: +: not enough args (has %d)\n", cons_len(AS_CONS(eargs)));
+        test_write(eargs);
+        return NIL_VAL;
+    }
+    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
+        if (!IS_NUM(cons->car)) {
+            fprintf(stderr, "Error: +: car is not a number!\n");
+            return NIL_VAL;
+        }
+        result += AS_NUM(cons->car);
+        if (IS_NIL(cons->cdr)) {
+            break;
+        }
+    }
+    return NUM_VAL(result);
+}
+
 int main(void) {
     vm_t *vm = vm_new();
+    env_t *env = env_new(vm, NIL_VAL, NULL);
 
     //test(vm);
 
     //test2(vm);
+    
+    symbol_t *pi_sym = symbol_intern(vm, "pi", 2);
+    value_t pi = NUM_VAL(3.1415);
+    variable_add(vm, env, pi_sym, pi);
 
-    rpl(vm);
+    primitive_add(vm, env, "+", 1, add);
+
+    fprintf(stdout, "---\n");
+
+    repl(vm, env);
 
     vm_free(vm);
     return 0;
