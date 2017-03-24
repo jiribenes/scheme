@@ -143,6 +143,9 @@ typedef struct {
 #define AS_PRIMITIVE(val) ((primitive_t*) AS_PTR(val))
 #define AS_FUNCTION(val) ((function_t*) AS_PTR(val))
 
+// equality
+#define IS_EQ(a,b) (val_eq((a),(b)))
+
 // GC (memory management) functions
 
 void ptr_free(vm_t *vm, ptrvalue_t *ptr);
@@ -189,7 +192,7 @@ static inline bool val_is_ptr(value_t val, ptrvalue_type_t t) {
 
 // scm: equal?
 // true for both ptrvalues and values when they are equal by value
-static bool val_equal(value_t a, value_t b);
+bool val_equal(value_t a, value_t b);
 
 // scm: eq? or eqv?
 // true for ptrvalues when they are identical

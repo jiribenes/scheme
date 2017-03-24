@@ -218,7 +218,7 @@ uint32_t cons_len(value_t val) {
 }
 
 /* *** equality *** */
-static bool val_equal(value_t a, value_t b) {
+bool val_equal(value_t a, value_t b) {
     if (val_eq(a, b)) {
         return true;
     }
@@ -252,7 +252,7 @@ static bool val_equal(value_t a, value_t b) {
         if ((syma->len == symb->len) && (memcmp(syma->name, symb->name, syma->len * sizeof(char)) == 0)) {
             // we should never get here! - two symbols with same name are eq?
             fprintf(stderr, "Error: symbol not interned!");
-            }
+        }
         return false;
     }
 
