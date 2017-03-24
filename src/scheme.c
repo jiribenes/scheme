@@ -154,12 +154,12 @@ void repl(vm_t *vm, env_t *env) {
         }
         value_t val = read_source(vm, buf);
 
-        fprintf(stdout, "symbol table:\n");
+        /*fprintf(stdout, "symbol table:\n");
         for (symbol_t *s = vm->symbol_table; s != NULL; s = s->next) {
             test_write(PTR_VAL(s));
-        }
-        fprintf(stdout, "env: ");
-        test_write(env->variables);
+        }*/
+        /*fprintf(stdout, "env: ");
+        test_write(env->variables);*/
         
         value_t result = eval(vm, env, val); 
         fprintf(stdout, "Your result:");
@@ -175,7 +175,6 @@ static value_t add(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) < 2) {
         fprintf(stderr, "Error: +: not enough args (has %d)\n", cons_len(eargs));
-        test_write(eargs);
         return NIL_VAL;
     }
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
@@ -192,11 +191,10 @@ static value_t add(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t multiply(vm_t *vm, env_t *env, value_t args) {
-    double result = 0.0F;
+    double result = 1.0F;
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) < 2) {
         fprintf(stderr, "Error: *: not enough args (has %d)\n", cons_len(eargs));
-        test_write(eargs);
         return NIL_VAL;
     }
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
@@ -205,6 +203,27 @@ static value_t multiply(vm_t *vm, env_t *env, value_t args) {
             return NIL_VAL;
         }
         result *= AS_NUM(cons->car);
+        if (IS_NIL(cons->cdr)) {
+            break;
+        }
+    }
+    return NUM_VAL(result);
+}
+
+static value_t subtract(vm_t *vm, env_t *env, value_t args) {
+    double result = 0.0F;
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(eargs) < 2) {
+        fprintf(stderr, "Error: -: not enough args (has %d)\n", cons_len(eargs));
+        return NIL_VAL;
+    }
+    result = AS_NUM(AS_CONS(eargs)->car);
+    for (cons_t *cons = AS_CONS(AS_CONS(eargs)->cdr); ; cons = AS_CONS(cons->cdr)){
+        if (!IS_NUM(cons->car)) {
+            fprintf(stderr, "Error: -: car is not a number!\n");
+            return NIL_VAL;
+        }
+        result -= AS_NUM(cons->car);
         if (IS_NIL(cons->cdr)) {
             break;
         }
@@ -287,6 +306,26 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
     return PTR_VAL(func);
 }
 
+// (if <condition> <then> <otherwise> ...)
+static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
+    if (cons_len(args) < 2) {
+        fprintf(stderr, "Error: if: not enough args (has %d)\n", cons_len(args));
+    }
+
+    value_t condition = eval(vm, env, AS_CONS(args)->car);
+    if (AS_BOOL(condition)) {
+        value_t then = eval(vm, env, AS_CONS(AS_CONS(args)->cdr)->car);
+        return eval(vm, env, then);
+    }
+
+    if (IS_NIL(AS_CONS(AS_CONS(args)->cdr)->cdr)) {
+        return FALSE_VAL;
+    }
+    
+    value_t otherwise = AS_CONS(AS_CONS(args)->cdr)->cdr;
+    return begin(vm, env, otherwise); 
+}
+
 int main(void) {
     vm_t *vm = vm_new();
     env_t *env = env_new(vm, NIL_VAL, NULL);
@@ -301,14 +340,14 @@ int main(void) {
 
     primitive_add(vm, env, "+", 1, add);
     primitive_add(vm, env, "*", 1, multiply);
+    primitive_add(vm, env, "-", 1, subtract);
     primitive_add(vm, env, "eq?", 3, eq);
     primitive_add(vm, env, "quote", 5, quote);
     primitive_add(vm, env, "list", 4, list);
     primitive_add(vm, env, "begin", 5, begin);
     primitive_add(vm, env, "define", 6, define);
     primitive_add(vm, env, "lambda", 6, lambda);
-
-    fprintf(stdout, "---\n");
+    primitive_add(vm, env, "if", 2, builtin_if);
 
     repl(vm, env);
 
