@@ -73,7 +73,7 @@ env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals) {
         fprintf(stderr, "Error: Number of arguments doesn't match!\n");
     }
     value_t alist = NIL_VAL;
-    while (true) {
+    while (!IS_NIL(vars)) {
         cons_t *var = AS_CONS(vars);
         cons_t *val = AS_CONS(vals);
         

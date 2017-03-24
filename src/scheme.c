@@ -228,9 +228,16 @@ static value_t define(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
-    if (!IS_CONS(args) || cons_len(args) != 2 || !IS_CONS(AS_CONS(args)->car)) {
+    if (!IS_CONS(args) || cons_len(args) != 2 || !(IS_CONS(AS_CONS(args)->car) || IS_NIL(AS_CONS(args)->car))) {
         fprintf(stderr, "Error: lambda: is wrong (lambda (<params>) <body>)\n"); 
     }
+    
+    if (IS_NIL(AS_CONS(args)->car)) { // no parameters
+        value_t body = AS_CONS(args)->cdr;
+        function_t *func = function_new(vm, env, NIL_VAL, body);
+        return PTR_VAL(func);
+    }
+
     for (cons_t *cons = AS_CONS(AS_CONS(args)->car); ; cons = AS_CONS(cons->cdr)) {
         if (!IS_SYMBOL(cons->car)) {
             fprintf(stderr, "Error: lambda: all parameters must be symbols!\n");
