@@ -82,6 +82,9 @@ static void next_token(reader_t *reader) {
     } else if (is_digit(*reader->cur)) {
         reader->toktype = TOK_NUMBER;  
         reader->tokstart = reader->cur;  
+    } else if (((*reader->cur) == '-') && is_digit(peek_next_char(reader))) { 
+        reader->toktype = TOK_NUMBER;
+        reader->tokstart = reader->cur;
     } else if ((*reader->cur) == '\0') {
         reader->toktype = TOK_EOF;
         reader->tokstart = reader->cur;
