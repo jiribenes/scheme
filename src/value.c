@@ -156,6 +156,21 @@ value_t cons_fn(vm_t *vm, value_t a, value_t b) {
     return PTR_VAL(result);
 }
 
+uint32_t cons_len(cons_t *cons) {
+    uint32_t len = 0;
+
+    while (true) { // this could be a little dangerous...
+        if (IS_NIL(cons->cdr)) {
+            return len;
+        } else if (!IS_CONS(cons->cdr)) {
+            fprintf(stderr, "Error: Can't find the length of a dotted list!");
+        }
+        cons = AS_CONS(cons->cdr);
+
+        len++;
+    }
+}
+
 /* *** equality *** */
 static bool val_equal(value_t a, value_t b) {
     if (val_eq(a, b)) {
