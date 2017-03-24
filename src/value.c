@@ -136,9 +136,9 @@ primitive_t *primitive_new(vm_t *vm, primitive_fn *fn) {
     return prim;
 }
 
-env_t *env_new(vm_t *vm, cons_t *variables, env_t *up) {
+env_t *env_new(vm_t *vm, value_t variables, env_t *up) {
     // I am not very sure about this
-    env_t *env = (env_t*) vm_realloc(vm, NULL, 0, sizeof(env_t));
+    env_t *env = (env_t*) vm_realloc(vm, NULL, 0, sizeof(env_t) + sizeof(cons_t));
 
     ptr_init(vm, &env->p, T_ENV);
     
