@@ -19,5 +19,6 @@ void variable_add(vm_t *vm, env_t *env, symbol_t *sym, value_t val);
 
 value_t eval_list(vm_t *vm, env_t *env, value_t list);
 value_t eval(vm_t *vm, env_t *env, value_t val);
+value_t begin(vm_t *vm, env_t *env, value_t val);
 
 #endif // _vm_h

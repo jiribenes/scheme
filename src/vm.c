@@ -154,3 +154,15 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
     fprintf(stderr, "Error: Unknown type to eval!\n");
     return NIL_VAL;
 }
+
+
+value_t begin(vm_t *vm, env_t *env, value_t val) {
+    value_t result = NIL_VAL;
+    for (cons_t *cons = AS_CONS(val); ;cons = AS_CONS(cons->cdr)) {
+        result = eval(vm, env, cons->car);
+        if (IS_NIL(cons->cdr)) {
+            break;
+        }
+    }
+    return result;
+}
