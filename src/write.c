@@ -69,6 +69,8 @@ void write(FILE *f, value_t val) {
             fprintf(f, "%s", sym->name);
         } else if (IS_PRIMITIVE(val)) {
             fprintf(f, "<primitive>");
+        } else if (IS_FUNCTION(val)) {
+            fprintf(f, "<function>");
         }
     }
 }

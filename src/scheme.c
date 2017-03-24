@@ -191,6 +191,50 @@ static value_t add(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(result);
 }
 
+static value_t quote(vm_t *vm, env_t *env, value_t args) {
+    if (cons_len(args) != 1) {
+        fprintf(stderr, "Error: ': args (has %d) != 1\n", cons_len(args));
+    }
+    return AS_CONS(args)->car;
+}
+
+static value_t list(vm_t *vm, env_t *env, value_t args) {
+    return eval_list(vm, env, args);
+}
+
+static value_t define(vm_t *vm, env_t *env, value_t args) {
+    if (!IS_CONS(args) || cons_len(args) != 2 || !IS_SYMBOL(AS_CONS(args)->car)) {
+        fprintf(stderr, "Error: define: is wrong (define <name> <body>)\n");
+    }
+    cons_t *rest = AS_CONS(args);
+    symbol_t *sym = AS_SYMBOL(rest->car);
+    cons_t *body = AS_CONS(rest->cdr);
+    value_t val = eval(vm, env, body->car);
+    variable_add(vm, env, sym, val);
+    return val;
+}
+
+static value_t lambda(vm_t *vm, env_t *env, value_t args) {
+    if (!IS_CONS(args) || cons_len(args) != 2 || !IS_CONS(AS_CONS(args)->car)) {
+        fprintf(stderr, "Error: lambda: is wrong (lambda (<params>) <body>)\n"); 
+    }
+    for (cons_t *cons = AS_CONS(AS_CONS(args)->car); ; cons = AS_CONS(cons->cdr)) {
+        if (!IS_SYMBOL(cons->car)) {
+            fprintf(stderr, "Error: lambda: all parameters must be symbols!\n");
+        } else if (!IS_NIL(cons->cdr) && !IS_CONS(cons->cdr)) {
+            fprintf(stderr, "Error: lambda: parameter list must not be dotted\n");
+        }
+        
+        if (IS_NIL(cons->cdr)) {
+            break;        
+        }
+    }
+    value_t params = AS_CONS(args)->car;
+    value_t body = AS_CONS(args)->cdr;
+    function_t *func = function_new(vm, env, params, body);
+    return PTR_VAL(func);
+}
+
 int main(void) {
     vm_t *vm = vm_new();
     env_t *env = env_new(vm, NIL_VAL, NULL);
@@ -204,6 +248,11 @@ int main(void) {
     variable_add(vm, env, pi_sym, pi);
 
     primitive_add(vm, env, "+", 1, add);
+    primitive_add(vm, env, "quote", 5, quote);
+    primitive_add(vm, env, "list", 4, list);
+    primitive_add(vm, env, "begin", 5, begin);
+    primitive_add(vm, env, "define", 6, define);
+    primitive_add(vm, env, "lambda", 6, lambda);
 
     fprintf(stdout, "---\n");
 

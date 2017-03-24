@@ -15,6 +15,7 @@ typedef enum {
     T_STRING,
     T_SYMBOL,
     T_PRIMITIVE,
+    T_FUNCTION,
     T_ENV
 } ptrvalue_type_t;
 
@@ -72,6 +73,15 @@ typedef struct {
     primitive_fn fn;
 } primitive_t;
 
+// User-defined function
+typedef struct {
+    ptrvalue_t p;
+
+    env_t *env;
+
+    value_t params;
+    value_t body;
+} function_t;
 
 // 1--------------------------------------------------------------- 
 #define SIGN_BIT ((uint64_t) 1 << 63)
@@ -112,6 +122,7 @@ typedef struct {
 #define IS_STRING(val) (val_is_ptr(val, T_STRING))
 #define IS_SYMBOL(val) (val_is_ptr(val, T_SYMBOL))
 #define IS_PRIMITIVE(val) (val_is_ptr(val, T_PRIMITIVE))
+#define IS_FUNCTION(val) (val_is_ptr(val, T_FUNCTION))
 #define IS_ENV(val) (val_is_ptr(val, T_ENV))
 
 // C value -> value
@@ -130,6 +141,7 @@ typedef struct {
 #define AS_STRING(val) ((string_t*) AS_PTR(val))
 #define AS_SYMBOL(val) ((symbol_t*) AS_PTR(val))
 #define AS_PRIMITIVE(val) ((primitive_t*) AS_PTR(val))
+#define AS_FUNCTION(val) ((function_t*) AS_PTR(val))
 
 // GC (memory management) functions
 
@@ -139,6 +151,7 @@ cons_t *cons_new(vm_t *vm);
 string_t *string_new(vm_t *vm, const char *text, size_t len);
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len);
 primitive_t *primitive_new(vm_t *vm, primitive_fn fn);
+function_t *function_new(vm_t *vm, env_t *env, value_t params, value_t body);
 env_t *env_new(vm_t *vm, value_t variables, env_t *up);
 
 symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len);

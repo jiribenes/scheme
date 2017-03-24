@@ -20,6 +20,8 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_PRIMITIVE) {
         vm_realloc(vm, ptr, 0, 0);
+    } else if (ptr->type == T_FUNCTION) {
+        vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_ENV) {
         vm_realloc(vm, ptr, 0, 0);
     }
@@ -136,9 +138,20 @@ primitive_t *primitive_new(vm_t *vm, primitive_fn fn) {
     return prim;
 }
 
+function_t *function_new(vm_t *vm, env_t *env, value_t params, value_t body) {
+    function_t *fn = (function_t*) vm_realloc(vm, NULL, 0, sizeof(function_t));
+    
+    ptr_init(vm, &fn->p, T_FUNCTION);
+
+    fn->env = env;
+    fn->params = params;
+    fn->body = body;
+
+    return fn;
+}
+
 env_t *env_new(vm_t *vm, value_t variables, env_t *up) {
-    // I am not very sure about this
-    env_t *env = (env_t*) vm_realloc(vm, NULL, 0, sizeof(env_t) + sizeof(cons_t));
+    env_t *env = (env_t*) vm_realloc(vm, NULL, 0, sizeof(env_t));
 
     ptr_init(vm, &env->p, T_ENV);
     

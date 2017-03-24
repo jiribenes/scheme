@@ -5,6 +5,7 @@
 #include "scheme.h"
 #include "vm.h"
 #include "value.h"
+#include "write.h"
 
 static void *scm_realloc(void *ptr, size_t size) {
     if (size == 0) {
@@ -66,6 +67,31 @@ void variable_add(vm_t *vm, env_t *env, symbol_t *sym, value_t val) {
     env->variables = temp;
 }
 
+// Creates a new env frame
+env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals) {
+    if (cons_len(vars) != cons_len(vals)) {
+        fprintf(stderr, "Error: Number of arguments doesn't match!\n");
+    }
+    value_t alist = NIL_VAL;
+    while (true) {
+        cons_t *var = AS_CONS(vars);
+        cons_t *val = AS_CONS(vals);
+        
+        value_t pair = cons_fn(vm, var->car, val->car);
+        value_t temp = cons_fn(vm, pair, alist);
+        alist = temp;
+
+        if (IS_NIL(var->cdr)) {
+            break;
+        }
+        var = AS_CONS(var->cdr);
+        val = AS_CONS(val->cdr);
+ 
+    }
+    env_t *new_env = env_new(vm, alist, env);
+    return new_env;
+}
+
 void primitive_add(vm_t *vm, env_t *env, const char *name, size_t len, primitive_fn fn) {
     symbol_t *sym = symbol_intern(vm, name, len);
 
@@ -82,19 +108,26 @@ static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
     if (IS_PRIMITIVE(fn)) {
         primitive_t *prim = AS_PRIMITIVE(fn);
         return prim->fn(vm, env, args);
+    } else if (IS_FUNCTION(fn)) {
+        function_t *func = AS_FUNCTION(fn);
+        value_t eargs = eval_list(vm, env, args);
+        value_t params = func->params;
+        value_t body = func->body;
+        env_t *new_env = env_push(vm, func->env, params, eargs);
+        return begin(vm, new_env, body);
     }
 
-    fprintf(stderr, "Error: Cannot apply something else than a primitive\n");
+    fprintf(stderr, "Error: Cannot apply something else than a primitive or a function\n");
     return NIL_VAL;
 }
 
 // TODO: this is a mess...
 static value_t find(env_t *env, symbol_t *sym) {
     for (env_t *e = env; e != NULL; e = e->up) {
-        if (IS_NIL(env->variables)) {
+        if (IS_NIL(e->variables)) {
             return NIL_VAL;
         }
-        cons_t *vars = AS_CONS(env->variables);
+        cons_t *vars = AS_CONS(e->variables);
         while (true) {
             cons_t *pair = AS_CONS(vars->car);
             symbol_t *key = AS_SYMBOL(pair->car);
@@ -137,7 +170,7 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list) {
 }
 
 value_t eval(vm_t *vm, env_t *env, value_t val) {
-    if (!IS_PTR(val) || IS_STRING(val) || IS_PRIMITIVE(val)) {
+    if (!IS_PTR(val) || IS_STRING(val) || IS_PRIMITIVE(val) || IS_FUNCTION(val)) {
         return val;
     } else if (IS_SYMBOL(val)) {
         symbol_t *sym = AS_SYMBOL(val);
@@ -146,7 +179,7 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
         cons_t *cons = AS_CONS(val);
         value_t fn = eval(vm, env, cons->car);
         value_t args = cons->cdr;
-        if (!IS_PRIMITIVE(fn)) {
+        if (!IS_PRIMITIVE(fn) && !IS_FUNCTION(fn)) {
             fprintf(stderr, "Error: Car of a cons must be a function in eval\n");
         }
         return apply(vm, env, fn, args);
