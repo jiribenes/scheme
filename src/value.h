@@ -13,7 +13,8 @@ typedef uint64_t value_t;
 typedef enum {
     T_CONS,
     T_STRING,
-    T_SYMBOL
+    T_SYMBOL,
+    T_PRIMITIVE
 } ptrvalue_type_t;
 
 // ptrvalue is a heap allocated object
@@ -47,6 +48,16 @@ typedef struct _symbol_t{
     // TODO: couldn't this be const/ regular char*?
     char name[];
 } symbol_t;
+
+// A primitive (builtin) function C type
+typedef value_t (*primitive_fn) (vm_t *vm, value_t args, value_t env);
+
+typedef struct _primitive {
+    ptrvalue_t p;
+
+    primitive_fn *fn;
+} primitive_t;
+
 
 // 1--------------------------------------------------------------- 
 #define SIGN_BIT ((uint64_t) 1 << 63)
@@ -86,6 +97,7 @@ typedef struct _symbol_t{
 #define IS_CONS(val) (val_is_ptr(val, T_CONS))
 #define IS_STRING(val) (val_is_ptr(val, T_STRING))
 #define IS_SYMBOL(val) (val_is_ptr(val, T_SYMBOL))
+#define IS_PRIMITIVE(val) (val_is_ptr(val, T_PRIMITIVE))
 
 // C value -> value
 #define BOOL_VAL(b) (b ? TRUE_VAL : FALSE_VAL)
@@ -102,6 +114,7 @@ typedef struct _symbol_t{
 #define AS_CONS(val) ((cons_t*) AS_PTR(val))
 #define AS_STRING(val) ((string_t*) AS_PTR(val))
 #define AS_SYMBOL(val) ((symbol_t*) AS_PTR(val))
+#define AS_PRIMITIVE(val) ((primitive_t*) AS_PTR(val))
 
 // GC (memory management) functions
 
@@ -110,6 +123,7 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr);
 cons_t *cons_new(vm_t *vm);
 string_t *string_new(vm_t *vm, const char *text, size_t len);
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len);
+primitive_t *primitive_new(vm_t *vm, primitive_fn *fn);
 
 symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len);
 value_t cons_fn(vm_t *vm, value_t a, value_t b);

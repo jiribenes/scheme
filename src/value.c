@@ -16,7 +16,9 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_CONS) { //TODO: is this a good idea?
         vm_realloc(vm, ptr, 0, 0);
-    }  else if (ptr->type == T_SYMBOL) {
+    } else if (ptr->type == T_SYMBOL) {
+        vm_realloc(vm, ptr, 0, 0);
+    } else if (ptr->type == T_PRIMITIVE) {
         vm_realloc(vm, ptr, 0, 0);
     }
 }
@@ -120,6 +122,16 @@ symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
     memcpy(sym->name, name, len);
 
     return sym;
+}
+
+primitive_t *primitive_new(vm_t *vm, primitive_fn *fn) {
+    primitive_t *prim = (primitive_t*) vm_realloc(vm, NULL, 0, sizeof(primitive_t));
+
+    ptr_init(vm, &prim->p, T_PRIMITIVE);
+
+    prim->fn = fn;
+
+    return prim;
 }
 
 symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len) {

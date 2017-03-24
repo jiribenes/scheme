@@ -67,6 +67,8 @@ void write(FILE *f, value_t val) {
         } else if (IS_SYMBOL(val)) {
             symbol_t *sym = AS_SYMBOL(val);
             fprintf(f, "%s", sym->name);
+        } else if (IS_PRIMITIVE(val)) {
+            fprintf(f, "<primitive>");
         }
     }
 }
