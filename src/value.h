@@ -50,15 +50,6 @@ typedef struct _symbol_t{
     char name[];
 } symbol_t;
 
-// A primitive (builtin) function C type
-typedef value_t (*primitive_fn) (vm_t *vm, value_t args, value_t env);
-
-typedef struct {
-    ptrvalue_t p;
-
-    primitive_fn *fn;
-} primitive_t;
-
 // Environment frame
 typedef struct _env_t {
     ptrvalue_t p;
@@ -71,6 +62,16 @@ typedef struct _env_t {
     // points to 'upper' env, NULL if none
     struct _env_t *up; 
 } env_t;
+
+// A primitive (builtin) function C type
+typedef value_t (*primitive_fn)(vm_t *vm, env_t *env, value_t args);
+
+typedef struct {
+    ptrvalue_t p;
+
+    primitive_fn fn;
+} primitive_t;
+
 
 // 1--------------------------------------------------------------- 
 #define SIGN_BIT ((uint64_t) 1 << 63)
@@ -137,7 +138,7 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr);
 cons_t *cons_new(vm_t *vm);
 string_t *string_new(vm_t *vm, const char *text, size_t len);
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len);
-primitive_t *primitive_new(vm_t *vm, primitive_fn *fn);
+primitive_t *primitive_new(vm_t *vm, primitive_fn fn);
 env_t *env_new(vm_t *vm, value_t variables, env_t *up);
 
 symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len);

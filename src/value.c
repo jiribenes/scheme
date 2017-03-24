@@ -126,7 +126,7 @@ symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
     return sym;
 }
 
-primitive_t *primitive_new(vm_t *vm, primitive_fn *fn) {
+primitive_t *primitive_new(vm_t *vm, primitive_fn fn) {
     primitive_t *prim = (primitive_t*) vm_realloc(vm, NULL, 0, sizeof(primitive_t));
 
     ptr_init(vm, &prim->p, T_PRIMITIVE);
