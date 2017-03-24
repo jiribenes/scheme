@@ -14,7 +14,8 @@ typedef enum {
     T_CONS,
     T_STRING,
     T_SYMBOL,
-    T_PRIMITIVE
+    T_PRIMITIVE,
+    T_ENV
 } ptrvalue_type_t;
 
 // ptrvalue is a heap allocated object
@@ -52,12 +53,23 @@ typedef struct _symbol_t{
 // A primitive (builtin) function C type
 typedef value_t (*primitive_fn) (vm_t *vm, value_t args, value_t env);
 
-typedef struct _primitive {
+typedef struct {
     ptrvalue_t p;
 
     primitive_fn *fn;
 } primitive_t;
 
+// Environment frame
+typedef struct _env_t {
+    ptrvalue_t p;
+    
+    // contains variables and their mapping in assoc list
+    // ((var . val) (var2 . val2) ... )
+    cons_t *variables;
+    
+    // points to 'upper' env, NULL if none
+    struct _env_t *up; 
+} env_t;
 
 // 1--------------------------------------------------------------- 
 #define SIGN_BIT ((uint64_t) 1 << 63)
@@ -98,6 +110,7 @@ typedef struct _primitive {
 #define IS_STRING(val) (val_is_ptr(val, T_STRING))
 #define IS_SYMBOL(val) (val_is_ptr(val, T_SYMBOL))
 #define IS_PRIMITIVE(val) (val_is_ptr(val, T_PRIMITIVE))
+#define IS_ENV(val) (val_is_ptr(val, T_ENV))
 
 // C value -> value
 #define BOOL_VAL(b) (b ? TRUE_VAL : FALSE_VAL)
@@ -124,6 +137,7 @@ cons_t *cons_new(vm_t *vm);
 string_t *string_new(vm_t *vm, const char *text, size_t len);
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len);
 primitive_t *primitive_new(vm_t *vm, primitive_fn *fn);
+env_t *env_new(vm_t *vm, cons_t *variables, env_t *up);
 
 symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len);
 value_t cons_fn(vm_t *vm, value_t a, value_t b);

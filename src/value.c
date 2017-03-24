@@ -20,6 +20,8 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_PRIMITIVE) {
         vm_realloc(vm, ptr, 0, 0);
+    } else if (ptr->type == T_ENV) {
+        vm_realloc(vm, ptr, 0, 0);
     }
 }
 
@@ -134,6 +136,22 @@ primitive_t *primitive_new(vm_t *vm, primitive_fn *fn) {
     return prim;
 }
 
+env_t *env_new(vm_t *vm, cons_t *variables, env_t *up) {
+    // I am not very sure about this
+    env_t *env = (env_t*) vm_realloc(vm, NULL, 0, sizeof(env_t));
+
+    ptr_init(vm, &env->p, T_ENV);
+    
+    env->variables = variables;
+    env->up = up;
+
+    return env;
+}
+
+/* *** UTILITY *** */
+
+// This is the proper way to create interned symbols
+// (so that we don't have two symbols that don't eq each other)
 symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len) {
     for (symbol_t *s = vm->symbol_table; s != NULL; s = s->next) {
         if (s->len == len && memcmp(s->name, name, len * sizeof(char)) == 0) {
