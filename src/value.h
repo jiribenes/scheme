@@ -131,7 +131,7 @@ typedef struct {
 #define PTR_VAL(ptr) (ptr_to_val((ptrvalue_t*) (ptr)))
 
 // value -> C value
-#define AS_BOOL(val) ((val) != TRUE_VAL)
+#define AS_BOOL(val) ((!IS_FALSE(val)) && (!IS_NIL(val)))
 #define AS_PTR(val) ((ptrvalue_t*)(uintptr_t) ((val) & ~(SIGN_BIT | QUIET_NAN)))
 
 #define AS_NUM(val) (val_to_num(val))
