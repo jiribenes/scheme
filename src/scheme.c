@@ -191,6 +191,38 @@ static value_t add(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(result);
 }
 
+static value_t multiply(vm_t *vm, env_t *env, value_t args) {
+    double result = 0.0F;
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(eargs) < 2) {
+        fprintf(stderr, "Error: *: not enough args (has %d)\n", cons_len(eargs));
+        test_write(eargs);
+        return NIL_VAL;
+    }
+    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
+        if (!IS_NUM(cons->car)) {
+            fprintf(stderr, "Error: *: car is not a number!\n");
+            return NIL_VAL;
+        }
+        result *= AS_NUM(cons->car);
+        if (IS_NIL(cons->cdr)) {
+            break;
+        }
+    }
+    return NUM_VAL(result);
+}
+
+static value_t eq(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(eargs) != 2) {
+        fprintf(stderr, "Error: eq?: args (has %d) != 2", cons_len(args));
+    }
+    value_t a = AS_CONS(eargs)->car;
+    value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
+    bool result = val_eq(a, b);
+    return BOOL_VAL(result);
+}
+
 static value_t quote(vm_t *vm, env_t *env, value_t args) {
     if (cons_len(args) != 1) {
         fprintf(stderr, "Error: ': args (has %d) != 1\n", cons_len(args));
@@ -268,6 +300,8 @@ int main(void) {
     variable_add(vm, env, pi_sym, pi);
 
     primitive_add(vm, env, "+", 1, add);
+    primitive_add(vm, env, "*", 1, multiply);
+    primitive_add(vm, env, "eq?", 3, eq);
     primitive_add(vm, env, "quote", 5, quote);
     primitive_add(vm, env, "list", 4, list);
     primitive_add(vm, env, "begin", 5, begin);
