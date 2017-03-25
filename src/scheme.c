@@ -93,6 +93,21 @@ static value_t subtract(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(result);
 }
 
+static value_t gt(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(eargs) != 2) {
+        fprintf(stderr, "Error: >: args (has %d) != 2", cons_len(args));
+    }
+
+    value_t a = AS_CONS(eargs)->car;
+    value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
+
+    if (!IS_NUM(a) || !IS_NUM(b)) {
+        fprintf(stderr, "Error: >: arg is not a number!\n");
+    }
+    return BOOL_VAL(AS_NUM(a) > AS_NUM(b));
+}
+
 static value_t eq(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) != 2) {
@@ -271,6 +286,26 @@ static value_t builtin_or(vm_t *vm, env_t *env, value_t args) {
     return BOOL_VAL(result);    
 }
 
+static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(eargs) < 2) {
+        fprintf(stderr, "Error: and: not enough args (has %d)\n", cons_len(eargs));
+        return NIL_VAL;
+    }
+    bool result = AS_BOOL(AS_CONS(eargs)->car);
+    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
+        if (!IS_BOOL(cons->car)) {
+            fprintf(stderr, "Error: and: car is not a bool!\n");
+            return NIL_VAL;
+        }
+        result &= AS_BOOL(cons->car);
+        if (IS_NIL(cons->cdr)) {
+            break;
+        }
+    }
+    return BOOL_VAL(result);    
+}
+
 /* *** */
 
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
@@ -299,6 +334,7 @@ int main(int argc, char* argv[]) {
     primitive_add(vm, env, "+", 1, add);
     primitive_add(vm, env, "*", 1, multiply);
     primitive_add(vm, env, "-", 1, subtract);
+    primitive_add(vm, env, ">", 1, gt);
     primitive_add(vm, env, "eq?", 3, eq);
     primitive_add(vm, env, "equal?", 6, equal);
     primitive_add(vm, env, "quote", 5, quote);
@@ -313,6 +349,7 @@ int main(int argc, char* argv[]) {
     primitive_add(vm, env, "cdr", 3, builtin_cdr);
     primitive_add(vm, env, "write", 5, builtin_write);
     primitive_add(vm, env, "or", 2, builtin_or);
+    primitive_add(vm, env, "and", 3, builtin_and);
 
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
