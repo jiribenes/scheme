@@ -27,12 +27,14 @@ typedef struct _ptrvalue {
     struct _ptrvalue *next;
 } ptrvalue_t;
 
+// a cons cell
 typedef struct {
     ptrvalue_t p;
 
     value_t car, cdr;
 } cons_t;
 
+// a basic string type
 typedef struct {
     ptrvalue_t p;
 
@@ -41,7 +43,9 @@ typedef struct {
     char value[];
 } string_t;
 
-typedef struct _symbol_t{ 
+// a basic symbol type with a pointer
+// to the next one in the symbol_table
+typedef struct _symbol_t {
     ptrvalue_t p;
 
     uint32_t len;
@@ -146,7 +150,7 @@ typedef struct {
 // equality
 #define IS_EQ(a,b) (val_eq((a),(b)))
 
-// GC (memory management) functions
+/* *** Memory management functions *** */
 
 void ptr_free(vm_t *vm, ptrvalue_t *ptr);
 
@@ -157,16 +161,23 @@ primitive_t *primitive_new(vm_t *vm, primitive_fn fn);
 function_t *function_new(vm_t *vm, env_t *env, value_t params, value_t body);
 env_t *env_new(vm_t *vm, value_t variables, env_t *up);
 
+// Makes sure that there are no duplicit symbols
+// => we can compare symbols using pointer comparisons
 symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len);
+
+// Creates a new cons cell and puts a as car and b as cdr
 value_t cons_fn(vm_t *vm, value_t a, value_t b);
 
+// Gets the length of a cons cell
 uint32_t cons_len(value_t val);
 
+/* *** conversion utilities *** */
+
+// a conversion type from double to uint64_t
 typedef union {
 	uint64_t bits;
 	double num;
 } value_conv_t;
-// a conversion type from double to uint64_t
 
 static inline double val_to_num(value_t val) {
     value_conv_t data;
