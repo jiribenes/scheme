@@ -24,7 +24,7 @@ vm_t *vm_new() {
     memset(vm, 0, sizeof(vm_t));
 
     vm->allocated = 0;
-    vm->gc_threshold = 8192;
+    vm->gc_threshold = 65536;
    
     vm->symbol_table = NULL;
 
@@ -97,11 +97,8 @@ static void mark(value_t val) {
     }
     if (ptr->gcmark) {
         return;
-    }/*
-    fprintf(stdout, "Marking :");
-    write(stdout, val);
-    fprintf(stdout, "\n");
-*/
+    }
+
     ptr->gcmark = true;
 
     if (ptr->type == T_CONS) {
@@ -198,7 +195,7 @@ void gc(vm_t *vm) {
 #ifdef DEBUG
     fprintf(stdout, "GC finished: %zu bytes previously, %zu bytes now!\n", prev_allocated, vm->allocated);
 #endif
-    vm->gc_threshold = vm->allocated * 4;
+    vm->gc_threshold = vm->allocated * 2;
     return;
 }
 
@@ -272,7 +269,6 @@ static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
     return NIL_VAL;
 }
 
-// TODO: this is a mess...
 static value_t find(env_t *env, symbol_t *sym) {
     for (env_t *e = env; e != NULL; e = e->up) {
         if (IS_NIL(e->variables)) {
