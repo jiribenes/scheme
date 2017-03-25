@@ -22,7 +22,7 @@ vm_t *vm_new() {
     memset(vm, 0, sizeof(vm_t));
 
     vm->allocated = 0;
-    vm->gc_threshold = 4096;
+    vm->gc_threshold = 8192;
    
     vm->symbol_table = NULL;
 
@@ -83,6 +83,9 @@ static void mark(value_t val) {
         return;
     }
     ptrvalue_t *ptr = AS_PTR(val);
+    if (ptr == NULL) {
+        fprintf(stderr, "Error: marking a NULL\n");
+    }
     if (ptr->gcmark) {
         return;
     }/*
@@ -183,7 +186,7 @@ void gc(vm_t *vm) {
 #ifdef DEBUG
     fprintf(stdout, "GC finished: %zu bytes previously, %zu bytes now!\n", prev_allocated, vm->allocated);
 #endif
-    vm->gc_threshold = vm->allocated * 2;
+    vm->gc_threshold = vm->allocated * 4;
     return;
 }
 

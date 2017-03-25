@@ -52,6 +52,7 @@ static void eat_whitespace(reader_t* reader) {
         while (*reader->cur != '\n' && *reader->cur != '\0') {
             next_char(reader);
         }
+        next_char(reader);
     }
     
     if ((*reader->cur) == '\0') {
@@ -167,6 +168,8 @@ static void read_symbol(reader_t *reader) {
 }
 
 static void read1(reader_t *reader) {
+    eat_whitespace(reader);
+
     if (reader->toktype == TOK_EOF) {
         return;
     } else if (reader->toktype == TOK_LPAREN) {
@@ -207,6 +210,7 @@ static void read1(reader_t *reader) {
 }
 
 static void read_list(reader_t *reader) {
+    eat_whitespace(reader);
     next_token(reader);
     if (reader->toktype == TOK_RPAREN) {
         next_char(reader);
@@ -221,6 +225,7 @@ static void read_list(reader_t *reader) {
     }
    
     read1(reader);
+    eat_whitespace(reader);
     value_t val = reader->tokval;
 
     cons_t *head, *tail;

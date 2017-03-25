@@ -19,8 +19,8 @@ void repl(vm_t *vm, env_t *env) {
     while (true) {
         fprintf(stdout, ">> ");
 
-        if (fgets(buf, 512, stdin) == NULL) {
-            break;
+        while (fgets(buf, 512, stdin)) {
+            
         }
         value_t val = read_source(vm, buf);
         
@@ -127,8 +127,9 @@ static value_t list(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t define(vm_t *vm, env_t *env, value_t args) {
-    if (!IS_CONS(args) || cons_len(args) != 2) {
+    if (cons_len(args) != 2) {
         fprintf(stderr, "Error: define: is wrong (define <name> <body>) or (define (<name> <params> ...) <body>\n");
+        write(stdout, args);
     }
     cons_t *rest = AS_CONS(args);
     if (IS_SYMBOL(rest->car)) {
@@ -153,7 +154,7 @@ static value_t define(vm_t *vm, env_t *env, value_t args) {
 
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
     if (!IS_CONS(args) || cons_len(args) != 2 || !(IS_CONS(AS_CONS(args)->car) || IS_NIL(AS_CONS(args)->car))) {
-        fprintf(stderr, "Error: lambda: is wrong (lambda (<params>) <body>)\n"); 
+        fprintf(stderr, "Error: lambda: is wrong (lambda (<params>) <body>), given args = %d\n", cons_len(args)); 
     }
     
     if (IS_NIL(AS_CONS(args)->car)) { // no parameters
@@ -261,7 +262,7 @@ static value_t builtin_env(vm_t *vm, env_t *env, value_t args) {
 }
 
 
-int main(void) {
+int main(int argc, char* argv[]) {
     vm_t *vm = vm_new();
     env_t *env = env_new(vm, NIL_VAL, NULL);
     
@@ -289,7 +290,30 @@ int main(void) {
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
 
-    repl(vm, env);
+    if (argc == 1) repl(vm, env);
+    if (argc == 2) { // This is quite unsafe, please don't break it...
+        FILE *f = fopen(argv[1], "rb");
+        fseek(f, 0, SEEK_END);
+        long fsize = ftell(f);
+        fseek(f, 0, SEEK_SET);
+
+        char *string = malloc(fsize + 1);
+        fread(string, fsize, 1, f);
+        fclose(f);
+        string[fsize] = '\0';
+
+        value_t val = read_source(vm, string);
+        fprintf(stdout, "I read in: ");
+        write(stdout, val);
+        fprintf(stdout, "\n");
+        free(string);
+
+        value_t result = eval(vm, vm->env, val); 
+
+        fprintf(stdout, "Result: "); 
+        test_write(result);
+        fprintf(stdout, "\n");
+    }
 
     vm_free(vm);
     return 0;
