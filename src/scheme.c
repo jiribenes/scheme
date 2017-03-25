@@ -312,9 +312,11 @@ static value_t file_read(vm_t *vm, const char *filename) {
     string[fsize] = '\0';
 
     value_t val = read_source(vm, string);
+#ifdef DEBUG
     fprintf(stdout, "I read in: ");
     write(stdout, val);
     fprintf(stdout, "\n");
+#endif
     free(string);
     return val; 
 }

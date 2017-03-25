@@ -1,6 +1,6 @@
 # Scheme
 
-This project is a small implementation of an opinionated Scheme Lisp dialect.
+This project is a small implementation of an opinionated Scheme Lisp dialect with cca ~1800 LOC and ~800 semicolons.
 
 ## The REPL
 
@@ -84,11 +84,20 @@ You can call a function like a primitive:
 (square 5) ; => 25 
 ```
 
+### Standard library
+
+The standard library is located in ```src/stdlib.scm```. It is loaded automatically and provides the following functions: ```caar, cadr, cdar, cddr, pair?, null?, bool?, not, map``` and following variables: ```true, null, false```.
+
+Example:
+```scheme
+(map (lambda (x) (* x x)) (list 1 2 3 4)) ; # => (1 4 9 16)
+```
+
 ### Other constructs
 
 ```begin``` evaluates and executes all its arguments and returns the last result.
 
-```;``` starts a single line comment.
+```;``` starts a single line comment that ends with newline.
 
 ### Debug primitives
 
