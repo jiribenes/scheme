@@ -19,12 +19,12 @@ void repl(vm_t *vm, env_t *env) {
     while (true) {
         fprintf(stdout, ">> ");
 
-        while (fgets(buf, 512, stdin)) {
-            
+        while (fgets(buf, 512, stdin) == NULL) {
+            break;
         }
         value_t val = read_source(vm, buf);
         
-        value_t result = eval(vm, vm->env, val); 
+        value_t result = eval(vm, env, val); 
  
         test_write(result);
     }
@@ -372,7 +372,7 @@ int main(int argc, char* argv[]) {
         fprintf(stdout, "\n");
         free(string);
 
-        value_t result = eval(vm, vm->env, val); 
+        value_t result = eval(vm, env, val); 
 
         fprintf(stdout, "Result: "); 
         test_write(result);

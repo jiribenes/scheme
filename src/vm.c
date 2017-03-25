@@ -7,12 +7,14 @@
 #include "value.h"
 #include "write.h"
 
+#define MAX_ALLOCATED 1024*1024*16
+
 static void *scm_realloc(void *ptr, size_t size) {
     if (size == 0) {
         free(ptr);
         return NULL;
     }
-
+    
     return realloc(ptr, size);
 }
 
@@ -52,6 +54,13 @@ void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size) {
     if (new_size > 0 && vm->allocated > vm->gc_threshold) {
         gc(vm);
     }
+    
+    if (vm->allocated > MAX_ALLOCATED) {
+        fprintf(stderr, "Error: Allocated more than %d! (MAX_ALLOCATED)\n", MAX_ALLOCATED);
+        vm->allocated -= new_size;
+        return NULL;    
+    }
+
 
     return scm_realloc(ptr, new_size);
 }
@@ -165,6 +174,9 @@ static size_t vm_size(vm_t *vm, value_t val) {
 
 // A very basic mark and sweep GC
 void gc(vm_t *vm) {
+#ifdef NOVM
+    return;
+#endif
 #ifdef DEBUG
     fprintf(stdout, "GC started\n");
     size_t prev_allocated = vm->allocated;
@@ -205,10 +217,12 @@ env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals) {
         fprintf(stderr, "Error: Number of arguments doesn't match!\n");
     }
     value_t alist = NIL_VAL;
-    while (!IS_NIL(vars)) {
-        cons_t *var = AS_CONS(vars);
-        cons_t *val = AS_CONS(vals);
-        
+    cons_t *var, *val;
+    if (!IS_NIL(vars)) {
+        var = AS_CONS(vars);
+        val = AS_CONS(vals);
+    } 
+    while (!IS_NIL(var->car)) {
         value_t pair = cons_fn(vm, var->car, val->car);
         value_t temp = cons_fn(vm, pair, alist);
         alist = temp;
@@ -218,9 +232,8 @@ env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals) {
         }
         var = AS_CONS(var->cdr);
         val = AS_CONS(val->cdr);
- 
     }
-    env_t *new_env = env_new(vm, alist, vm->env);
+    env_t *new_env = env_new(vm, alist, env);
     return new_env;
 }
 
@@ -314,7 +327,8 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
         return find(env, sym);
     } else if (IS_CONS(val)) {
         cons_t *cons = AS_CONS(val);
-        value_t fn = eval(vm, env, cons->car);
+        value_t fn = cons->car;
+        fn = eval(vm, env, cons->car);
         value_t args = cons->cdr;
         if (!IS_PRIMITIVE(fn) && !IS_FUNCTION(fn)) {
             fprintf(stderr, "Error: Car of a cons must be a function in eval\n");
