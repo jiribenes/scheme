@@ -45,6 +45,7 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
 }
 
 /* *** HASHING *** */
+/* currently mostly unused */
 
 /* Uses the pretty good FNV-1a hash, see 
  * http://www.isthe.com/chongo/tech/comp/fnv/index.html */
@@ -52,7 +53,7 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
 const uint32_t HASH_PRIME = 16777619;
 const uint32_t HASH_SEED = 2166136261u;
 
-
+/* UNUSED
 static uint32_t hash_ptr(ptrvalue_t *ptr) {
     if (ptr->type == T_STRING) {
         return ((string_t*) ptr)->hash;
@@ -63,7 +64,7 @@ static uint32_t hash_ptr(ptrvalue_t *ptr) {
 
 inline static uint32_t hash_octet(uint8_t octet, uint32_t hash) {
     return (hash ^ octet) * 16777619;
-}
+}*/
 
 static void hash_string(string_t *str) {
     uint32_t hash = HASH_SEED;
@@ -88,7 +89,7 @@ static inline uint32_t hash_number(uint64_t num) {
 
     return hash;
 }
-
+/* UNUSED
 static uint32_t hash_value(value_t val) {
     if (IS_PTR(val)) {
         return hash_ptr(AS_PTR(val));
@@ -97,7 +98,7 @@ static uint32_t hash_value(value_t val) {
         data.bits = val;
         return hash_number(data.bits);
     } 
-}
+}*/
 /* *** ptrvalue creating *** */
 cons_t *cons_new(vm_t *vm) {
     cons_t *cons = (cons_t*) vm_realloc(vm, NULL, 0, sizeof(cons_t));
