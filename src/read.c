@@ -191,7 +191,7 @@ static void read1(reader_t *reader) {
             next_char(reader);
             reader->tokval = FALSE_VAL;
         } else {
-            fprintf(stderr, "Invalid token: #t is only symbol that can begin with #\n");
+            fprintf(stderr, "Invalid token: #t and #f are the only symbols that can begin with #\n");
         }
     } else if (reader->toktype == TOK_RPAREN) {
         fprintf(stderr, "Unexpected ')'\n");
