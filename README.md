@@ -41,9 +41,17 @@ Possible values are:
 
 ```equal?``` returns ```#t``` iff the two given objects are same in value.
 
+```>``` returns ```#t``` iff the first given number is greater than the second.
+
+```or, and``` are the predefined boolean operators.
+
+```cons?``` returns ```#t``` if the given argument is a cons cell or ```()```
+
 ```+, -, *``` are the predefined numerical operators.
 
 ```cons``` takes two objects and returns a new cons cell with first argument being the ```car``` and the second the ```cdr```.
+
+```list``` makes a proper list out of its arguments.
 
 ```car, cdr``` are the accessors for the cons cells.
 
@@ -71,7 +79,21 @@ If you want to name your function, you can use ```define``` directly or indirect
 (define (square x) (+ x x))
 ```
 
+You can call a function like a primitive:
+```scheme
+(square 5) ; => 25 
+```
+
 ### Other constructs
 
 ```begin``` evaluates and executes all its arguments and returns the last result.
+
 ```;``` starts a single line comment.
+
+### Debug primitives
+
+These primitives are for testing only. Please, do not use them, if you don't know what you're doing.
+
+```gc``` triggers the garbage collector.
+
+```env``` writes to stdout the current environment.
