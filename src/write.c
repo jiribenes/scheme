@@ -71,6 +71,13 @@ void write(FILE *f, value_t val) {
             fprintf(f, "<primitive>");
         } else if (IS_FUNCTION(val)) {
             fprintf(f, "<function>");
+        } else if (IS_ENV(val)) {
+            fprintf(f, "<environment> containing: ");
+            write(f, ((env_t*) AS_PTR(val))->variables);
+        } else {
+            fprintf(f, "<unknown ptrvalue>");
         }
+    } else {
+        fprintf(f, "<unknown value>");
     }
 }
