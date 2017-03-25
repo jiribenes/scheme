@@ -2,6 +2,7 @@
 #include <stdlib.h> // strtod
 
 #include "value.h"
+#include "vm.h"
 #include "read.h"
 
 inline static bool is_space(char c) {
@@ -265,16 +266,21 @@ value_t read_source(vm_t *vm, const char *source) {
     reader.line = 1;
     reader.tokval = NIL_VAL;
     reader.toktype = TOK_NONE;
+
+    vm->reader = &reader;
+
     /* new here */
     next_token(&reader);
     
     symbol_t *eof = symbol_intern(vm, "eof", 3);
     
     if (reader.toktype == TOK_EOF) {
+        vm->curval = PTR_VAL(eof);
         reader.tokval = PTR_VAL(eof);
     } else {
         read1(&reader);
     }
     
+    vm->curval = reader.tokval;
     return reader.tokval;
 }

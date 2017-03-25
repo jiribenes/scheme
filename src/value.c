@@ -3,6 +3,7 @@
 
 #include "vm.h" // vm_t, vm_realloc
 #include "value.h" 
+#include "write.h"
 
 static void ptr_init(vm_t *vm, ptrvalue_t *ptr, ptrvalue_type_t type) {
     ptr->type = type;
@@ -17,6 +18,22 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
     } else if (ptr->type == T_CONS) { //TODO: is this a good idea?
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_SYMBOL) {
+        symbol_t *ptr_sym = (symbol_t*) ptr;
+        symbol_t *prev = NULL;
+        symbol_t *s = vm->symbol_table;
+        while (s != NULL) {
+            if (s->len == ptr_sym->len && memcmp(s->name, ptr_sym->name, s->len * sizeof(char)) == 0) {
+                if (prev != NULL) {
+                    prev->next = s->next;
+                    vm->symbol_table = prev;
+                } else {
+                    vm->symbol_table = s->next;
+                }
+                break;
+            }
+            prev = s;
+            s = s->next;
+        }
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_PRIMITIVE) {
         vm_realloc(vm, ptr, 0, 0);
@@ -157,6 +174,8 @@ env_t *env_new(vm_t *vm, value_t variables, env_t *up) {
     
     env->variables = variables;
     env->up = up;
+
+    vm->env = env;
 
     return env;
 }

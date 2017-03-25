@@ -153,15 +153,8 @@ void repl(vm_t *vm, env_t *env) {
             break;
         }
         value_t val = read_source(vm, buf);
-
-        /*fprintf(stdout, "symbol table:\n");
-        for (symbol_t *s = vm->symbol_table; s != NULL; s = s->next) {
-            test_write(PTR_VAL(s));
-        }*/
-        /*fprintf(stdout, "env: ");
-        test_write(env->variables);*/
         
-        value_t result = eval(vm, env, val); 
+        value_t result = eval(vm, vm->env, val); 
         fprintf(stdout, "Your result:");
  
         test_write(result);
