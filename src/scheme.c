@@ -6,32 +6,6 @@
 #include "read.h"
 #include "vm.h"
 
-// write to stdout with newline
-static void test_write(value_t val) {
-    write(stdout, val);
-    puts("");
-}
-
-void repl(vm_t *vm, env_t *env) {
-    fprintf(stdout, "|Scheme 0.0 - REPL|\n|Use ^D to exit!:)|\n");
-    char buf[512];
-
-    while (true) {
-        fprintf(stdout, ">> ");
-
-        while (fgets(buf, 512, stdin) == NULL) {
-            break;
-        }
-        value_t val = read_source(vm, buf);
-        
-        value_t result = eval(vm, env, val); 
- 
-        test_write(result);
-    }
-    
-    fprintf(stdout, "\nQuiting!\n");
-}
-
 static value_t add(vm_t *vm, env_t *env, value_t args) {
     double result = 0.0F;
     value_t eargs = eval_list(vm, env, args);
@@ -316,15 +290,41 @@ static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_env(vm_t *vm, env_t *env, value_t args) {
     env_t *e = env;
     while (e != NULL) {
-        test_write(e->variables);
+        write(stdout, e->variables);
+        fprintf(stdout, "\n");
         e = e->up;
     }
     return NIL_VAL;
 }
 
+/* *** */
 
-int main(int argc, char* argv[]) {
-    vm_t *vm = vm_new();
+// This function is reaaaally unsafe. Please don't break it.
+static value_t file_read(vm_t *vm, const char *filename) {
+    FILE *f = fopen(filename, "rb");
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    char *string = malloc(fsize + 1);
+    fread(string, fsize, 1, f);
+    fclose(f);
+    string[fsize] = '\0';
+
+    value_t val = read_source(vm, string);
+    fprintf(stdout, "I read in: ");
+    write(stdout, val);
+    fprintf(stdout, "\n");
+    free(string);
+    return val; 
+}
+
+static void stdlib_load(vm_t *vm, env_t *env, char *filename) {
+    value_t val = file_read(vm, filename);
+    eval(vm, env, val);
+}
+
+static env_t *env_default(vm_t *vm) {
     env_t *env = env_new(vm, NIL_VAL, NULL);
     
     symbol_t *pi_sym = symbol_intern(vm, "pi", 2);
@@ -354,28 +354,43 @@ int main(int argc, char* argv[]) {
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
 
-    if (argc == 1) repl(vm, env);
-    if (argc == 2) { // This is quite unsafe, please don't break it...
-        FILE *f = fopen(argv[1], "rb");
-        fseek(f, 0, SEEK_END);
-        long fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
+    stdlib_load(vm, env, "src/stdlib.scm");
 
-        char *string = malloc(fsize + 1);
-        fread(string, fsize, 1, f);
-        fclose(f);
-        string[fsize] = '\0';
+    return env; 
+}
 
-        value_t val = read_source(vm, string);
-        fprintf(stdout, "I read in: ");
-        write(stdout, val);
+void repl(vm_t *vm, env_t *env) {
+    fprintf(stdout, "|Scheme 0.1.0 - REPL|\n|Use Ctrl+D to exit!|\n");
+    char buf[512];
+
+    while (true) {
+        fprintf(stdout, ">> ");
+
+        while (fgets(buf, 512, stdin) == NULL) {
+            break;
+        }
+        value_t val = read_source(vm, buf);
+        
+        value_t result = eval(vm, env, val); 
+ 
+        write(stdout, result);
         fprintf(stdout, "\n");
-        free(string);
+    }
+    
+    fprintf(stdout, "Quiting!\n");
+}
 
+int main(int argc, char* argv[]) {
+    vm_t *vm = vm_new();
+    env_t *env = env_default(vm);
+
+    if (argc == 1) repl(vm, env);
+    if (argc == 2) {
+        value_t val = file_read(vm, argv[1]);
         value_t result = eval(vm, env, val); 
 
         fprintf(stdout, "Result: "); 
-        test_write(result);
+        write(stdout, result);
         fprintf(stdout, "\n");
     }
 
