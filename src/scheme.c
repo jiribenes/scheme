@@ -358,10 +358,51 @@ static value_t builtin_is_cons(vm_t *vm, env_t *env, value_t args) {
     return BOOL_VAL(IS_NIL(a) || IS_CONS(a));
 }
 
+static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(eargs) != 1) {
+        fprintf(stderr, "Error: car: args (has %d) != 1", cons_len(args));
+    }
+    value_t a = AS_CONS(eargs)->car;
+    if (!IS_CONS(a)) {
+        fprintf(stderr, "Error: car: arg is not a cons");
+    }
+    return AS_CONS(a)->car;
+}
+
+static value_t builtin_cdr(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(eargs) != 1) {
+        fprintf(stderr, "Error: cdr: args (has %d) != 1", cons_len(args));
+    }
+    value_t a = AS_CONS(eargs)->car;
+    if (!IS_CONS(a)) {
+        fprintf(stderr, "Error: cdr: arg is not a cons");
+    }
+    return AS_CONS(a)->cdr;
+}
+
+/* *** */
+
+static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
+    gc(vm);
+    return NIL_VAL;
+}
+
+static value_t builtin_env(vm_t *vm, env_t *env, value_t args) {
+    env_t *e = env;
+    while (e != NULL) {
+        test_write(e->variables);
+        e = e->up;
+    }
+    return NIL_VAL;
+}
+
+
 int main(void) {
     vm_t *vm = vm_new();
     env_t *env = env_new(vm, NIL_VAL, NULL);
-
+    
     //test(vm);
 
     //test2(vm);
@@ -383,6 +424,11 @@ int main(void) {
     primitive_add(vm, env, "if", 2, builtin_if);
     primitive_add(vm, env, "cons", 4, builtin_cons);
     primitive_add(vm, env, "cons?", 5, builtin_is_cons);
+    primitive_add(vm, env, "car", 3, builtin_car);
+    primitive_add(vm, env, "cdr", 3, builtin_cdr);
+
+    primitive_add(vm, env, "gc", 2, builtin_gc);
+    primitive_add(vm, env, "env", 3, builtin_env);
 
     repl(vm, env);
 
