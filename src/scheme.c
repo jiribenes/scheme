@@ -155,7 +155,6 @@ void repl(vm_t *vm, env_t *env) {
         value_t val = read_source(vm, buf);
         
         value_t result = eval(vm, vm->env, val); 
-        fprintf(stdout, "Your result:");
  
         test_write(result);
     }
@@ -357,9 +356,6 @@ static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
         fprintf(stderr, "Error: car: args (has %d) != 1", cons_len(args));
     }
     value_t a = AS_CONS(eargs)->car;
-    if (!IS_CONS(a)) {
-        fprintf(stderr, "Error: car: arg is not a cons");
-    }
     return AS_CONS(a)->car;
 }
 
@@ -369,10 +365,13 @@ static value_t builtin_cdr(vm_t *vm, env_t *env, value_t args) {
         fprintf(stderr, "Error: cdr: args (has %d) != 1", cons_len(args));
     }
     value_t a = AS_CONS(eargs)->car;
-    if (!IS_CONS(a)) {
-        fprintf(stderr, "Error: cdr: arg is not a cons");
-    }
     return AS_CONS(a)->cdr;
+}
+
+static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
+    write(stdout, eval_list(vm, env, args));
+    fprintf(stdout, "\n");
+    return NIL_VAL;
 }
 
 /* *** */
@@ -419,6 +418,7 @@ int main(void) {
     primitive_add(vm, env, "cons?", 5, builtin_is_cons);
     primitive_add(vm, env, "car", 3, builtin_car);
     primitive_add(vm, env, "cdr", 3, builtin_cdr);
+    primitive_add(vm, env, "write", 5, builtin_write);
 
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
