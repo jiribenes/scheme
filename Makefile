@@ -4,7 +4,7 @@ C_OPTIONS = -std=c99
 C_LIBS = -lm
 
 DEBUG_OPTIONS = -O0 -DDEBUG -g -Wno-unused-parameter -Wno-unused-function
-RELEASE_OPTIONS = -O3
+RELEASE_OPTIONS = -O3 -Wno-unused-parameter
 
 SOURCES := $(wildcard src/*.c)
 
