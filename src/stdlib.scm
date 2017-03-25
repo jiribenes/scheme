@@ -9,6 +9,8 @@
     (define true #t)
     (define null ())
     (define false #f)
+    (define (null? x) 
+        (eq? x ()))
 
     (define (bool? x)
         (if (eq? x #f)
@@ -20,7 +22,7 @@
     (define (not x)
         (if x #f #t))
 
-    (define (map f lst)
+    (define (map fn lst)
         (if (null? lst)
             ()
             (cons (fn (car lst))
