@@ -242,6 +242,17 @@ static value_t eq(vm_t *vm, env_t *env, value_t args) {
     return BOOL_VAL(result);
 }
 
+static value_t equal(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(eargs) != 2) {
+        fprintf(stderr, "Error: equal?: args (has %d) != 2", cons_len(args));
+    }
+    value_t a = AS_CONS(eargs)->car;
+    value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
+    bool result = val_equal(a, b);
+    return BOOL_VAL(result);    
+}
+
 static value_t quote(vm_t *vm, env_t *env, value_t args) {
     if (cons_len(args) != 1) {
         fprintf(stderr, "Error: ': args (has %d) != 1\n", cons_len(args));
@@ -326,6 +337,27 @@ static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
     return begin(vm, env, otherwise); 
 }
 
+static value_t builtin_cons(vm_t *vm, env_t *env, value_t args) {
+    if (cons_len(args) != 2) {
+        fprintf(stderr, "Error: eq?: args (has %d) != 2", cons_len(args));
+    }
+
+    value_t car = eval(vm, env, AS_CONS(args)->car);
+    value_t cdr = eval(vm, env, AS_CONS(AS_CONS(args)->cdr)->car);
+
+    value_t cons = cons_fn(vm, car, cdr);
+    return cons;
+}
+
+static value_t builtin_is_cons(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    if (cons_len(eargs) != 1) {
+        fprintf(stderr, "Error: cons?: args (has %d) != 1", cons_len(args));
+    }
+    value_t a = AS_CONS(eargs)->car;
+    return BOOL_VAL(IS_NIL(a) || IS_CONS(a));
+}
+
 int main(void) {
     vm_t *vm = vm_new();
     env_t *env = env_new(vm, NIL_VAL, NULL);
@@ -342,12 +374,15 @@ int main(void) {
     primitive_add(vm, env, "*", 1, multiply);
     primitive_add(vm, env, "-", 1, subtract);
     primitive_add(vm, env, "eq?", 3, eq);
+    primitive_add(vm, env, "equal?", 6, equal);
     primitive_add(vm, env, "quote", 5, quote);
     primitive_add(vm, env, "list", 4, list);
     primitive_add(vm, env, "begin", 5, begin);
     primitive_add(vm, env, "define", 6, define);
     primitive_add(vm, env, "lambda", 6, lambda);
     primitive_add(vm, env, "if", 2, builtin_if);
+    primitive_add(vm, env, "cons", 4, builtin_cons);
+    primitive_add(vm, env, "cons?", 5, builtin_is_cons);
 
     repl(vm, env);
 
