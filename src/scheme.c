@@ -362,7 +362,7 @@ static env_t *env_default(vm_t *vm) {
 }
 
 void repl(vm_t *vm, env_t *env) {
-    fprintf(stdout, "|Scheme 0.1.0 - REPL|\n|Use Ctrl+D to exit!|\n");
+    fprintf(stdout, "|Scheme 0.1.0 - REPL|\n|Use Ctrl+C to exit!|\n");
     char buf[512];
 
     while (true) {
