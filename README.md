@@ -101,7 +101,7 @@ Example:
 
 ### Debug primitives
 
-These primitives are for testing only. Please, do not use them, if you don't know what you're doing.
+These primitives are for testing only when the program is compiled with ```make debug```. Please, do not use them, if you don't know what you're doing.
 
 ```gc``` triggers the garbage collector.
 

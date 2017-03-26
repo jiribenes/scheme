@@ -281,7 +281,7 @@ static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
 }
 
 /* *** */
-
+#ifdef DEBUG
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
     gc(vm);
     return NIL_VAL;
@@ -296,7 +296,7 @@ static value_t builtin_env(vm_t *vm, env_t *env, value_t args) {
     }
     return NIL_VAL;
 }
-
+#endif
 /* *** */
 
 // This function is reaaaally unsafe. Please don't break it.
@@ -352,10 +352,10 @@ static env_t *env_default(vm_t *vm) {
     primitive_add(vm, env, "write", 5, builtin_write);
     primitive_add(vm, env, "or", 2, builtin_or);
     primitive_add(vm, env, "and", 3, builtin_and);
-
+#ifdef DEBUG
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
-
+#endif
     stdlib_load(vm, env, "src/stdlib.scm");
 
     return env; 
