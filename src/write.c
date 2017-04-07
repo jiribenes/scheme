@@ -6,14 +6,14 @@
 static void write_cons(FILE *f, cons_t *cons) {
     fprintf(f, "(");
     cons_t *temp = cons;
-    
+
     if (IS_NIL(temp->car)) {
         fprintf(f, "()"); //write(f, temp->car);
     }
 
     while (!IS_NIL(temp->car)) {
         write(f, temp->car);
-        
+
         if (!IS_NIL(temp->cdr)) {
             fprintf(f, " ");
         } else {
@@ -26,7 +26,7 @@ static void write_cons(FILE *f, cons_t *cons) {
             break;
         } else {
             temp = AS_CONS(temp->cdr);
-        } 
+        }
     }
     fprintf(f, ")");
 }

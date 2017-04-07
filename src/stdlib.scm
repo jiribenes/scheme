@@ -9,7 +9,7 @@
     (define true #t)
     (define null ())
     (define false #f)
-    (define (null? x) 
+    (define (null? x)
         (eq? x ()))
 
     (define (bool? x)

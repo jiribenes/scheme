@@ -20,10 +20,10 @@ inline static bool is_letter(char c) {
 // R5RS without following: . @
 // http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-5.html#%_sec_2.1
 inline static bool is_symbol(char c) {
-    return is_digit(c) || is_letter(c) || 
-        (c == '!') || (c == '$') || (c == '%') || (c == '&') || 
-        (c == '*') || (c == '+') || (c == '-') || (c == ':') || 
-        (c == '<') || (c == '=') || (c == '>') || (c == '?') || 
+    return is_digit(c) || is_letter(c) ||
+        (c == '!') || (c == '$') || (c == '%') || (c == '&') ||
+        (c == '*') || (c == '+') || (c == '-') || (c == ':') ||
+        (c == '<') || (c == '=') || (c == '>') || (c == '?') ||
         (c == '^') || (c == '_') || (c == '~') || (c == '/');
 }
 
@@ -54,7 +54,7 @@ static void eat_whitespace(reader_t* reader) {
         }
         next_char(reader);
     }
-    
+
     if ((*reader->cur) == '\0') {
         reader->toktype = TOK_EOF;
     }
@@ -62,7 +62,7 @@ static void eat_whitespace(reader_t* reader) {
 
 static void next_token(reader_t *reader) {
     eat_whitespace(reader);
-    
+
     if ((*reader->cur) == '(') {
         reader->toktype = TOK_LPAREN;
         reader->tokstart = reader->cur;
@@ -82,9 +82,9 @@ static void next_token(reader_t *reader) {
         reader->toktype = TOK_STRING;
         reader->tokstart = reader->cur;
     } else if (is_digit(*reader->cur)) {
-        reader->toktype = TOK_NUMBER;  
-        reader->tokstart = reader->cur;  
-    } else if (((*reader->cur) == '-') && is_digit(peek_next_char(reader))) { 
+        reader->toktype = TOK_NUMBER;
+        reader->tokstart = reader->cur;
+    } else if (((*reader->cur) == '-') && is_digit(peek_next_char(reader))) {
         reader->toktype = TOK_NUMBER;
         reader->tokstart = reader->cur;
     } else if ((*reader->cur) == '\0') {
@@ -103,7 +103,7 @@ static void read_list(reader_t *reader);
 
 static void read_number(reader_t *reader){
     double d = strtod(reader->tokstart, NULL);
-    
+
     while (is_digit(*reader->cur)) {
         next_char(reader);
     }
@@ -132,7 +132,7 @@ static void read_number(reader_t *reader){
 static void read_quote(reader_t *reader) {
     next_char(reader);
     next_token(reader);
-    
+
     symbol_t *s = symbol_intern(reader->vm, "quote", 5);
 
     read1(reader);
@@ -223,7 +223,7 @@ static void read_list(reader_t *reader) {
         fprintf(stderr, "Unexpected dot in list\n");
         return;
     }
-   
+
     read1(reader);
     eat_whitespace(reader);
     value_t val = reader->tokval;
@@ -241,21 +241,21 @@ static void read_list(reader_t *reader) {
             fprintf(stderr, "Unexpected EOF while parsing\n");
             return;
         } else if (reader->toktype == TOK_DOT) {
-            next_char(reader); 
+            next_char(reader);
             next_token(reader);
-           
+
             read1(reader);
-            
+
             tail->cdr = reader->tokval;
             reader->tokval = PTR_VAL(head);
-            
+
             next_char(reader);
             return;
         }
-        
+
         read1(reader);
         val = reader->tokval;
-        
+
         tail->cdr = cons_fn(reader->vm, val, NIL_VAL);
         tail = AS_CONS(tail->cdr);
     }
@@ -263,7 +263,7 @@ static void read_list(reader_t *reader) {
 
 value_t read_source(vm_t *vm, const char *source) {
     reader_t reader;
-    
+
     reader.vm = vm;
     reader.source = source;
     reader.tokstart = source;
@@ -276,16 +276,16 @@ value_t read_source(vm_t *vm, const char *source) {
 
     /* new here */
     next_token(&reader);
-    
+
     symbol_t *eof = symbol_intern(vm, "eof", 3);
-    
+
     if (reader.toktype == TOK_EOF) {
         vm->curval = PTR_VAL(eof);
         reader.tokval = PTR_VAL(eof);
     } else {
         read1(&reader);
     }
-    
+
     vm->curval = reader.tokval;
     return reader.tokval;
 }

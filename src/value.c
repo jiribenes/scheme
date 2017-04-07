@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "vm.h" // vm_t, vm_realloc
-#include "value.h" 
+#include "value.h"
 #include "write.h"
 
 static void ptr_init(vm_t *vm, ptrvalue_t *ptr, ptrvalue_type_t type) {
@@ -10,7 +10,7 @@ static void ptr_init(vm_t *vm, ptrvalue_t *ptr, ptrvalue_type_t type) {
     ptr->gcmark = false;
     ptr->next = vm->head;
     vm->head = ptr;
-} 
+}
 
 void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
     if (ptr->type == T_STRING) {
@@ -47,7 +47,7 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
 /* *** HASHING *** */
 /* currently mostly unused */
 
-/* Uses the pretty good FNV-1a hash, see 
+/* Uses the pretty good FNV-1a hash, see
  * http://www.isthe.com/chongo/tech/comp/fnv/index.html */
 
 const uint32_t HASH_PRIME = 16777619;
@@ -59,7 +59,7 @@ static uint32_t hash_ptr(ptrvalue_t *ptr) {
         return ((string_t*) ptr)->hash;
     } else {
         return 0; //TODO: log error - mutable
-    }      
+    }
 }
 
 inline static uint32_t hash_octet(uint8_t octet, uint32_t hash) {
@@ -68,7 +68,7 @@ inline static uint32_t hash_octet(uint8_t octet, uint32_t hash) {
 
 static void hash_string(string_t *str) {
     uint32_t hash = HASH_SEED;
-    
+
     for (uint32_t i = 0; i < str->len; i++) {
         hash ^= str->value[i];
         hash *= HASH_PRIME;
@@ -97,7 +97,7 @@ static uint32_t hash_value(value_t val) {
         value_conv_t data;
         data.bits = val;
         return hash_number(data.bits);
-    } 
+    }
 }*/
 /* *** ptrvalue creating *** */
 cons_t *cons_new(vm_t *vm) {
@@ -124,15 +124,15 @@ string_t *string_new(vm_t *vm, const char *text, size_t len) {
     }
 
     hash_string(str);
-    
-    return str; 
+
+    return str;
 }
 
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
     if (len == 0 || name == NULL) { //TODO: better logging
         fprintf(stderr, "Error: NULL/0-len symbols are not allowed");
     }
-   
+
     symbol_t *sym = (symbol_t*) vm_realloc(vm, NULL, 0, sizeof(symbol_t) + sizeof(char) * (len + 1));
 
     ptr_init(vm, &sym->p, T_SYMBOL);
@@ -158,7 +158,7 @@ primitive_t *primitive_new(vm_t *vm, primitive_fn fn) {
 
 function_t *function_new(vm_t *vm, env_t *env, value_t params, value_t body) {
     function_t *fn = (function_t*) vm_realloc(vm, NULL, 0, sizeof(function_t));
-    
+
     ptr_init(vm, &fn->p, T_FUNCTION);
 
     fn->env = env;
@@ -172,7 +172,7 @@ env_t *env_new(vm_t *vm, value_t variables, env_t *up) {
     env_t *env = (env_t*) vm_realloc(vm, NULL, 0, sizeof(env_t));
 
     ptr_init(vm, &env->p, T_ENV);
-    
+
     env->variables = variables;
     env->up = up;
 
@@ -188,7 +188,7 @@ env_t *env_new(vm_t *vm, value_t variables, env_t *up) {
 symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len) {
     for (symbol_t *s = vm->symbol_table; s != NULL; s = s->next) {
         if (s->len == len && memcmp(s->name, name, len * sizeof(char)) == 0) {
-            return s;    
+            return s;
         }
     }
 
@@ -211,13 +211,13 @@ value_t cons_fn(vm_t *vm, value_t a, value_t b) {
 //TODO: rewrite this to be more readable
 uint32_t cons_len(value_t val) {
     uint32_t len = 0;
-    
+
     if (IS_NIL(val)) {
         return 0;
-    } 
+    }
 
     cons_t *temp = AS_CONS(val);
-    
+
     if (IS_NIL(temp->cdr)) {
         return 1;
     }
@@ -257,16 +257,16 @@ bool val_equal(value_t a, value_t b) {
     if (pa->type == T_CONS) {
         cons_t *consa = (cons_t*) pa;
         cons_t *consb = (cons_t*) pb;
-    
-        return val_equal(consa->car, consb->car) && val_equal(consa->cdr, consb->cdr); 
+
+        return val_equal(consa->car, consb->car) && val_equal(consa->cdr, consb->cdr);
     } else if (pa->type == T_STRING) {
         string_t *stra = (string_t*) pa;
         string_t *strb = (string_t*) pb;
 
-        return stra->len == strb->len && stra->hash == strb->hash && 
+        return stra->len == strb->len && stra->hash == strb->hash &&
             memcmp(stra->value, strb->value, stra->len * sizeof(char)) == 0;
-    
-    }  else if (pa->type == T_SYMBOL) { 
+
+    }  else if (pa->type == T_SYMBOL) {
         symbol_t *syma = (symbol_t*) pa;
         symbol_t *symb = (symbol_t*) pb;
         if ((syma->len == symb->len) && (memcmp(syma->name, symb->name, syma->len * sizeof(char)) == 0)) {

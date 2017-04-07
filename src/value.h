@@ -49,7 +49,7 @@ typedef struct _symbol_t {
     ptrvalue_t p;
 
     uint32_t len;
-    
+
     struct _symbol_t *next;
     // TODO: couldn't this be const/ regular char*?
     char name[];
@@ -58,14 +58,14 @@ typedef struct _symbol_t {
 // Environment frame
 typedef struct _env_t {
     ptrvalue_t p;
-    
+
     // contains variables and their mapping in assoc list
     // ((var . val) (var2 . val2) ... )
     // or NIL_VAL
     value_t variables;
-    
+
     // points to 'upper' env, NULL if none
-    struct _env_t *up; 
+    struct _env_t *up;
 } env_t;
 
 // A primitive (builtin) function C type
@@ -87,7 +87,7 @@ typedef struct {
     value_t body;
 } function_t;
 
-// 1--------------------------------------------------------------- 
+// 1---------------------------------------------------------------
 #define SIGN_BIT ((uint64_t) 1 << 63)
 // -1111111111111--------------------------------------------------
 #define QUIET_NAN ((uint64_t) 0x7ffc000000000000)
@@ -211,4 +211,4 @@ bool val_equal(value_t a, value_t b);
 static inline bool val_eq(value_t a, value_t b) {
     return a == b;
 }
-#endif // _value_h 
+#endif // _value_h

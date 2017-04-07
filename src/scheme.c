@@ -101,7 +101,7 @@ static value_t equal(vm_t *vm, env_t *env, value_t args) {
     value_t a = AS_CONS(eargs)->car;
     value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
     bool result = val_equal(a, b);
-    return BOOL_VAL(result);    
+    return BOOL_VAL(result);
 }
 
 static value_t quote(vm_t *vm, env_t *env, value_t args) {
@@ -134,7 +134,7 @@ static value_t define(vm_t *vm, env_t *env, value_t args) {
         function_t *func = function_new(vm, env, params, PTR_VAL(body));
         value_t val = eval(vm, env, PTR_VAL(func));
         variable_add(vm, env, sym, val);
-        return val; 
+        return val;
      } else {
         fprintf(stderr, "Error: define: is wrong - second argument has to be either a list or a symbol!\n");
         return NIL_VAL;
@@ -143,9 +143,9 @@ static value_t define(vm_t *vm, env_t *env, value_t args) {
 
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
     if (!IS_CONS(args) || cons_len(args) != 2 || !(IS_CONS(AS_CONS(args)->car) || IS_NIL(AS_CONS(args)->car))) {
-        fprintf(stderr, "Error: lambda: is wrong (lambda (<params>) <body>), given args = %d\n", cons_len(args)); 
+        fprintf(stderr, "Error: lambda: is wrong (lambda (<params>) <body>), given args = %d\n", cons_len(args));
     }
-    
+
     if (IS_NIL(AS_CONS(args)->car)) { // no parameters
         value_t body = AS_CONS(args)->cdr;
         function_t *func = function_new(vm, env, NIL_VAL, body);
@@ -158,9 +158,9 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
         } else if (!IS_NIL(cons->cdr) && !IS_CONS(cons->cdr)) {
             fprintf(stderr, "Error: lambda: parameter list must not be dotted\n");
         }
-        
+
         if (IS_NIL(cons->cdr)) {
-            break;        
+            break;
         }
     }
     value_t params = AS_CONS(args)->car;
@@ -184,9 +184,9 @@ static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
     if (IS_NIL(AS_CONS(AS_CONS(args)->cdr)->cdr)) {
         return FALSE_VAL;
     }
-    
+
     value_t otherwise = AS_CONS(AS_CONS(args)->cdr)->cdr;
-    return begin(vm, env, otherwise); 
+    return begin(vm, env, otherwise);
 }
 
 static value_t builtin_cons(vm_t *vm, env_t *env, value_t args) {
@@ -257,7 +257,7 @@ static value_t builtin_or(vm_t *vm, env_t *env, value_t args) {
             break;
         }
     }
-    return BOOL_VAL(result);    
+    return BOOL_VAL(result);
 }
 
 static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
@@ -277,7 +277,7 @@ static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
             break;
         }
     }
-    return BOOL_VAL(result);    
+    return BOOL_VAL(result);
 }
 
 /* *** */
@@ -318,7 +318,7 @@ static value_t file_read(vm_t *vm, const char *filename) {
     fprintf(stdout, "\n");
 #endif
     free(string);
-    return val; 
+    return val;
 }
 
 static void stdlib_load(vm_t *vm, env_t *env, char *filename) {
@@ -328,7 +328,7 @@ static void stdlib_load(vm_t *vm, env_t *env, char *filename) {
 
 static env_t *env_default(vm_t *vm) {
     env_t *env = env_new(vm, NIL_VAL, NULL);
-    
+
     symbol_t *pi_sym = symbol_intern(vm, "pi", 2);
     value_t pi = NUM_VAL(3.1415);
     variable_add(vm, env, pi_sym, pi);
@@ -358,7 +358,7 @@ static env_t *env_default(vm_t *vm) {
 #endif
     stdlib_load(vm, env, "src/stdlib.scm");
 
-    return env; 
+    return env;
 }
 
 void repl(vm_t *vm, env_t *env) {
@@ -372,13 +372,13 @@ void repl(vm_t *vm, env_t *env) {
             break;
         }
         value_t val = read_source(vm, buf);
-        
-        value_t result = eval(vm, env, val); 
- 
+
+        value_t result = eval(vm, env, val);
+
         write(stdout, result);
         fprintf(stdout, "\n");
     }
-    
+
     fprintf(stdout, "Quiting!\n");
 }
 
@@ -389,9 +389,9 @@ int main(int argc, char* argv[]) {
     if (argc == 1) repl(vm, env);
     if (argc == 2) {
         value_t val = file_read(vm, argv[1]);
-        value_t result = eval(vm, env, val); 
+        value_t result = eval(vm, env, val);
 
-        fprintf(stdout, "Result: "); 
+        fprintf(stdout, "Result: ");
         write(stdout, result);
         fprintf(stdout, "\n");
     }

@@ -14,7 +14,7 @@ static void *scm_realloc(void *ptr, size_t size) {
         free(ptr);
         return NULL;
     }
-    
+
     return realloc(ptr, size);
 }
 
@@ -25,7 +25,7 @@ vm_t *vm_new() {
 
     vm->allocated = 0;
     vm->gc_threshold = 65536;
-   
+
     vm->symbol_table = NULL;
 
     vm->env = NULL;
@@ -54,11 +54,11 @@ void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size) {
     if (new_size > 0 && vm->allocated > vm->gc_threshold) {
         gc(vm);
     }
-    
+
     if (vm->allocated > MAX_ALLOCATED) {
         fprintf(stderr, "Error: Allocated more than %d! (MAX_ALLOCATED)\n", MAX_ALLOCATED);
         vm->allocated -= new_size;
-        return NULL;    
+        return NULL;
     }
 
 
@@ -125,7 +125,7 @@ static void mark(value_t val) {
         }
     } else if (ptr->type == T_FUNCTION) {
         function_t *func = (function_t*) ptr;
-        
+
         mark(func->params);
         mark(func->body);
         mark(PTR_VAL(func->env));
@@ -134,7 +134,7 @@ static void mark(value_t val) {
 
 static void markall(vm_t *vm) {
     env_t *env = vm->env;
-    mark(PTR_VAL(env)); 
+    mark(PTR_VAL(env));
 
     if (vm->reader != NULL) {
         mark(vm->reader->tokval);
@@ -151,13 +151,13 @@ static size_t vm_size(vm_t *vm, value_t val) {
     if (!IS_PTR(val)) {
         return 0;
     } else if (IS_CONS(val)) {
-        return sizeof(cons_t); 
+        return sizeof(cons_t);
     } else if (IS_STRING(val)) {
         string_t *str = AS_STRING(val);
         return sizeof(string_t) + sizeof(char) * (str->len + 1);
     } else if (IS_SYMBOL(val)) {
         symbol_t *sym = AS_SYMBOL(val);
-        return sizeof(symbol_t) + sizeof(char) * (sym->len + 1); 
+        return sizeof(symbol_t) + sizeof(char) * (sym->len + 1);
     } else if (IS_PRIMITIVE(val)) {
         return sizeof(primitive_t);
     } else if (IS_FUNCTION(val)) {
@@ -219,7 +219,7 @@ env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals) {
     if (!IS_NIL(vars)) {
         var = AS_CONS(vars);
         val = AS_CONS(vals);
-    } 
+    }
     while (!IS_NIL(var->car)) {
         value_t pair = cons_fn(vm, var->car, val->car);
         value_t temp = cons_fn(vm, pair, alist);
@@ -287,7 +287,7 @@ static value_t find(env_t *env, symbol_t *sym) {
             vars = AS_CONS(vars->cdr);
         }
     }
-    
+
     fprintf(stderr, "Error: Symbol %s not bound\n", sym->name);
     return NIL_VAL;
 }
@@ -298,7 +298,7 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list) {
     }
     cons_t *head = NULL;
     cons_t *tail = NULL;
-    
+
     for (cons_t *cons = AS_CONS(list); ;cons = AS_CONS(cons->cdr)) {
         value_t temp = eval(vm, env, cons->car);
         if (head == NULL) {

@@ -26,7 +26,7 @@ struct vm_t {
     reader_t *reader;
 
     value_t curval;
-    
+
     // a stack of temporary roots
     // these are values, that shouldn't be deleted by the gc
     size_t num_temp;
