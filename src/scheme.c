@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "scheme.h"
 #include "value.h"
@@ -6,16 +7,27 @@
 #include "read.h"
 #include "vm.h"
 
+static void error(char *format, ...) {
+    va_list contents;
+    va_start(contents, format);
+    printf("Error: ");
+    vfprintf(stderr, format, contents);
+    fprintf(stderr, "\n");
+    va_end(contents);
+}
+
+/* *** */
+
 static value_t add(vm_t *vm, env_t *env, value_t args) {
     double result = 0.0F;
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) < 2) {
-        fprintf(stderr, "Error: +: not enough args (has %d)\n", cons_len(eargs));
+        error("+: not enough args (has %d)", cons_len(eargs));
         return NIL_VAL;
     }
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
         if (!IS_NUM(cons->car)) {
-            fprintf(stderr, "Error: +: car is not a number!\n");
+            error("+: car is not a number!");
             return NIL_VAL;
         }
         result += AS_NUM(cons->car);
@@ -30,12 +42,12 @@ static value_t multiply(vm_t *vm, env_t *env, value_t args) {
     double result = 1.0F;
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) < 2) {
-        fprintf(stderr, "Error: *: not enough args (has %d)\n", cons_len(eargs));
+        error("*: not enough args (has %d)", cons_len(eargs));
         return NIL_VAL;
     }
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
         if (!IS_NUM(cons->car)) {
-            fprintf(stderr, "Error: *: car is not a number!\n");
+            error("*: car is not a number!");
             return NIL_VAL;
         }
         result *= AS_NUM(cons->car);
@@ -50,13 +62,13 @@ static value_t subtract(vm_t *vm, env_t *env, value_t args) {
     double result = 0.0F;
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) < 2) {
-        fprintf(stderr, "Error: -: not enough args (has %d)\n", cons_len(eargs));
+        error("-: not enough args (has %d)", cons_len(eargs));
         return NIL_VAL;
     }
     result = AS_NUM(AS_CONS(eargs)->car);
     for (cons_t *cons = AS_CONS(AS_CONS(eargs)->cdr); ; cons = AS_CONS(cons->cdr)){
         if (!IS_NUM(cons->car)) {
-            fprintf(stderr, "Error: -: car is not a number!\n");
+            error("-: car is not a number!");
             return NIL_VAL;
         }
         result -= AS_NUM(cons->car);
@@ -70,14 +82,14 @@ static value_t subtract(vm_t *vm, env_t *env, value_t args) {
 static value_t gt(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) != 2) {
-        fprintf(stderr, "Error: >: args (has %d) != 2", cons_len(args));
+        error(">: args (has %d) != 2", cons_len(args));
     }
 
     value_t a = AS_CONS(eargs)->car;
     value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
 
     if (!IS_NUM(a) || !IS_NUM(b)) {
-        fprintf(stderr, "Error: >: arg is not a number!\n");
+        error(">: arg is not a number!");
     }
     return BOOL_VAL(AS_NUM(a) > AS_NUM(b));
 }
@@ -85,7 +97,7 @@ static value_t gt(vm_t *vm, env_t *env, value_t args) {
 static value_t eq(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) != 2) {
-        fprintf(stderr, "Error: eq?: args (has %d) != 2", cons_len(args));
+        error("eq?: args (has %d) != 2", cons_len(args));
     }
     value_t a = AS_CONS(eargs)->car;
     value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
@@ -96,7 +108,7 @@ static value_t eq(vm_t *vm, env_t *env, value_t args) {
 static value_t equal(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) != 2) {
-        fprintf(stderr, "Error: equal?: args (has %d) != 2", cons_len(args));
+        error("equal?: args (has %d) != 2", cons_len(args));
     }
     value_t a = AS_CONS(eargs)->car;
     value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
@@ -106,7 +118,7 @@ static value_t equal(vm_t *vm, env_t *env, value_t args) {
 
 static value_t quote(vm_t *vm, env_t *env, value_t args) {
     if (cons_len(args) != 1) {
-        fprintf(stderr, "Error: ': args (has %d) != 1\n", cons_len(args));
+        error("': args (has %d) != 1", cons_len(args));
     }
     return AS_CONS(args)->car;
 }
@@ -117,7 +129,7 @@ static value_t list(vm_t *vm, env_t *env, value_t args) {
 
 static value_t define(vm_t *vm, env_t *env, value_t args) {
     if (cons_len(args) != 2) {
-        fprintf(stderr, "Error: define: is wrong (define <name> <body>) or (define (<name> <params> ...) <body>\n");
+        error("define: is wrong (define <name> <body>) or (define (<name> <params> ...) <body>");
         write(stdout, args);
     }
     cons_t *rest = AS_CONS(args);
@@ -136,14 +148,14 @@ static value_t define(vm_t *vm, env_t *env, value_t args) {
         variable_add(vm, env, sym, val);
         return val;
      } else {
-        fprintf(stderr, "Error: define: is wrong - second argument has to be either a list or a symbol!\n");
+        error("define: is wrong - second argument has to be either a list or a symbol!");
         return NIL_VAL;
      }
 }
 
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
     if (!IS_CONS(args) || cons_len(args) != 2 || !(IS_CONS(AS_CONS(args)->car) || IS_NIL(AS_CONS(args)->car))) {
-        fprintf(stderr, "Error: lambda: is wrong (lambda (<params>) <body>), given args = %d\n", cons_len(args));
+        error("lambda: is wrong (lambda (<params>) <body>), given args = %d", cons_len(args));
     }
 
     if (IS_NIL(AS_CONS(args)->car)) { // no parameters
@@ -154,9 +166,9 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
 
     for (cons_t *cons = AS_CONS(AS_CONS(args)->car); ; cons = AS_CONS(cons->cdr)) {
         if (!IS_SYMBOL(cons->car)) {
-            fprintf(stderr, "Error: lambda: all parameters must be symbols!\n");
+            error("lambda: all parameters must be symbols!");
         } else if (!IS_NIL(cons->cdr) && !IS_CONS(cons->cdr)) {
-            fprintf(stderr, "Error: lambda: parameter list must not be dotted\n");
+            error("lambda: parameter list must not be dotted");
         }
 
         if (IS_NIL(cons->cdr)) {
@@ -172,7 +184,7 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
 // (if <condition> <then> <otherwise> ...)
 static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
     if (cons_len(args) < 2) {
-        fprintf(stderr, "Error: if: not enough args (has %d)\n", cons_len(args));
+        error("if: not enough args (has %d)", cons_len(args));
     }
 
     value_t condition = eval(vm, env, AS_CONS(args)->car);
@@ -191,7 +203,7 @@ static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
 
 static value_t builtin_cons(vm_t *vm, env_t *env, value_t args) {
     if (cons_len(args) != 2) {
-        fprintf(stderr, "Error: eq?: args (has %d) != 2", cons_len(args));
+        error("eq?: args (has %d) != 2", cons_len(args));
     }
 
     value_t car = eval(vm, env, AS_CONS(args)->car);
@@ -204,7 +216,7 @@ static value_t builtin_cons(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_is_cons(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) != 1) {
-        fprintf(stderr, "Error: cons?: args (has %d) != 1", cons_len(args));
+        error("cons?: args (has %d) != 1", cons_len(args));
     }
     value_t a = AS_CONS(eargs)->car;
     return BOOL_VAL(IS_NIL(a) || IS_CONS(a));
@@ -213,11 +225,11 @@ static value_t builtin_is_cons(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) != 1) {
-        fprintf(stderr, "Error: car: args (has %d) != 1", cons_len(args));
+        error("car: args (has %d) != 1", cons_len(args));
     }
     value_t a = AS_CONS(eargs)->car;
     if (IS_NIL(a)) {
-        fprintf(stderr, "Error: car: cannot give car of NIL\n");
+        error("car: cannot give car of NIL");
     }
     return AS_CONS(a)->car;
 }
@@ -225,11 +237,11 @@ static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_cdr(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) != 1) {
-        fprintf(stderr, "Error: cdr: args (has %d) != 1", cons_len(args));
+        error("cdr: args (has %d) != 1", cons_len(args));
     }
     value_t a = AS_CONS(eargs)->car;
     if (IS_NIL(a)) {
-        fprintf(stderr, "Error: cdr: cannot give cdr of NIL\n");
+        error("cdr: cannot give cdr of NIL");
     }
     return AS_CONS(a)->cdr;
 }
@@ -243,13 +255,13 @@ static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_or(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) < 2) {
-        fprintf(stderr, "Error: or: not enough args (has %d)\n", cons_len(eargs));
+        error("or: not enough args (has %d)", cons_len(eargs));
         return NIL_VAL;
     }
     bool result = AS_BOOL(AS_CONS(eargs)->car);
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
         if (!IS_BOOL(cons->car)) {
-            fprintf(stderr, "Error: or: car is not a bool!\n");
+            error("or: car is not a bool!");
             return NIL_VAL;
         }
         result |= AS_BOOL(cons->car);
@@ -263,13 +275,13 @@ static value_t builtin_or(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     if (cons_len(eargs) < 2) {
-        fprintf(stderr, "Error: and: not enough args (has %d)\n", cons_len(eargs));
+        error("and: not enough args (has %d)", cons_len(eargs));
         return NIL_VAL;
     }
     bool result = AS_BOOL(AS_CONS(eargs)->car);
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
         if (!IS_BOOL(cons->car)) {
-            fprintf(stderr, "Error: and: car is not a bool!\n");
+            error("and: car is not a bool!");
             return NIL_VAL;
         }
         result &= AS_BOOL(cons->car);
