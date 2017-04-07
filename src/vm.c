@@ -52,7 +52,7 @@ void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size) {
     vm->allocated += new_size - old_size;
 
     if (new_size > 0 && vm->allocated > vm->gc_threshold) {
-        gc(vm);
+        vm_gc(vm);
     }
 
     if (vm->allocated > MAX_ALLOCATED) {
@@ -170,7 +170,7 @@ static size_t vm_size(vm_t *vm, value_t val) {
 }
 
 // A very basic mark and sweep GC
-void gc(vm_t *vm) {
+void vm_gc(vm_t *vm) {
 #ifdef NOVM
     return;
 #endif
