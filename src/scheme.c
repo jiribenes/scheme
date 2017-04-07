@@ -319,13 +319,18 @@ static value_t file_read(vm_t *vm, const char *filename) {
     fseek(f, 0, SEEK_SET);
 
     char *string = malloc(fsize + 1);
-    fread(string, fsize, 1, f);
+    size_t bytes_read = fread(string, fsize, 1, f);
     fclose(f);
+    if (bytes_read != 1) {
+        error("Could not read file %s!", filename);
+        free(string);
+        return NIL_VAL;
+    }
     string[fsize] = '\0';
 
     value_t val = read_source(vm, string);
 #ifdef DEBUG
-    fprintf(stdout, "I read in: ");
+    fprintf(stdout, "I read in %zu bytes: ", bytes_read);
     write(stdout, val);
     fprintf(stdout, "\n");
 #endif
