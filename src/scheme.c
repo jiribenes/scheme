@@ -127,7 +127,7 @@ static value_t list(vm_t *vm, env_t *env, value_t args) {
     return eval_list(vm, env, args);
 }
 
-static value_t define(vm_t *vm, env_t *env, value_t args) {
+static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
     if (cons_len(args) != 2) {
         error("define: is wrong (define <name> <body>) or (define (<name> <params> ...) <body>");
         write(stdout, args);
@@ -359,7 +359,7 @@ static env_t *env_default(vm_t *vm) {
     primitive_add(vm, env, "quote", 5, quote);
     primitive_add(vm, env, "list", 4, list);
     primitive_add(vm, env, "begin", 5, begin);
-    primitive_add(vm, env, "define", 6, define);
+    primitive_add(vm, env, "define", 6, builtin_define);
     primitive_add(vm, env, "lambda", 6, lambda);
     primitive_add(vm, env, "if", 2, builtin_if);
     primitive_add(vm, env, "cons", 4, builtin_cons);
