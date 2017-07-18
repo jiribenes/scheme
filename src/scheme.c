@@ -13,7 +13,7 @@ static void error_report(vm_t *vm, int line, const char *message) {
 }
 
 // TODO: Migrate error handling to new system
-static void error(char *format, ...) {
+static void error(const char *format, ...) {
     va_list contents;
     va_start(contents, format);
     fprintf(stderr, "Error: ");
@@ -319,7 +319,7 @@ static value_t file_read(vm_t *vm, const char *filename) {
     long fsize = ftell(f);
     fseek(f, 0, SEEK_SET);
 
-    char *string = malloc(fsize + 1);
+    char *string = (char *) malloc(fsize + 1);
     size_t bytes_read = fread(string, fsize, 1, f);
     fclose(f);
     if (bytes_read != 1) {
@@ -339,7 +339,7 @@ static value_t file_read(vm_t *vm, const char *filename) {
     return val;
 }
 
-static void stdlib_load(vm_t *vm, env_t *env, char *filename) {
+static void stdlib_load(vm_t *vm, env_t *env, const char *filename) {
     value_t val = file_read(vm, filename);
     eval(vm, env, val);
 }
@@ -380,7 +380,7 @@ static env_t *env_default(vm_t *vm) {
 }
 
 void repl(vm_t *vm, env_t *env) {
-    fprintf(stdout, "|Scheme "SCM_VERSION_STRING" - REPL|\n|Use Ctrl+C to exit!|\n");
+    fprintf(stdout, "|Scheme " SCM_VERSION_STRING " - REPL|\n|Use Ctrl+C to exit!|\n");
     char buf[512];
 
     while (true) {
