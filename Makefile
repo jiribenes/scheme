@@ -9,10 +9,10 @@ RELEASE_OPTIONS = -O3 -Wno-unused-parameter
 SOURCES := $(wildcard src/*.c)
 
 debug: $(SOURCES)
-	$(CC) $(C_OPTIONS) $(C_WARNINGS) $(DEBUG_OPTIONS) $(C_LIBS) -Isrc/ $(SOURCES) -o $(BIN)
+	$(CC) $(C_OPTIONS) $(C_WARNINGS) $(DEBUG_OPTIONS) $(C_LIBS) -Isrc/ -Iinclude/ $(SOURCES) -o $(BIN)
 
 release: $(SOURCES)
-	$(CC) $(C_OPTIONS) $(C_WARNINGS) $(RELEASE_OPTIONS) $(C_LIBS) -Isrc/ $(SOURCES) -o $(BIN)
+	$(CC) $(C_OPTIONS) $(C_WARNINGS) $(RELEASE_OPTIONS) $(C_LIBS) -Isrc/ -Iinclude/ $(SOURCES) -o $(BIN)
 
 run: debug 
 	./$(BIN)

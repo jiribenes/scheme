@@ -2,6 +2,7 @@
 #include <stdarg.h>
 
 #include "scheme.h"
+
 #include "value.h"
 #include "write.h"
 #include "read.h"
@@ -10,7 +11,7 @@
 static void error(char *format, ...) {
     va_list contents;
     va_start(contents, format);
-    printf("Error: ");
+    fprintf(stderr, "Error: ");
     vfprintf(stderr, format, contents);
     fprintf(stderr, "\n");
     va_end(contents);
@@ -374,7 +375,7 @@ static env_t *env_default(vm_t *vm) {
 }
 
 void repl(vm_t *vm, env_t *env) {
-    fprintf(stdout, "|Scheme 0.1.0 - REPL|\n|Use Ctrl+C to exit!|\n");
+    fprintf(stdout, "|Scheme "SCM_VERSION_STRING" - REPL|\n|Use Ctrl+C to exit!|\n");
     char buf[512];
 
     while (true) {
