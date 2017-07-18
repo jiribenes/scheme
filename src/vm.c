@@ -9,19 +9,32 @@
 
 #define MAX_ALLOCATED 1024*1024*16
 
-static void *scm_realloc(void *ptr, size_t size) {
-    if (size == 0) {
+static void *scm_realloc_default(void *ptr, size_t new_size) {
+    if (new_size == 0) {
         free(ptr);
         return NULL;
     }
 
-    return realloc(ptr, size);
+    return realloc(ptr, new_size);
 }
 
-vm_t *vm_new() {
-    vm_t *vm = (vm_t*) scm_realloc(NULL, sizeof(vm_t));
+void scm_config_default(scm_config_t *config) {
+    config->realloc_fn = scm_realloc_default;
+}
+
+vm_t *vm_new(scm_config_t *config) {
+    scm_realloc_fn reallocate = scm_realloc_default;
+    if (config != NULL) reallocate = config->realloc_fn;
+
+    vm_t *vm = (vm_t*) reallocate(NULL, sizeof(vm_t));
 
     memset(vm, 0, sizeof(vm_t));
+
+    if (config != NULL) {
+        memcpy(&vm->config, config, sizeof(scm_config_t)); 
+    } else {
+        scm_config_default(&vm->config);
+    }
 
     vm->allocated = 0;
     vm->gc_threshold = 65536;
@@ -62,7 +75,7 @@ void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size) {
     }
 
 
-    return scm_realloc(ptr, new_size);
+    return vm->config.realloc_fn(ptr, new_size);
 }
 
 /* *** temp *** */

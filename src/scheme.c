@@ -396,7 +396,10 @@ void repl(vm_t *vm, env_t *env) {
 }
 
 int main(int argc, char* argv[]) {
-    vm_t *vm = vm_new();
+    scm_config_t config;
+    scm_config_default(&config);
+
+    vm_t *vm = vm_new(&config);
     env_t *env = env_default(vm);
 
     if (argc == 1) repl(vm, env);

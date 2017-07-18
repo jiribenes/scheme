@@ -22,6 +22,8 @@ struct vm_t {
     // a table of all symbols (needed for interning)
     symbol_t *symbol_table;
 
+    scm_config_t config;
+
     env_t *env;
     reader_t *reader;
 
