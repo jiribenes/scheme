@@ -128,18 +128,15 @@ static value_t list(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
-    if (cons_len(args) != 2) {
-        error("define: is wrong (define <name> <body>) or (define (<name> <params> ...) <body>");
-        write(stdout, args);
-    }
     cons_t *rest = AS_CONS(args);
-    if (IS_SYMBOL(rest->car)) {
+
+    if (IS_SYMBOL(rest->car)) { // (define <name> <body...>)
         symbol_t *sym = AS_SYMBOL(rest->car);
         cons_t *body = AS_CONS(rest->cdr);
         value_t val = eval(vm, env, body->car);
         variable_add(vm, env, sym, val);
         return val;
-    } else if (IS_CONS(rest->car)) {
+    } else if (IS_CONS(rest->car)) { // (define (<name> <params...>) <body...>)
         symbol_t *sym = AS_SYMBOL(AS_CONS(rest->car)->car);
         value_t params = AS_CONS(rest->car)->cdr;
         cons_t *body = AS_CONS(rest->cdr);
@@ -154,9 +151,7 @@ static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
-    if (!IS_CONS(args) || cons_len(args) != 2 || !(IS_CONS(AS_CONS(args)->car) || IS_NIL(AS_CONS(args)->car))) {
-        error("lambda: is wrong (lambda (<params>) <body>), given args = %d", cons_len(args));
-    }
+    // (lambda (<params...>) <body...>)
 
     if (IS_NIL(AS_CONS(args)->car)) { // no parameters
         value_t body = AS_CONS(args)->cdr;
