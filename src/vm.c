@@ -20,6 +20,7 @@ static void *scm_realloc_default(void *ptr, size_t new_size) {
 
 void scm_config_default(scm_config_t *config) {
     config->realloc_fn = scm_realloc_default;
+    config->error_fn = NULL;
 }
 
 vm_t *vm_new(scm_config_t *config) {

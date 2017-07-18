@@ -16,10 +16,16 @@ typedef struct vm_t vm_t;
 // Generic realloc function type (see scm_realloc_default for example)
 typedef void* (*scm_realloc_fn) (void *ptr, size_t new_size);
 
+// A function for reporting an error to the user
+typedef void (*scm_error_fn) (vm_t *vm, int line, const char *message);
+
 // Configuration struct for VM creation
 typedef struct {
     // A function for allocating, reallocating and freeing memory
     scm_realloc_fn realloc_fn;
+
+    // A function for reporting an error to the user
+    scm_error_fn error_fn;
 } scm_config_t;
 
 // Loads a default config into the config struct

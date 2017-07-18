@@ -8,6 +8,11 @@
 #include "read.h"
 #include "vm.h"
 
+static void error_report(vm_t *vm, int line, const char *message) {
+    fprintf(stderr, "ERROR @ line %d : %s", line, message);
+}
+
+// TODO: Migrate error handling to new system
 static void error(char *format, ...) {
     va_list contents;
     va_start(contents, format);
@@ -398,6 +403,8 @@ void repl(vm_t *vm, env_t *env) {
 int main(int argc, char* argv[]) {
     scm_config_t config;
     scm_config_default(&config);
+
+    config.error_fn = error_report;
 
     vm_t *vm = vm_new(&config);
     env_t *env = env_default(vm);
