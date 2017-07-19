@@ -1,0 +1,23 @@
+---
+Language:        Cpp
+Standard:        Cpp11
+BasedOnStyle:    Google
+
+AlwaysBreakBeforeMultilineStrings: false
+CommentPragmas:  '^ IWYU pragma:'
+
+DerivePointerAlignment: false
+PointerAlignment: Right
+
+SpaceAfterCStyleCast: true # this is wrong in the docs!
+
+TabWidth:        4
+IndentWidth:     4 
+ContinuationIndentWidth: 4
+MaxEmptyLinesToKeep: 2
+SpacesBeforeTrailingComments: 2
+ConstructorInitializerIndentWidth: 0
+ColumnLimit:     80
+UseTab:          Never
+...
+

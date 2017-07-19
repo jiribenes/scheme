@@ -1,4 +1,4 @@
-#include <stdio.h> // FILE, fprintf, stderr
+#include <stdio.h>  // FILE, fprintf, stderr
 
 #include "value.h"
 #include "write.h"
@@ -8,7 +8,7 @@ static void write_cons(FILE *f, cons_t *cons) {
     cons_t *temp = cons;
 
     if (IS_NIL(temp->car)) {
-        fprintf(f, "()"); //write(f, temp->car);
+        fprintf(f, "()");  // write(f, temp->car);
     }
 
     while (!IS_NIL(temp->car)) {
@@ -72,7 +72,7 @@ void write(FILE *f, value_t val) {
         } else if (IS_FUNCTION(val)) {
             fprintf(f, "<function>");
         } else if (IS_ENV(val)) {
-            env_t *env = (env_t*) AS_PTR(val);
+            env_t *env = (env_t *) AS_PTR(val);
             fprintf(f, "<environment> containing: ");
             write(f, env->variables);
             if (env->up != NULL) {

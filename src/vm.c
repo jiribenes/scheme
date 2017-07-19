@@ -1,13 +1,13 @@
-#include <stdlib.h> // realloc
-#include <string.h> // memset
-#include <stdio.h> // fprintf, stderr
+#include <stdio.h>   // fprintf, stderr
+#include <stdlib.h>  // realloc
+#include <string.h>  // memset
 
 #include "scheme.h"
-#include "vm.h"
 #include "value.h"
+#include "vm.h"
 #include "write.h"
 
-#define MAX_ALLOCATED 1024*1024*16
+#define MAX_ALLOCATED 1024 * 1024 * 16
 
 static void *scm_realloc_default(void *ptr, size_t new_size) {
     if (new_size == 0) {
@@ -27,7 +27,7 @@ vm_t *vm_new(scm_config_t *config) {
     scm_realloc_fn reallocate = scm_realloc_default;
     if (config != NULL) reallocate = config->realloc_fn;
 
-    vm_t *vm = (vm_t*) reallocate(NULL, sizeof(vm_t));
+    vm_t *vm = (vm_t *) reallocate(NULL, sizeof(vm_t));
 
     memset(vm, 0, sizeof(vm_t));
 
@@ -63,8 +63,7 @@ void vm_free(vm_t *vm) {
     vm_realloc(vm, vm, 0, 0);
 }
 
-
-void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size) {
+void *vm_realloc(vm_t *vm, void *ptr, size_t old_size, size_t new_size) {
     vm->allocated += new_size - old_size;
 
     if (new_size > 0 && vm->allocated > vm->gc_threshold) {
@@ -72,11 +71,11 @@ void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size) {
     }
 
     if (vm->allocated > MAX_ALLOCATED) {
-        fprintf(stderr, "Error: Allocated more than %d! (MAX_ALLOCATED)\n", MAX_ALLOCATED);
+        fprintf(stderr, "Error: Allocated more than %d! (MAX_ALLOCATED)\n",
+                MAX_ALLOCATED);
         vm->allocated -= new_size;
         return NULL;
     }
-
 
     return vm->config.realloc_fn(ptr, new_size);
 }
@@ -100,7 +99,6 @@ void vm_pop_temp(vm_t *vm) {
     vm->num_temp--;
 }
 
-
 /* *** GC *** */
 
 static void mark(value_t val) {
@@ -118,11 +116,11 @@ static void mark(value_t val) {
     ptr->gcmark = true;
 
     if (ptr->type == T_CONS) {
-        cons_t *cons = (cons_t*) ptr;
+        cons_t *cons = (cons_t *) ptr;
         mark(cons->car);
         mark(cons->cdr);
     } else if (ptr->type == T_ENV) {
-        env_t *env = (env_t*) ptr;
+        env_t *env = (env_t *) ptr;
         mark(env->variables);
         if (!IS_NIL(env->variables)) {
             cons_t *vars = AS_CONS(env->variables);
@@ -140,7 +138,7 @@ static void mark(value_t val) {
             mark(PTR_VAL(env->up));
         }
     } else if (ptr->type == T_FUNCTION) {
-        function_t *func = (function_t*) ptr;
+        function_t *func = (function_t *) ptr;
 
         mark(func->params);
         mark(func->body);
@@ -209,7 +207,8 @@ void vm_gc(vm_t *vm) {
         }
     }
 #ifdef DEBUG
-    fprintf(stdout, "GC finished: %zu bytes previously, %zu bytes now!\n", prev_allocated, vm->allocated);
+    fprintf(stdout, "GC finished: %zu bytes previously, %zu bytes now!\n",
+            prev_allocated, vm->allocated);
 #endif
     vm->gc_threshold = vm->allocated * 2;
     return;
@@ -219,7 +218,7 @@ void vm_gc(vm_t *vm) {
 
 // Adds a variable (pair of symbol and its value) to the env. frame
 void variable_add(vm_t *vm, env_t *env, symbol_t *sym, value_t val) {
-    value_t pair = cons_fn(vm, PTR_VAL(sym), val); // (sym . val)
+    value_t pair = cons_fn(vm, PTR_VAL(sym), val);  // (sym . val)
     value_t temp = cons_fn(vm, pair, env->variables);
     env->variables = temp;
 }
@@ -251,7 +250,8 @@ env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals) {
     return new_env;
 }
 
-void primitive_add(vm_t *vm, env_t *env, const char *name, size_t len, primitive_fn fn) {
+void primitive_add(vm_t *vm, env_t *env, const char *name, size_t len,
+                   primitive_fn fn) {
     symbol_t *sym = symbol_intern(vm, name, len);
 
     primitive_t *prim = primitive_new(vm, fn);
@@ -260,7 +260,8 @@ void primitive_add(vm_t *vm, env_t *env, const char *name, size_t len, primitive
 }
 
 /* *** EVAL/APPLY *** */
-static value_t apply_func(vm_t *vm, env_t *env, function_t *func, value_t args) {
+static value_t apply_func(vm_t *vm, env_t *env, function_t *func,
+                          value_t args) {
     value_t params = func->params;
     env_t *new_env = func->env;
     new_env = env_push(vm, new_env, params, args);
@@ -281,7 +282,9 @@ static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
         return apply_func(vm, env, func, eargs);
     }
 
-    fprintf(stderr, "Error: Cannot apply something else than a primitive or a function\n");
+    fprintf(
+        stderr,
+        "Error: Cannot apply something else than a primitive or a function\n");
     return NIL_VAL;
 }
 
@@ -315,11 +318,11 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list) {
     cons_t *head = NULL;
     cons_t *tail = NULL;
 
-    for (cons_t *cons = AS_CONS(list); ;cons = AS_CONS(cons->cdr)) {
+    for (cons_t *cons = AS_CONS(list);; cons = AS_CONS(cons->cdr)) {
         value_t temp = eval(vm, env, cons->car);
         if (head == NULL) {
             head = tail = AS_CONS(cons_fn(vm, temp, NIL_VAL));
-            vm_push_temp(vm, (ptrvalue_t*) (head));
+            vm_push_temp(vm, (ptrvalue_t *) (head));
         } else {
             tail->cdr = cons_fn(vm, temp, NIL_VAL);
             tail = AS_CONS(tail->cdr);
@@ -328,12 +331,13 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list) {
             break;
         }
     }
-    vm_pop_temp(vm); //head
+    vm_pop_temp(vm);  // head
     return PTR_VAL(head);
 }
 
 value_t eval(vm_t *vm, env_t *env, value_t val) {
-    if (!IS_PTR(val) || IS_STRING(val) || IS_PRIMITIVE(val) || IS_FUNCTION(val)) {
+    if (!IS_PTR(val) || IS_STRING(val) || IS_PRIMITIVE(val) ||
+        IS_FUNCTION(val)) {
         return val;
     } else if (IS_SYMBOL(val)) {
         symbol_t *sym = AS_SYMBOL(val);
@@ -344,7 +348,8 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
         fn = eval(vm, env, cons->car);
         value_t args = cons->cdr;
         if (!IS_PRIMITIVE(fn) && !IS_FUNCTION(fn)) {
-            fprintf(stderr, "Error: Car of a cons must be a function in eval\n");
+            fprintf(stderr,
+                    "Error: Car of a cons must be a function in eval\n");
         }
         return apply(vm, env, fn, args);
     }
@@ -352,10 +357,9 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
     return NIL_VAL;
 }
 
-
 value_t begin(vm_t *vm, env_t *env, value_t val) {
     value_t result = NIL_VAL;
-    for (cons_t *cons = AS_CONS(val); ;cons = AS_CONS(cons->cdr)) {
+    for (cons_t *cons = AS_CONS(val);; cons = AS_CONS(cons->cdr)) {
         result = eval(vm, env, cons->car);
         if (IS_NIL(cons->cdr)) {
             break;

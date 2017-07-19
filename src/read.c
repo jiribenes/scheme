@@ -1,12 +1,12 @@
-#include <stdio.h> // fprintf, stderr, vsnprintf
-#include <stdarg.h> // va_list
-#include <stdlib.h> // strtod
-#include <errno.h> // errno, ERANGE
+#include <errno.h>   // errno, ERANGE
+#include <stdarg.h>  // va_list
+#include <stdio.h>   // fprintf, stderr, vsnprintf
+#include <stdlib.h>  // strtod
 
+#include "read.h"
 #include "scheme.h"
 #include "value.h"
 #include "vm.h"
-#include "read.h"
 
 static void error_print(reader_t *reader, int line, const char *format, ...) {
     reader->vm->has_error = true;
@@ -32,9 +32,7 @@ inline static bool is_space(char c) {
     return c == ' ' || c == '\r' || c == '\n' || c == '\t';
 }
 
-inline static bool is_digit(char c) {
-    return c >= '0' && c <= '9';
-}
+inline static bool is_digit(char c) { return c >= '0' && c <= '9'; }
 
 inline static bool is_letter(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -43,18 +41,17 @@ inline static bool is_letter(char c) {
 // R5RS without following: . @
 // http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-5.html#%_sec_2.1
 inline static bool is_symbol(char c) {
-    return is_digit(c) || is_letter(c) ||
-        (c == '!') || (c == '$') || (c == '%') || (c == '&') ||
-        (c == '*') || (c == '+') || (c == '-') || (c == ':') ||
-        (c == '<') || (c == '=') || (c == '>') || (c == '?') ||
-        (c == '^') || (c == '_') || (c == '~') || (c == '/');
+    return is_digit(c) || is_letter(c) || (c == '!') || (c == '$') ||
+           (c == '%') || (c == '&') || (c == '*') || (c == '+') || (c == '-') ||
+           (c == ':') || (c == '<') || (c == '=') || (c == '>') || (c == '?') ||
+           (c == '^') || (c == '_') || (c == '~') || (c == '/');
 }
 
 /* *** */
 
-static char next_char(reader_t* reader) {
+static char next_char(reader_t *reader) {
     char c = *reader->cur;
-    //fprintf(stdout, "Note: %c -> %c\n", *reader->cur, *(reader->cur + 1));
+    // fprintf(stdout, "Note: %c -> %c\n", *reader->cur, *(reader->cur + 1));
     reader->cur++;
     if (c == '\n') {
         reader->line++;
@@ -62,12 +59,12 @@ static char next_char(reader_t* reader) {
     return c;
 }
 
-static char peek_next_char(reader_t* reader) {
+static char peek_next_char(reader_t *reader) {
     if (*reader->cur == '\0') return '\0';
     return *(reader->cur + 1);
 }
 
-static void eat_whitespace(reader_t* reader) {
+static void eat_whitespace(reader_t *reader) {
     while (is_space(*reader->cur) && (*reader->cur) != '\0') {
         next_char(reader);
     }
@@ -117,14 +114,15 @@ static void next_token(reader_t *reader) {
         reader->toktype = TOK_SYMBOL;
         reader->tokstart = reader->cur;
     } else {
-        error_print(reader, reader->line, "Unknown token (starts with '%c')", *reader->tokstart);
+        error_print(reader, reader->line, "Unknown token (starts with '%c')",
+                    *reader->tokstart);
     }
 }
 
 static void read1(reader_t *reader);
 static void read_list(reader_t *reader);
 
-static void read_number(reader_t *reader){
+static void read_number(reader_t *reader) {
     errno = 0;
 
     double d = strtod(reader->tokstart, NULL);
@@ -153,7 +151,9 @@ static void read_number(reader_t *reader){
 
     if (errno == ERANGE) {
         // if strtod indicated that the number is too big
-        error_print(reader, reader->line, "Number beginning with %c is too large!", *reader->tokstart);
+        error_print(reader, reader->line,
+                    "Number beginning with %c is too large!",
+                    *reader->tokstart);
         reader->tokval = NUM_VAL(0);
 
         return;
@@ -171,7 +171,8 @@ static void read_quote(reader_t *reader) {
     read1(reader);
     value_t val = reader->tokval;
 
-    reader->tokval = cons_fn(reader->vm, PTR_VAL(s), cons_fn(reader->vm, val, NIL_VAL));
+    reader->tokval =
+        cons_fn(reader->vm, PTR_VAL(s), cons_fn(reader->vm, val, NIL_VAL));
 }
 
 // TODO: add escape characters
@@ -224,7 +225,10 @@ static void read1(reader_t *reader) {
             next_char(reader);
             reader->tokval = FALSE_VAL;
         } else {
-            error_print(reader, reader->line, "Invalid token beginning with # - #t, #f are the only symbols that can begin with #");
+            error_print(reader, reader->line,
+                        "Invalid token beginning with # - "
+                        "#t, #f are the only symbols that "
+                        "can begin with #");
         }
     } else if (reader->toktype == TOK_RPAREN) {
         error_print(reader, reader->line, "Unexpected ')'");

@@ -1,13 +1,13 @@
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "scheme.h"
 
-#include "value.h"
-#include "write.h"
-#include "read.h"
-#include "vm.h"
 #include "core.h"
+#include "read.h"
+#include "value.h"
+#include "vm.h"
+#include "write.h"
 
 static void error_report(vm_t *vm, int line, const char *message) {
     if (line > 0) {
@@ -20,7 +20,8 @@ static void error_report(vm_t *vm, int line, const char *message) {
 /* *** */
 
 void repl(vm_t *vm, env_t *env) {
-    fprintf(stdout, "|Scheme " SCM_VERSION_STRING " - REPL|\n|Use Ctrl+C to exit!|\n");
+    fprintf(stdout,
+            "|Scheme " SCM_VERSION_STRING " - REPL|\n|Use Ctrl+C to exit!|\n");
     char buf[512];
 
     while (true) {
@@ -40,7 +41,7 @@ void repl(vm_t *vm, env_t *env) {
     fprintf(stdout, "Quiting!\n");
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     scm_config_t config;
     scm_config_default(&config);
 

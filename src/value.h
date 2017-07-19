@@ -1,9 +1,9 @@
 #ifndef _value_h
 #define _value_h
 
-#include <stdint.h> // uint64_t, uintptr_t
-#include <stdbool.h> // bool
-#include <math.h> // trunc
+#include <math.h>     // trunc
+#include <stdbool.h>  // bool
+#include <stdint.h>   // uint64_t, uintptr_t
 
 #include "scheme.h"
 
@@ -39,7 +39,7 @@ typedef struct {
     ptrvalue_t p;
 
     uint32_t len, hash;
-    //C99 only - flexible array
+    // C99 only - flexible array
     char value[];
 } string_t;
 
@@ -96,7 +96,7 @@ typedef struct {
 // --------------------------------------------------------------11
 #define MASK_TAG (3)
 
-#define GET_TAG(val) ((int) ((val) & MASK_TAG))
+#define GET_TAG(val) ((int) ((val) & (MASK_TAG)))
 
 // NaN is reserved!
 #define TAG_NAN (0)
@@ -105,12 +105,12 @@ typedef struct {
 #define TAG_TRUE (2)
 #define TAG_FALSE (3)
 
-#define NIL_VAL ((value_t)(uint64_t) (QUIET_NAN | TAG_NIL))
-#define TRUE_VAL ((value_t)(uint64_t) (QUIET_NAN | TAG_TRUE))
-#define FALSE_VAL ((value_t)(uint64_t) (QUIET_NAN | TAG_FALSE))
+#define NIL_VAL ((value_t)(uint64_t)(QUIET_NAN | TAG_NIL))
+#define TRUE_VAL ((value_t)(uint64_t)(QUIET_NAN | TAG_TRUE))
+#define FALSE_VAL ((value_t)(uint64_t)(QUIET_NAN | TAG_FALSE))
 
 // returns true if val is type <X> in IS_<X>
-#define IS_NUM(val) (((val) & QUIET_NAN) != QUIET_NAN)
+#define IS_NUM(val) (((val) & (QUIET_NAN)) != QUIET_NAN)
 #define IS_PTR(val) (((val) & (QUIET_NAN | SIGN_BIT)) == (QUIET_NAN | SIGN_BIT))
 
 #define IS_TRUE(val) ((val) == TRUE_VAL)
@@ -132,23 +132,24 @@ typedef struct {
 // C value -> value
 #define BOOL_VAL(b) (b ? TRUE_VAL : FALSE_VAL)
 #define NUM_VAL(num) (num_to_val(num))
-#define PTR_VAL(ptr) (ptr_to_val((ptrvalue_t*) (ptr)))
+#define PTR_VAL(ptr) (ptr_to_val((ptrvalue_t *) (ptr)))
 
 // value -> C value
 #define AS_BOOL(val) ((!IS_FALSE(val)) && (!IS_NIL(val)))
-#define AS_PTR(val) ((ptrvalue_t*)(uintptr_t) ((val) & ~(SIGN_BIT | QUIET_NAN)))
+#define AS_PTR(val) \
+    ((ptrvalue_t *) (uintptr_t)((val) & ~(SIGN_BIT | QUIET_NAN)))
 
 #define AS_NUM(val) (val_to_num(val))
 
 // doesn't check anything
-#define AS_CONS(val) ((cons_t*) AS_PTR(val))
-#define AS_STRING(val) ((string_t*) AS_PTR(val))
-#define AS_SYMBOL(val) ((symbol_t*) AS_PTR(val))
-#define AS_PRIMITIVE(val) ((primitive_t*) AS_PTR(val))
-#define AS_FUNCTION(val) ((function_t*) AS_PTR(val))
+#define AS_CONS(val) ((cons_t *) AS_PTR(val))
+#define AS_STRING(val) ((string_t *) AS_PTR(val))
+#define AS_SYMBOL(val) ((symbol_t *) AS_PTR(val))
+#define AS_PRIMITIVE(val) ((primitive_t *) AS_PTR(val))
+#define AS_FUNCTION(val) ((function_t *) AS_PTR(val))
 
 // equality
-#define IS_EQ(a,b) (val_eq((a),(b)))
+#define IS_EQ(a, b) (val_eq((a), (b)))
 
 /* *** Memory management functions *** */
 
@@ -175,8 +176,8 @@ uint32_t cons_len(value_t val);
 
 // a conversion type from double to uint64_t
 typedef union {
-	uint64_t bits;
-	double num;
+    uint64_t bits;
+    double num;
 } value_conv_t;
 
 static inline double val_to_num(value_t val) {
@@ -192,7 +193,7 @@ static inline value_t num_to_val(double num) {
 }
 
 static inline value_t ptr_to_val(ptrvalue_t *ptr) {
-    return (value_t) (SIGN_BIT | QUIET_NAN | (uint64_t)(uintptr_t) (ptr));
+    return (value_t)(SIGN_BIT | QUIET_NAN | (uint64_t)(uintptr_t)(ptr));
 }
 
 /* *** equality *** */
@@ -208,7 +209,5 @@ bool val_equal(value_t a, value_t b);
 // scm: eq? or eqv?
 // true for ptrvalues when they are identical
 // true for values when they are equal
-static inline bool val_eq(value_t a, value_t b) {
-    return a == b;
-}
-#endif // _value_h
+static inline bool val_eq(value_t a, value_t b) { return a == b; }
+#endif  // _value_h

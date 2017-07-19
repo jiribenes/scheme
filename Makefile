@@ -6,6 +6,7 @@ C_LIBS = -lm
 DEBUG_OPTIONS = -O0 -DDEBUG -g -Wno-unused-parameter -Wno-unused-function
 RELEASE_OPTIONS = -O3 -Wno-unused-parameter
 
+HEADERS := $(wildcard include/*.h src/*.h)
 SOURCES := $(wildcard src/*.c)
 
 debug: $(SOURCES)
@@ -20,5 +21,9 @@ run: debug
 valgrind: debug
 	valgrind --leak-check=full ./$(BIN)
 
-clean: 
+clean:
 	rm -rf $(BIN)
+
+# TODO: modify this to use SOURCES :)
+format: 
+	clang-format -i -style=file $(HEADERS) $(SOURCES)

@@ -1,11 +1,11 @@
-#include <stdio.h> // FILE
-#include <stdarg.h> // va_list
+#include <stdarg.h>  // va_list
+#include <stdio.h>   // FILE
 
-#include "scheme.h"
 #include "core.h"
+#include "scheme.h"
 #include "value.h"
-#include "write.h"
 #include "vm.h"
+#include "write.h"
 
 void error_runtime(vm_t *vm, const char *format, ...) {
     vm->has_error = true;
@@ -29,16 +29,19 @@ void error_runtime(vm_t *vm, const char *format, ...) {
 
 // Checks if there are exactly n arguments (if at_least is false)
 //                  or at least n arguments (if at_least is true)
-bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n, bool at_least) {
+bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n,
+                 bool at_least) {
     int argc = cons_len(args);
-    if (!at_least) { // exactly
+    if (!at_least) {  // exactly
         if (argc < n) {
-            error_runtime(vm, "%s: not enough args: >= %d expected, %d given!", fn_name, argc, n);
+            error_runtime(vm, "%s: not enough args: >= %d expected, %d given!",
+                          fn_name, argc, n);
             return false;
         }
     } else {
         if (argc != n) {
-            error_runtime(vm, "%s: not enough args: %d expected, %d given!", fn_name, argc, n);
+            error_runtime(vm, "%s: not enough args: %d expected, %d given!",
+                          fn_name, argc, n);
             return false;
         }
     }
@@ -53,7 +56,7 @@ static value_t add(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     double result = 0.0F;
-    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
+    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
         if (!IS_NUM(cons->car)) {
             error_runtime(vm, "+: argument is not a number!");
             return NIL_VAL;
@@ -72,7 +75,7 @@ static value_t multiply(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     double result = 1.0F;
-    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
+    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
         if (!IS_NUM(cons->car)) {
             error_runtime(vm, "*: argument is not a number!");
             return NIL_VAL;
@@ -90,7 +93,8 @@ static value_t subtract(vm_t *vm, env_t *env, value_t args) {
     double result = 0.0F;
     value_t eargs = eval_list(vm, env, args);
     result = AS_NUM(AS_CONS(eargs)->car);
-    for (cons_t *cons = AS_CONS(AS_CONS(eargs)->cdr); ; cons = AS_CONS(cons->cdr)){
+    for (cons_t *cons = AS_CONS(AS_CONS(eargs)->cdr);;
+         cons = AS_CONS(cons->cdr)) {
         if (!IS_NUM(cons->car)) {
             error_runtime(vm, "-: argument is not a number!");
             return NIL_VAL;
@@ -109,13 +113,14 @@ static value_t gt(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     value_t prev = NIL_VAL;
-    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)) {
+    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
         if (!IS_NUM(cons->car)) {
             error_runtime(vm, ">: argument is not a number!");
             return NIL_VAL;
         }
         if (!IS_NIL(prev)) {
-            // if we find a pair where the '>' relation doesn't hold, return false
+            // if we find a pair where the '>' relation doesn't hold,
+            // return false
             if (AS_NUM(prev) <= AS_NUM(cons->car)) {
                 return FALSE_VAL;
             }
@@ -136,9 +141,10 @@ static value_t eq(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     value_t prev = NIL_VAL;
-    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)) {
+    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
         if (!IS_NIL(prev)) {
-            // if we find a pair where the 'eq?' relation doesn't hold, return false
+            // if we find a pair where the 'eq?' relation doesn't hold,
+            // return false
             if (!val_eq(prev, cons->car)) {
                 return FALSE_VAL;
             }
@@ -159,9 +165,10 @@ static value_t equal(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     value_t prev = NIL_VAL;
-    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)) {
+    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
         if (!IS_NIL(prev)) {
-            // if we find a pair where the 'equal?' relation doesn't hold, return false
+            // if we find a pair where the 'equal?' relation doesn't hold,
+            // return false
             if (!val_equal(prev, cons->car)) {
                 return FALSE_VAL;
             }
@@ -187,13 +194,13 @@ static value_t list(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
     cons_t *rest = AS_CONS(args);
 
-    if (IS_SYMBOL(rest->car)) { // (define <name> <body...>)
+    if (IS_SYMBOL(rest->car)) {  // (define <name> <body...>)
         symbol_t *sym = AS_SYMBOL(rest->car);
         cons_t *body = AS_CONS(rest->cdr);
         value_t val = eval(vm, env, body->car);
         variable_add(vm, env, sym, val);
         return val;
-    } else if (IS_CONS(rest->car)) { // (define (<name> <params...>) <body...>)
+    } else if (IS_CONS(rest->car)) {  // (define (<name> <params...>) <body...>)
         symbol_t *sym = AS_SYMBOL(AS_CONS(rest->car)->car);
         value_t params = AS_CONS(rest->car)->cdr;
         cons_t *body = AS_CONS(rest->cdr);
@@ -201,22 +208,24 @@ static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
         value_t val = eval(vm, env, PTR_VAL(func));
         variable_add(vm, env, sym, val);
         return val;
-     } else {
-        error_runtime(vm, "define: is wrong - second argument has to be either a list or a symbol!");
+    } else {
+        error_runtime(vm, "define: is wrong - second argument has to be"
+                          "either a list or a symbol!");
         return NIL_VAL;
-     }
+    }
 }
 
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
     // (lambda (<params...>) <body...>)
 
-    if (IS_NIL(AS_CONS(args)->car)) { // no parameters
+    if (IS_NIL(AS_CONS(args)->car)) {  // no parameters
         value_t body = AS_CONS(args)->cdr;
         function_t *func = function_new(vm, env, NIL_VAL, body);
         return PTR_VAL(func);
     }
 
-    for (cons_t *cons = AS_CONS(AS_CONS(args)->car); ; cons = AS_CONS(cons->cdr)) {
+    for (cons_t *cons = AS_CONS(AS_CONS(args)->car);;
+         cons = AS_CONS(cons->cdr)) {
         if (!IS_SYMBOL(cons->car)) {
             error_runtime(vm, "lambda: all parameters must be symbols!");
             return NIL_VAL;
@@ -302,7 +311,7 @@ static value_t builtin_or(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     arity_check(vm, "or", eargs, 2, true);
     bool result = AS_BOOL(AS_CONS(eargs)->car);
-    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
+    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
         if (!IS_BOOL(cons->car)) {
             error_runtime(vm, "or: argument is not a bool!");
             return NIL_VAL;
@@ -319,7 +328,7 @@ static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     arity_check(vm, "and", eargs, 2, true);
     bool result = AS_BOOL(AS_CONS(eargs)->car);
-    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
+    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
         if (!IS_BOOL(cons->car)) {
             error_runtime(vm, "and: argument is not a bool!");
             return NIL_VAL;
@@ -418,4 +427,3 @@ env_t *scm_env_default(vm_t *vm) {
 
     return env;
 }
-

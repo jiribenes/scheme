@@ -11,7 +11,8 @@ void error_runtime(vm_t *vm, const char *format, ...);
 
 // Checks if there are exactly n arguments (if at_least is false)
 //                  or at least n arguments (if at_least is true)
-bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n, bool at_least);
+bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n,
+                 bool at_least);
 
 // Reads a file and parses it
 value_t file_read(vm_t *vm, const char *filename);
@@ -19,5 +20,4 @@ value_t file_read(vm_t *vm, const char *filename);
 // Loads a default environment
 env_t *scm_env_default(vm_t *vm);
 
-#endif // _core_h
-
+#endif  // _core_h

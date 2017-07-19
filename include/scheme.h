@@ -1,7 +1,7 @@
 #ifndef _scheme_h
 #define _scheme_h
 
-#include <stdlib.h> // size_t
+#include <stdlib.h>  // size_t
 
 // semantic versioning
 #define SCM_VERSION_MAJOR 0
@@ -14,10 +14,10 @@
 typedef struct vm_t vm_t;
 
 // Generic realloc function type (see scm_realloc_default for example)
-typedef void* (*scm_realloc_fn) (void *ptr, size_t new_size);
+typedef void *(*scm_realloc_fn)(void *ptr, size_t new_size);
 
 // A function for reporting an error to the user
-typedef void (*scm_error_fn) (vm_t *vm, int line, const char *message);
+typedef void (*scm_error_fn)(vm_t *vm, int line, const char *message);
 
 // Configuration struct for VM creation
 typedef struct {
@@ -39,9 +39,9 @@ vm_t *vm_new(scm_config_t *config);
 void vm_free(vm_t *vm);
 
 // (re)allocates a pointer, uses vm->config.realloc_fn inside
-void *vm_realloc(vm_t *vm, void* ptr, size_t old_size, size_t new_size);
+void *vm_realloc(vm_t *vm, void *ptr, size_t old_size, size_t new_size);
 
 // garbage collect
 void vm_gc(vm_t *vm);
 
-#endif // _scheme_h
+#endif  // _scheme_h

@@ -6,8 +6,16 @@
 
 // Types of tokens - no other are permitted
 typedef enum {
-    TOK_EOF, TOK_NONE, TOK_LPAREN, TOK_RPAREN, TOK_DOT,
-    TOK_QUOTE, TOK_STRING, TOK_SYMBOL, TOK_HASH, TOK_NUMBER
+    TOK_EOF,
+    TOK_NONE,
+    TOK_LPAREN,
+    TOK_RPAREN,
+    TOK_DOT,
+    TOK_QUOTE,
+    TOK_STRING,
+    TOK_SYMBOL,
+    TOK_HASH,
+    TOK_NUMBER
 } tok_type_t;
 
 // The main reader (parser) type
@@ -28,4 +36,4 @@ typedef struct {
 // Creates a local reader_t on the inside.
 value_t read_source(vm_t *vm, const char *source);
 
-#endif // _read_h
+#endif  // _read_h
