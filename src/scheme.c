@@ -36,16 +36,35 @@ static void error_runtime(vm_t *vm, const char *format, ...) {
 
 /* *** */
 
-static value_t add(vm_t *vm, env_t *env, value_t args) {
-    double result = 0.0F;
-    value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) < 2) {
-        error_runtime(vm, "+: not enough args (has %d)", cons_len(eargs));
-        return NIL_VAL;
+// Checks if there are exactly n arguments (if at_least is false)
+//                  or at least n arguments (if at_least is true)
+static bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n, bool at_least) {
+    int argc = cons_len(args);
+    if (!at_least) { // exactly
+        if (argc < n) {
+            error_runtime(vm, "%s: not enough args: >= %d expected, %d given!", fn_name, argc, n);
+            return false;
+        }
+    } else {
+        if (argc != n) {
+            error_runtime(vm, "%s: not enough args: %d expected, %d given!", fn_name, argc, n);
+            return false;
+        }
     }
+    return true;
+}
+
+/* *** */
+
+static value_t add(vm_t *vm, env_t *env, value_t args) {
+    if (IS_NIL(args)) {
+        return NUM_VAL(0.0F);
+    }
+    value_t eargs = eval_list(vm, env, args);
+    double result = 0.0F;
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
         if (!IS_NUM(cons->car)) {
-            error_runtime(vm, "+: car is not a number!");
+            error_runtime(vm, "+: argument is not a number!");
             return NIL_VAL;
         }
         result += AS_NUM(cons->car);
@@ -57,15 +76,14 @@ static value_t add(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t multiply(vm_t *vm, env_t *env, value_t args) {
-    double result = 1.0F;
-    value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) < 2) {
-        error_runtime(vm, "*: not enough args (has %d)", cons_len(eargs));
-        return NIL_VAL;
+    if (IS_NIL(args)) {
+        return NUM_VAL(1.0F);
     }
+    value_t eargs = eval_list(vm, env, args);
+    double result = 1.0F;
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
         if (!IS_NUM(cons->car)) {
-            error_runtime(vm, "*: car is not a number!");
+            error_runtime(vm, "*: argument is not a number!");
             return NIL_VAL;
         }
         result *= AS_NUM(cons->car);
@@ -77,16 +95,13 @@ static value_t multiply(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t subtract(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "-", args, 1, true);
     double result = 0.0F;
     value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) < 2) {
-        error_runtime(vm, "-: not enough args (has %d)", cons_len(eargs));
-        return NIL_VAL;
-    }
     result = AS_NUM(AS_CONS(eargs)->car);
     for (cons_t *cons = AS_CONS(AS_CONS(eargs)->cdr); ; cons = AS_CONS(cons->cdr)){
         if (!IS_NUM(cons->car)) {
-            error_runtime(vm, "-: car is not a number!");
+            error_runtime(vm, "-: argument is not a number!");
             return NIL_VAL;
         }
         result -= AS_NUM(cons->car);
@@ -98,46 +113,79 @@ static value_t subtract(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t gt(vm_t *vm, env_t *env, value_t args) {
+    if (IS_NIL(args)) {
+        return TRUE_VAL;
+    }
     value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) != 2) {
-        error_runtime(vm, ">: args (has %d) != 2", cons_len(args));
+    value_t prev = NIL_VAL;
+    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)) {
+        if (!IS_NUM(cons->car)) {
+            error_runtime(vm, ">: argument is not a number!");
+            return NIL_VAL;
+        }
+        if (!IS_NIL(prev)) {
+            // if we find a pair where the '>' relation doesn't hold, return false
+            if (AS_NUM(prev) <= AS_NUM(cons->car)) {
+                return FALSE_VAL;
+            }
+        }
+        prev = AS_NUM(cons->car);
+        if (IS_NIL(cons->cdr)) {
+            break;
+        }
     }
-
-    value_t a = AS_CONS(eargs)->car;
-    value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
-
-    if (!IS_NUM(a) || !IS_NUM(b)) {
-        error_runtime(vm, ">: arg is not a number!");
-    }
-    return BOOL_VAL(AS_NUM(a) > AS_NUM(b));
+    return TRUE_VAL;
 }
 
+// Checks for eq? using the val_eq function from value.h
+// BEWARE: It assumes transitivity (tries only a == b && b == c && c == d ...)
 static value_t eq(vm_t *vm, env_t *env, value_t args) {
-    value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) != 2) {
-        error_runtime(vm, "eq?: args (has %d) != 2", cons_len(args));
+    if (IS_NIL(args)) {
+        return TRUE_VAL;
     }
-    value_t a = AS_CONS(eargs)->car;
-    value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
-    bool result = val_eq(a, b);
-    return BOOL_VAL(result);
+    value_t eargs = eval_list(vm, env, args);
+    value_t prev = NIL_VAL;
+    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)) {
+        if (!IS_NIL(prev)) {
+            // if we find a pair where the 'eq?' relation doesn't hold, return false
+            if (!val_eq(prev, cons->car)) {
+                return FALSE_VAL;
+            }
+        }
+        prev = cons->car;
+        if (IS_NIL(cons->cdr)) {
+            break;
+        }
+    }
+    return TRUE_VAL;
 }
 
+// Checks for equal? using the val_equal function from value.h
+// BEWARE: It assumes transitivity (tries only a == b && b == c && c == d ...)
 static value_t equal(vm_t *vm, env_t *env, value_t args) {
-    value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) != 2) {
-        error_runtime(vm, "equal?: args (has %d) != 2", cons_len(args));
+    if (IS_NIL(args)) {
+        return TRUE_VAL;
     }
-    value_t a = AS_CONS(eargs)->car;
-    value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;
-    bool result = val_equal(a, b);
-    return BOOL_VAL(result);
+    value_t eargs = eval_list(vm, env, args);
+    value_t prev = NIL_VAL;
+    for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)) {
+        if (!IS_NIL(prev)) {
+            // if we find a pair where the 'equal?' relation doesn't hold, return false
+            if (!val_equal(prev, cons->car)) {
+                return FALSE_VAL;
+            }
+        }
+        prev = cons->car;
+        if (IS_NIL(cons->cdr)) {
+            break;
+        }
+    }
+    return TRUE_VAL;
 }
 
+// FIXME I have a feeling that this is not the correct functionality...
 static value_t quote(vm_t *vm, env_t *env, value_t args) {
-    if (cons_len(args) != 1) {
-        error_runtime(vm, "': args (has %d) != 1", cons_len(args));
-    }
+    arity_check(vm, "quote", args, 1, false);
     return AS_CONS(args)->car;
 }
 
@@ -180,8 +228,10 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
     for (cons_t *cons = AS_CONS(AS_CONS(args)->car); ; cons = AS_CONS(cons->cdr)) {
         if (!IS_SYMBOL(cons->car)) {
             error_runtime(vm, "lambda: all parameters must be symbols!");
+            return NIL_VAL;
         } else if (!IS_NIL(cons->cdr) && !IS_CONS(cons->cdr)) {
             error_runtime(vm, "lambda: parameter list must not be dotted");
+            return NIL_VAL;
         }
 
         if (IS_NIL(cons->cdr)) {
@@ -196,9 +246,7 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
 
 // (if <condition> <then> <otherwise> ...)
 static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
-    if (cons_len(args) < 2) {
-        error_runtime(vm, "if: not enough args (has %d)", cons_len(args));
-    }
+    arity_check(vm, "if", args, 2, true);
 
     value_t condition = eval(vm, env, AS_CONS(args)->car);
     if (AS_BOOL(condition)) {
@@ -215,9 +263,7 @@ static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t builtin_cons(vm_t *vm, env_t *env, value_t args) {
-    if (cons_len(args) != 2) {
-        error_runtime(vm, "eq?: args (has %d) != 2", cons_len(args));
-    }
+    arity_check(vm, "cons", args, 2, false);
 
     value_t car = eval(vm, env, AS_CONS(args)->car);
     value_t cdr = eval(vm, env, AS_CONS(AS_CONS(args)->cdr)->car);
@@ -228,18 +274,14 @@ static value_t builtin_cons(vm_t *vm, env_t *env, value_t args) {
 
 static value_t builtin_is_cons(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) != 1) {
-        error_runtime(vm, "cons?: args (has %d) != 1", cons_len(args));
-    }
+    arity_check(vm, "cons?", eargs, 1, false);
     value_t a = AS_CONS(eargs)->car;
     return BOOL_VAL(IS_NIL(a) || IS_CONS(a));
 }
 
 static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) != 1) {
-        error_runtime(vm, "car: args (has %d) != 1", cons_len(args));
-    }
+    arity_check(vm, "car", eargs, 1, false);
     value_t a = AS_CONS(eargs)->car;
     if (IS_NIL(a)) {
         error_runtime(vm, "car: cannot give car of NIL");
@@ -249,9 +291,7 @@ static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
 
 static value_t builtin_cdr(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) != 1) {
-        error_runtime(vm, "cdr: args (has %d) != 1", cons_len(args));
-    }
+    arity_check(vm, "cdr", eargs, 1, false);
     value_t a = AS_CONS(eargs)->car;
     if (IS_NIL(a)) {
         error_runtime(vm, "cdr: cannot give cdr of NIL");
@@ -265,16 +305,15 @@ static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
     return NIL_VAL;
 }
 
+// TODO Allow functions or, and to be with arbitrary amount of elements
+//      Look at the RxRS for the details
 static value_t builtin_or(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) < 2) {
-        error_runtime(vm, "or: not enough args (has %d)", cons_len(eargs));
-        return NIL_VAL;
-    }
+    arity_check(vm, "or", eargs, 2, true);
     bool result = AS_BOOL(AS_CONS(eargs)->car);
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
         if (!IS_BOOL(cons->car)) {
-            error_runtime(vm, "or: car is not a bool!");
+            error_runtime(vm, "or: argument is not a bool!");
             return NIL_VAL;
         }
         result |= AS_BOOL(cons->car);
@@ -287,14 +326,11 @@ static value_t builtin_or(vm_t *vm, env_t *env, value_t args) {
 
 static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
-    if (cons_len(eargs) < 2) {
-        error_runtime(vm, "and: not enough args (has %d)", cons_len(eargs));
-        return NIL_VAL;
-    }
+    arity_check(vm, "and", eargs, 2, true);
     bool result = AS_BOOL(AS_CONS(eargs)->car);
     for (cons_t *cons = AS_CONS(eargs); ; cons = AS_CONS(cons->cdr)){
         if (!IS_BOOL(cons->car)) {
-            error_runtime(vm, "and: car is not a bool!");
+            error_runtime(vm, "and: argument is not a bool!");
             return NIL_VAL;
         }
         result &= AS_BOOL(cons->car);
