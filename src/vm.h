@@ -33,6 +33,10 @@ struct vm_t {
     // these are values, that shouldn't be deleted by the gc
     size_t num_temp;
     ptrvalue_t *temp[MAX_NUM_TEMP];
+
+    // indicates if the VM encountered an error
+    // we want to accumulate as many errors as possible!
+    bool has_error;
 };
 
 // adds a primitive function under name [name] to env

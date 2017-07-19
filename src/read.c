@@ -1,9 +1,32 @@
-#include <stdio.h> // fprintf, stderr
+#include <stdio.h> // fprintf, stderr, vsnprintf
+#include <stdarg.h> // va_list
 #include <stdlib.h> // strtod
+#include <errno.h> // errno, ERANGE
 
+#include "scheme.h"
 #include "value.h"
 #include "vm.h"
 #include "read.h"
+
+static void error_print(reader_t *reader, int line, const char *format, ...) {
+    reader->vm->has_error = true;
+    if (reader->vm->config.error_fn == NULL) {
+        return;
+    }
+
+    // TODO Move magic number and actually determine the size needed
+    char message[256];
+
+    va_list contents;
+    va_start(contents, format);
+
+    vsnprintf(message, 256, format, contents);
+
+    va_end(contents);
+
+    reader->vm->config.error_fn(reader->vm, line, message);
+}
+/* *** */
 
 inline static bool is_space(char c) {
     return c == ' ' || c == '\r' || c == '\n' || c == '\t';
@@ -94,7 +117,7 @@ static void next_token(reader_t *reader) {
         reader->toktype = TOK_SYMBOL;
         reader->tokstart = reader->cur;
     } else {
-        fprintf(stderr, "Error: Unknown token at line %d (starts with '%c')", reader->line, *reader->cur);
+        error_print(reader, reader->line, "Unknown token (starts with '%c')", *reader->tokstart);
     }
 }
 
@@ -102,6 +125,8 @@ static void read1(reader_t *reader);
 static void read_list(reader_t *reader);
 
 static void read_number(reader_t *reader){
+    errno = 0;
+
     double d = strtod(reader->tokstart, NULL);
 
     while (is_digit(*reader->cur)) {
@@ -124,6 +149,14 @@ static void read_number(reader_t *reader){
         while (is_digit(*reader->cur)) {
             next_char(reader);
         }
+    }
+
+    if (errno == ERANGE) {
+        // if strtod indicated that the number is too big
+        error_print(reader, reader->line, "Number beginning with %c is too large!", *reader->tokstart);
+        reader->tokval = NUM_VAL(0);
+
+        return;
     }
 
     reader->tokval = NUM_VAL(d);
@@ -191,14 +224,14 @@ static void read1(reader_t *reader) {
             next_char(reader);
             reader->tokval = FALSE_VAL;
         } else {
-            fprintf(stderr, "Invalid token: #t and #f are the only symbols that can begin with #\n");
+            error_print(reader, reader->line, "Invalid token beginning with # - #t, #f are the only symbols that can begin with #");
         }
     } else if (reader->toktype == TOK_RPAREN) {
-        fprintf(stderr, "Unexpected ')'\n");
+        error_print(reader, reader->line, "Unexpected ')'");
         next_char(reader);
         return;
     } else if (reader->toktype == TOK_DOT) {
-        fprintf(stderr, "Unexpected '.'\n");
+        error_print(reader, reader->line, "Unexpected '.'");
         next_char(reader);
         return;
     } else if (reader->toktype == TOK_SYMBOL) {
@@ -217,10 +250,10 @@ static void read_list(reader_t *reader) {
         reader->tokval = NIL_VAL;
         return;
     } else if (reader->toktype == TOK_EOF) {
-        fprintf(stderr, "Unexpected EOF while parsing\n");
+        error_print(reader, reader->line, "Unexpected EOF while parsing");
         return;
     } else if (reader->toktype == TOK_DOT) {
-        fprintf(stderr, "Unexpected dot in list\n");
+        error_print(reader, reader->line, "Unexpected dot in list");
         return;
     }
 
@@ -238,7 +271,7 @@ static void read_list(reader_t *reader) {
             next_char(reader);
             return;
         } else if (reader->toktype == TOK_EOF) {
-            fprintf(stderr, "Unexpected EOF while parsing\n");
+            error_print(reader, reader->line, "Unexpected EOF while parsing");
             return;
         } else if (reader->toktype == TOK_DOT) {
             next_char(reader);
@@ -273,6 +306,7 @@ value_t read_source(vm_t *vm, const char *source) {
     reader.toktype = TOK_NONE;
 
     vm->reader = &reader;
+    vm->has_error = false;
 
     /* new here */
     next_token(&reader);
@@ -284,6 +318,12 @@ value_t read_source(vm_t *vm, const char *source) {
         reader.tokval = PTR_VAL(eof);
     } else {
         read1(&reader);
+    }
+
+    if (vm->has_error) {
+        // We have encountered an error, everything is surely borked.
+        vm->curval = NIL_VAL;
+        reader.tokval = NIL_VAL;
     }
 
     vm->curval = reader.tokval;

@@ -32,7 +32,7 @@ vm_t *vm_new(scm_config_t *config) {
     memset(vm, 0, sizeof(vm_t));
 
     if (config != NULL) {
-        memcpy(&vm->config, config, sizeof(scm_config_t)); 
+        memcpy(&vm->config, config, sizeof(scm_config_t));
     } else {
         scm_config_default(&vm->config);
     }
@@ -46,6 +46,8 @@ vm_t *vm_new(scm_config_t *config) {
     vm->reader = NULL;
 
     vm->curval = NIL_VAL;
+
+    vm->has_error = false;
 
     return vm;
 }
