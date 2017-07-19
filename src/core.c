@@ -33,15 +33,15 @@ bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n,
                  bool at_least) {
     int argc = cons_len(args);
     if (!at_least) {  // exactly
-        if (argc < n) {
-            error_runtime(vm, "%s: not enough args: >= %d expected, %d given!",
-                          fn_name, argc, n);
-            return false;
-        }
-    } else {
         if (argc != n) {
             error_runtime(vm, "%s: not enough args: %d expected, %d given!",
-                          fn_name, argc, n);
+                          fn_name, n, argc);
+            return false;
+        }
+    } else {  // at least
+        if (argc < n) {
+            error_runtime(vm, "%s: not enough args: >= %d expected, %d given!",
+                          fn_name, n, argc);
             return false;
         }
     }
@@ -93,6 +93,9 @@ static value_t subtract(vm_t *vm, env_t *env, value_t args) {
     double result = 0.0F;
     value_t eargs = eval_list(vm, env, args);
     result = AS_NUM(AS_CONS(eargs)->car);
+    if (IS_NIL(AS_CONS(eargs)->cdr)) {
+        return NUM_VAL(-result);
+    }
     for (cons_t *cons = AS_CONS(AS_CONS(eargs)->cdr);;
          cons = AS_CONS(cons->cdr)) {
         if (!IS_NUM(cons->car)) {
