@@ -28,4 +28,8 @@
             (cons (fn (car lst))
                 (map fn (cdr lst)))))
 
+    (define (test a b)
+        (write 
+            (equal? (eval a) b)))
+
     'stdlib)

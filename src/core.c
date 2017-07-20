@@ -344,9 +344,9 @@ static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t builtin_eval(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "eval", args, 1, false);
     value_t eargs = eval_list(vm, env, args);
-    arity_check(vm, "eval", eargs, 1, false);
-    return AS_CONS(eval_list(vm, env, eargs))->car;
+    return eval(vm, env, AS_CONS(eargs)->car);
 }
 
 /* *** */

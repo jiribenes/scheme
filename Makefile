@@ -9,6 +9,8 @@ RELEASE_OPTIONS = -O3 -Wno-unused-parameter
 HEADERS := $(wildcard include/*.h src/*.h)
 SOURCES := $(wildcard src/*.c)
 
+.PHONY: test clean
+
 debug: $(SOURCES)
 	$(CC) $(C_OPTIONS) $(C_WARNINGS) $(DEBUG_OPTIONS) $(C_LIBS) -Isrc/ -Iinclude/ $(SOURCES) -o $(BIN)
 
@@ -27,3 +29,6 @@ clean:
 # TODO: modify this to use SOURCES :)
 format: 
 	clang-format -i -style=file $(HEADERS) $(SOURCES)
+
+test:
+	test/test.py
