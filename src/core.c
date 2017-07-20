@@ -138,10 +138,6 @@ static value_t eq(vm_t *vm, env_t *env, value_t args) {
     value_t prev = NIL_VAL;
     value_t arg, iter;
     SCM_FOREACH (arg, AS_CONS(eargs), iter) {
-        if (!IS_NUM(arg)) {
-            error_runtime(vm, "eq?: argument is not a number!");
-            return NIL_VAL;
-        }
         if (!IS_NIL(prev)) {
             // if we find a pair where the 'eq?' relation doesn't hold,
             // return false
@@ -164,10 +160,6 @@ static value_t equal(vm_t *vm, env_t *env, value_t args) {
     value_t prev = NIL_VAL;
     value_t arg, iter;
     SCM_FOREACH (arg, AS_CONS(eargs), iter) {
-        if (!IS_NUM(arg)) {
-            error_runtime(vm, "equal?: argument is not a number!");
-            return NIL_VAL;
-        }
         if (!IS_NIL(prev)) {
             // if we find a pair where the 'equal?' relation doesn't hold,
             // return false
