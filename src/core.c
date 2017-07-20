@@ -56,15 +56,13 @@ static value_t add(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     double result = 0.0F;
-    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
-        if (!IS_NUM(cons->car)) {
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
+        if (!IS_NUM(arg)) {
             error_runtime(vm, "+: argument is not a number!");
             return NIL_VAL;
         }
-        result += AS_NUM(cons->car);
-        if (IS_NIL(cons->cdr)) {
-            break;
-        }
+        result += AS_NUM(arg);
     }
     return NUM_VAL(result);
 }
@@ -75,15 +73,13 @@ static value_t multiply(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     double result = 1.0F;
-    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
-        if (!IS_NUM(cons->car)) {
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
+        if (!IS_NUM(arg)) {
             error_runtime(vm, "*: argument is not a number!");
             return NIL_VAL;
         }
-        result *= AS_NUM(cons->car);
-        if (IS_NIL(cons->cdr)) {
-            break;
-        }
+        result *= AS_NUM(arg);
     }
     return NUM_VAL(result);
 }
@@ -92,20 +88,18 @@ static value_t subtract(vm_t *vm, env_t *env, value_t args) {
     arity_check(vm, "-", args, 1, true);
     double result = 0.0F;
     value_t eargs = eval_list(vm, env, args);
-    result = AS_NUM(AS_CONS(eargs)->car);
+    value_t arg = AS_CONS(eargs)->car;
+    result = AS_NUM(arg);
     if (IS_NIL(AS_CONS(eargs)->cdr)) {
         return NUM_VAL(-result);
     }
-    for (cons_t *cons = AS_CONS(AS_CONS(eargs)->cdr);;
-         cons = AS_CONS(cons->cdr)) {
-        if (!IS_NUM(cons->car)) {
+    value_t iter;
+    SCM_FOREACH (arg, AS_CONS(AS_CONS(eargs)->cdr), iter) {
+        if (!IS_NUM(arg)) {
             error_runtime(vm, "-: argument is not a number!");
             return NIL_VAL;
         }
-        result -= AS_NUM(cons->car);
-        if (IS_NIL(cons->cdr)) {
-            break;
-        }
+        result -= AS_NUM(arg);
     }
     return NUM_VAL(result);
 }
@@ -116,22 +110,20 @@ static value_t gt(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     value_t prev = NIL_VAL;
-    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
-        if (!IS_NUM(cons->car)) {
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
+        if (!IS_NUM(arg)) {
             error_runtime(vm, ">: argument is not a number!");
             return NIL_VAL;
         }
         if (!IS_NIL(prev)) {
             // if we find a pair where the '>' relation doesn't hold,
             // return false
-            if (AS_NUM(prev) <= AS_NUM(cons->car)) {
+            if (AS_NUM(prev) <= AS_NUM(arg)) {
                 return FALSE_VAL;
             }
         }
-        prev = AS_NUM(cons->car);
-        if (IS_NIL(cons->cdr)) {
-            break;
-        }
+        prev = arg;
     }
     return TRUE_VAL;
 }
@@ -144,18 +136,20 @@ static value_t eq(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     value_t prev = NIL_VAL;
-    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
+        if (!IS_NUM(arg)) {
+            error_runtime(vm, "eq?: argument is not a number!");
+            return NIL_VAL;
+        }
         if (!IS_NIL(prev)) {
             // if we find a pair where the 'eq?' relation doesn't hold,
             // return false
-            if (!val_eq(prev, cons->car)) {
+            if (!val_eq(prev, arg)) {
                 return FALSE_VAL;
             }
         }
-        prev = cons->car;
-        if (IS_NIL(cons->cdr)) {
-            break;
-        }
+        prev = arg;
     }
     return TRUE_VAL;
 }
@@ -168,18 +162,20 @@ static value_t equal(vm_t *vm, env_t *env, value_t args) {
     }
     value_t eargs = eval_list(vm, env, args);
     value_t prev = NIL_VAL;
-    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
+        if (!IS_NUM(arg)) {
+            error_runtime(vm, "equal?: argument is not a number!");
+            return NIL_VAL;
+        }
         if (!IS_NIL(prev)) {
             // if we find a pair where the 'equal?' relation doesn't hold,
             // return false
-            if (!val_equal(prev, cons->car)) {
+            if (!val_equal(prev, arg)) {
                 return FALSE_VAL;
             }
         }
-        prev = cons->car;
-        if (IS_NIL(cons->cdr)) {
-            break;
-        }
+        prev = arg;
     }
     return TRUE_VAL;
 }
@@ -190,7 +186,7 @@ static value_t quote(vm_t *vm, env_t *env, value_t args) {
     return AS_CONS(args)->car;
 }
 
-static value_t list(vm_t *vm, env_t *env, value_t args) {
+static value_t builtin_list(vm_t *vm, env_t *env, value_t args) {
     return eval_list(vm, env, args);
 }
 
@@ -226,7 +222,7 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
         function_t *func = function_new(vm, env, NIL_VAL, body);
         return PTR_VAL(func);
     }
-
+    // TODO: Rewrite using SCM_FOREACH macro
     for (cons_t *cons = AS_CONS(AS_CONS(args)->car);;
          cons = AS_CONS(cons->cdr)) {
         if (!IS_SYMBOL(cons->car)) {
@@ -310,6 +306,7 @@ static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
 
 // TODO Allow functions or, and to be with arbitrary amount of elements
 //      Look at the RxRS for the details
+//      Rewrite using SCM_FOREACH macro
 static value_t builtin_or(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     arity_check(vm, "or", eargs, 2, true);
@@ -410,7 +407,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "eq?", 3, eq);
     primitive_add(vm, env, "equal?", 6, equal);
     primitive_add(vm, env, "quote", 5, quote);
-    primitive_add(vm, env, "list", 4, list);
+    primitive_add(vm, env, "list", 4, builtin_list);
     primitive_add(vm, env, "begin", 5, begin);
     primitive_add(vm, env, "define", 6, builtin_define);
     primitive_add(vm, env, "lambda", 6, lambda);
