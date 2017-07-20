@@ -29,7 +29,7 @@
                 (map fn (cdr lst)))))
 
     (define (test a b)
-        (write 
-            (equal? (eval a) b)))
+        (write
+            (eq? a b)))
 
     'stdlib)
