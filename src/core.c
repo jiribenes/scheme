@@ -343,6 +343,12 @@ static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
     return BOOL_VAL(result);
 }
 
+static value_t builtin_eval(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "eval", eargs, 1, false);
+    return AS_CONS(eval_list(vm, env, eargs))->car;
+}
+
 /* *** */
 #ifdef DEBUG
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
@@ -421,6 +427,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "write", 5, builtin_write);
     primitive_add(vm, env, "or", 2, builtin_or);
     primitive_add(vm, env, "and", 3, builtin_and);
+    primitive_add(vm, env, "eval", 4, builtin_eval);
 #ifdef DEBUG
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
