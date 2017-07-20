@@ -210,4 +210,13 @@ bool val_equal(value_t a, value_t b);
 // true for ptrvalues when they are identical
 // true for values when they are equal
 static inline bool val_eq(value_t a, value_t b) { return a == b; }
+
+/* *** looping *** */
+
+// For each value `val` in cons pair `cons` using iterator `iter`,
+// do something
+#define SCM_FOREACH(val, cons, iter)                                     \
+    for (iter = PTR_VAL(cons); !IS_NIL(iter); iter = AS_CONS(iter)->cdr) \
+        if ((val = AS_CONS(iter)->car), true)
+
 #endif  // _value_h

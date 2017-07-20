@@ -10,6 +10,7 @@ DerivePointerAlignment: false
 PointerAlignment: Right
 
 SpaceAfterCStyleCast: true # this is wrong in the docs!
+ForEachMacros: ['SCM_FOREACH']
 
 TabWidth:        4
 IndentWidth:     4 
