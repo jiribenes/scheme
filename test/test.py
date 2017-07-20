@@ -73,11 +73,11 @@ def main(basepath):
         total_failed += len(failed)
 
         for fail in failed:
-            print 'FAIL: line {} in file: {} (absolute path: {})!'.format(fail,
-                    P.basename(test), test)
+            print('FAIL: test #{} in file: {} (absolute path: {})!'.format(fail,
+                    P.basename(test), test))
 
-    print 'Tests finished! {} succeeded and {} failed!'.format(total
-            - total_failed, total_failed)
+    print('Tests finished! {} succeeded and {} failed!'.format(total
+            - total_failed, total_failed))
 
 
 if __name__ == '__main__':
