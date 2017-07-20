@@ -127,6 +127,10 @@ static void read_number(reader_t *reader) {
 
     double d = strtod(reader->tokstart, NULL);
 
+    if ((*reader->cur) == '-') {
+        next_char(reader);
+    }
+
     while (is_digit(*reader->cur)) {
         next_char(reader);
     }
