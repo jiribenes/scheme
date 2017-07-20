@@ -299,7 +299,9 @@ static value_t builtin_cdr(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
-    write(stdout, eval_list(vm, env, args));
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "write", eargs, 1, false);
+    write(stdout, AS_CONS(eargs)->car);
     fprintf(stdout, "\n");
     return NIL_VAL;
 }
