@@ -185,13 +185,13 @@ static size_t vm_size(vm_t *vm, value_t val) {
 
 // A very basic mark and sweep GC
 void vm_gc(vm_t *vm) {
-#ifdef NOVM
+#ifdef NOGC
     return;
-#endif
+#endif  // NOGC
 #ifdef DEBUG
     fprintf(stdout, "GC started\n");
     size_t prev_allocated = vm->allocated;
-#endif
+#endif  // DEBUG
     vm->allocated = 0;
     markall(vm);
     ptrvalue_t **head = &vm->head;
@@ -209,7 +209,7 @@ void vm_gc(vm_t *vm) {
 #ifdef DEBUG
     fprintf(stdout, "GC finished: %zu bytes previously, %zu bytes now!\n",
             prev_allocated, vm->allocated);
-#endif
+#endif  // DEBUG
     vm->gc_threshold = vm->allocated * 2;
     return;
 }
@@ -234,17 +234,17 @@ env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals) {
     if (!IS_NIL(vars)) {
         var = AS_CONS(vars);
         val = AS_CONS(vals);
-    }
-    while (!IS_NIL(var->car)) {
-        value_t pair = cons_fn(vm, var->car, val->car);
-        value_t temp = cons_fn(vm, pair, alist);
-        alist = temp;
+        while (!IS_NIL(var->car)) {
+            value_t pair = cons_fn(vm, var->car, val->car);
+            value_t temp = cons_fn(vm, pair, alist);
+            alist = temp;
 
-        if (IS_NIL(var->cdr)) {
-            break;
+            if (IS_NIL(var->cdr)) {
+                break;
+            }
+            var = AS_CONS(var->cdr);
+            val = AS_CONS(val->cdr);
         }
-        var = AS_CONS(var->cdr);
-        val = AS_CONS(val->cdr);
     }
     env_t *new_env = env_new(vm, alist, env);
     return new_env;
@@ -260,6 +260,8 @@ void primitive_add(vm_t *vm, env_t *env, const char *name, size_t len,
 }
 
 /* *** EVAL/APPLY *** */
+
+// Applies <func> in <env> to <args>
 static value_t apply_func(vm_t *vm, env_t *env, function_t *func,
                           value_t args) {
     value_t params = func->params;
@@ -269,9 +271,11 @@ static value_t apply_func(vm_t *vm, env_t *env, function_t *func,
     return begin(vm, new_env, body);
 }
 
+// Tries to apply the value <fn> in <env> to <args>
 static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
     if (!IS_NIL(args) && !IS_CONS(args)) {
         fprintf(stderr, "Error: Cannot apply to a non-list\n");
+        return NIL_VAL;
     }
     if (IS_PRIMITIVE(fn)) {
         primitive_t *prim = AS_PRIMITIVE(fn);
@@ -288,22 +292,19 @@ static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
     return NIL_VAL;
 }
 
+// Tries to find <sym> in <env>
 static value_t find(env_t *env, symbol_t *sym) {
     for (env_t *e = env; e != NULL; e = e->up) {
         if (IS_NIL(e->variables)) {
-            return NIL_VAL;
+            // we're not going to find anything here, let's move on
+            continue;
         }
-        cons_t *vars = AS_CONS(e->variables);
-        while (true) {
-            cons_t *pair = AS_CONS(vars->car);
-            symbol_t *key = AS_SYMBOL(pair->car);
+        value_t pair, iter;
+        SCM_FOREACH (pair, AS_CONS(e->variables), iter) {
+            symbol_t *key = AS_SYMBOL(AS_CONS(pair)->car);
             if (key == sym) {
-                return pair->cdr;
+                return AS_CONS(pair)->cdr;
             }
-            if (IS_NIL(vars->cdr)) {
-                break;
-            }
-            vars = AS_CONS(vars->cdr);
         }
     }
 
@@ -311,6 +312,7 @@ static value_t find(env_t *env, symbol_t *sym) {
     return NIL_VAL;
 }
 
+// Evaluates all members of list and returns their return values as a list
 value_t eval_list(vm_t *vm, env_t *env, value_t list) {
     if (IS_NIL(list)) {
         return NIL_VAL;
@@ -335,14 +337,18 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list) {
     return PTR_VAL(head);
 }
 
+// Evaluates the value <val>
 value_t eval(vm_t *vm, env_t *env, value_t val) {
     if (!IS_PTR(val) || IS_STRING(val) || IS_PRIMITIVE(val) ||
         IS_FUNCTION(val)) {
+        // These values are self evaluating
         return val;
     } else if (IS_SYMBOL(val)) {
+        // This is a variable
         symbol_t *sym = AS_SYMBOL(val);
         return find(env, sym);
     } else if (IS_CONS(val)) {
+        // It's a function application
         cons_t *cons = AS_CONS(val);
         value_t fn = cons->car;
         fn = eval(vm, env, cons->car);
@@ -357,13 +363,10 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
     return NIL_VAL;
 }
 
+// Evaluates expressions in order, returns the last evaluated
 value_t begin(vm_t *vm, env_t *env, value_t val) {
     value_t result = NIL_VAL;
-    for (cons_t *cons = AS_CONS(val);; cons = AS_CONS(cons->cdr)) {
-        result = eval(vm, env, cons->car);
-        if (IS_NIL(cons->cdr)) {
-            break;
-        }
-    }
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(val), iter) { result = eval(vm, env, arg); }
     return result;
 }
