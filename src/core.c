@@ -239,16 +239,21 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
     arity_check(vm, "if", args, 2, true);
 
+    // First evaluate <condition>
     value_t condition = eval(vm, env, AS_CONS(args)->car);
+
+    // if it's true, return <then>
     if (AS_BOOL(condition)) {
         value_t then = eval(vm, env, AS_CONS(AS_CONS(args)->cdr)->car);
         return eval(vm, env, then);
     }
 
+    // If missing <otherwise> and <condition> is false, return false
     if (IS_NIL(AS_CONS(AS_CONS(args)->cdr)->cdr)) {
         return FALSE_VAL;
     }
 
+    // Else do <otherwise>
     value_t otherwise = AS_CONS(AS_CONS(args)->cdr)->cdr;
     return begin(vm, env, otherwise);
 }
@@ -294,6 +299,14 @@ static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     arity_check(vm, "write", eargs, 1, false);
     write(stdout, AS_CONS(eargs)->car);
+    fprintf(stdout, "\n");
+    return NIL_VAL;
+}
+
+static value_t builtin_display(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "write", eargs, 1, false);
+    display(stdout, AS_CONS(eargs)->car);
     fprintf(stdout, "\n");
     return NIL_VAL;
 }
@@ -417,6 +430,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "car", 3, builtin_car);
     primitive_add(vm, env, "cdr", 3, builtin_cdr);
     primitive_add(vm, env, "write", 5, builtin_write);
+    primitive_add(vm, env, "display", 7, builtin_display);
     primitive_add(vm, env, "or", 2, builtin_or);
     primitive_add(vm, env, "and", 3, builtin_and);
     primitive_add(vm, env, "eval", 4, builtin_eval);
