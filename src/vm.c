@@ -293,7 +293,7 @@ static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
 }
 
 // Tries to find <sym> in <env>
-static value_t find(env_t *env, symbol_t *sym) {
+value_t find(env_t *env, symbol_t *sym) {
     for (env_t *e = env; e != NULL; e = e->up) {
         if (IS_NIL(e->variables)) {
             // we're not going to find anything here, let's move on
@@ -304,6 +304,28 @@ static value_t find(env_t *env, symbol_t *sym) {
             symbol_t *key = AS_SYMBOL(AS_CONS(pair)->car);
             if (key == sym) {
                 return AS_CONS(pair)->cdr;
+            }
+        }
+    }
+
+    fprintf(stderr, "Error: Symbol %s not bound\n", sym->name);
+    return NIL_VAL;
+}
+
+// Tries to find <sym> in <env> and replace it's val with <new_val>
+// TODO: this is maybe unnecessary duplication with 'find' above?
+value_t find_replace(env_t *env, symbol_t *sym, value_t new_val) {
+    for (env_t *e = env; e != NULL; e = e->up) {
+        if (IS_NIL(e->variables)) {
+            // we're not going to find anything here, let's move on
+            continue;
+        }
+        value_t pair, iter;
+        SCM_FOREACH (pair, AS_CONS(e->variables), iter) {
+            symbol_t *key = AS_SYMBOL(AS_CONS(pair)->car);
+            if (key == sym) {
+                AS_CONS(pair)->cdr = new_val;
+                return new_val;
             }
         }
     }

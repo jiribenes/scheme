@@ -44,6 +44,12 @@ void primitive_add(vm_t *vm, env_t *env, const char *name, size_t len,
 // adds a variable to env
 void variable_add(vm_t *vm, env_t *env, symbol_t *sym, value_t val);
 
+// tries to find a <sym> in <env>
+value_t find(env_t *env, symbol_t *sym);
+
+// tries to find a <sym> in <env>, if found, replaces it's val with <new_val>
+value_t find_replace(env_t *env, symbol_t *sym, value_t new_val);
+
 // evaluates a list
 value_t eval_list(vm_t *vm, env_t *env, value_t list);
 // evaluates a value
