@@ -140,6 +140,7 @@ typedef struct {
     ((ptrvalue_t *) (uintptr_t)((val) & ~(SIGN_BIT | QUIET_NAN)))
 
 #define AS_NUM(val) (val_to_num(val))
+#define AS_INT(val) ((int64_t) trunc(val_to_num(val)))
 
 // doesn't check anything
 #define AS_CONS(val) ((cons_t *) AS_PTR(val))

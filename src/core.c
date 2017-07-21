@@ -104,6 +104,21 @@ static value_t subtract(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(result);
 }
 
+static value_t modulo(vm_t *vm, env_t *env, value_t args) {
+    // (modulo <n> <m>) => n % m
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "modulo", args, 2, false);
+    value_t n = AS_CONS(eargs)->car;
+    value_t m = AS_CONS(AS_CONS(eargs)->cdr)->car;
+
+    if (!IS_INT(n) || !IS_INT(m)) {
+        error_runtime(vm, "modulo: argument is not an integer!");
+        return NIL_VAL;
+    }
+
+    return NUM_VAL(AS_INT(n) % AS_INT(m));
+}
+
 static value_t gt(vm_t *vm, env_t *env, value_t args) {
     if (IS_NIL(args)) {
         return TRUE_VAL;
@@ -434,6 +449,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "+", 1, add);
     primitive_add(vm, env, "*", 1, multiply);
     primitive_add(vm, env, "-", 1, subtract);
+    primitive_add(vm, env, "modulo", 6, modulo);
     primitive_add(vm, env, ">", 1, gt);
     primitive_add(vm, env, "eq?", 3, eq);
     primitive_add(vm, env, "equal?", 6, equal);
