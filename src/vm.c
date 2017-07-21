@@ -2,6 +2,10 @@
 #include <stdlib.h>  // realloc
 #include <string.h>  // memset
 
+#if DEBUG
+#include <time.h>  // clock(), CLOCKS_PER_SEC
+#endif             // DEBUG`
+
 #include "scheme.h"
 #include "value.h"
 #include "vm.h"
@@ -21,6 +25,11 @@ static void *scm_realloc_default(void *ptr, size_t new_size) {
 void scm_config_default(scm_config_t *config) {
     config->realloc_fn = scm_realloc_default;
     config->error_fn = NULL;
+
+    // TODO: tweak the initial and min heap sizes
+    config->heap_size_initial = 512 * 1024;  // 512 kB
+    config->heap_size_min = 64 * 1024;       // 64 kB
+    config->heap_growth = 0.5;               // 50%
 }
 
 vm_t *vm_new(scm_config_t *config) {
@@ -38,7 +47,7 @@ vm_t *vm_new(scm_config_t *config) {
     }
 
     vm->allocated = 0;
-    vm->gc_threshold = 65536;
+    vm->gc_threshold = vm->config.heap_size_initial;
 
     vm->symbol_table = NULL;
 
@@ -190,7 +199,8 @@ void vm_gc(vm_t *vm) {
 #endif  // NOGC
 #ifdef DEBUG
     fprintf(stdout, "GC started\n");
-    size_t prev_allocated = vm->allocated;
+    size_t allocated_prev = vm->allocated;
+    double time_start = (double) clock() / CLOCKS_PER_SEC;
 #endif  // DEBUG
     vm->allocated = 0;
     markall(vm);
@@ -206,12 +216,17 @@ void vm_gc(vm_t *vm) {
             head = &(*head)->next;
         }
     }
+    vm->gc_threshold = vm->allocated * (1 + vm->config.heap_growth);
+    if (vm->gc_threshold < vm->config.heap_size_min) {
+        vm->gc_threshold = vm->config.heap_size_min;
+    }
 #ifdef DEBUG
-    fprintf(stdout, "GC finished: %zu bytes previously, %zu bytes now!\n",
-            prev_allocated, vm->allocated);
+    double time_delta = ((double) clock() / CLOCKS_PER_SEC) - time_start;
+    fprintf(stdout, "GC finished: %zuB previously, %zuB now (%zuB gc'd), "
+                    "new threshold at %zuB! Time delta: %.3lfs.\n",
+            allocated_prev, vm->allocated, (allocated_prev - vm->allocated),
+            vm->gc_threshold, time_delta);
 #endif  // DEBUG
-    vm->gc_threshold = vm->allocated * 2;
-    return;
 }
 
 /* *** ENV *** */

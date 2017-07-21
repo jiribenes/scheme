@@ -26,6 +26,15 @@ typedef struct {
 
     // A function for reporting an error to the user
     scm_error_fn error_fn;
+
+    // Initial heap size
+    size_t heap_size_initial;
+
+    // Minimum heap size
+    size_t heap_size_min;
+
+    // Heap growth
+    double heap_growth;
 } scm_config_t;
 
 // Loads a default config into the config struct
