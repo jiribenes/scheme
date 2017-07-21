@@ -31,6 +31,25 @@ static void write_cons(FILE *f, cons_t *cons) {
     fprintf(f, ")");
 }
 
+static void write_string(FILE *f, string_t *str) {
+    fprintf(f, "\"");
+
+    for (uint32_t i = 0; i < str->len; i++) {
+        char c = str->value[i];
+        if (c == '\n') {
+            fprintf(f, "\\n");
+        } else if (c == '\\') {
+            fprintf(f, "\\\\");
+        } else if (c == '\"') {
+            fprintf(f, "\\\"");
+        } else {
+            fprintf(f, "%c", c);
+        }
+    }
+
+    fprintf(f, "\"");
+}
+
 // write val as a s-expr
 void write(FILE *f, value_t val) {
     if (IS_NUM(val)) {
@@ -47,42 +66,37 @@ void write(FILE *f, value_t val) {
             write_cons(f, cons);
         } else if (IS_STRING(val)) {
             string_t *str = AS_STRING(val);
-
-            fprintf(f, "\"");
-
-            for (uint32_t i = 0; i < str->len; i++) {
-                char c = str->value[i];
-                if (c == '\n') {
-                    fprintf(f, "\\n");
-                } else if (c == '\\') {
-                    fprintf(f, "\\\\");
-                } else if (c == '\"') {
-                    fprintf(f, "\\\"");
-                } else {
-                    fprintf(f, "%c", c);
-                }
-            }
-
-            fprintf(f, "\"");
+            write_string(f, str);
         } else if (IS_SYMBOL(val)) {
             symbol_t *sym = AS_SYMBOL(val);
             fprintf(f, "%s", sym->name);
         } else if (IS_PRIMITIVE(val)) {
-            fprintf(f, "<primitive>");
+            fprintf(f, "#<primitive>");
         } else if (IS_FUNCTION(val)) {
-            fprintf(f, "<function>");
+            fprintf(f, "#<function>");
         } else if (IS_ENV(val)) {
             env_t *env = (env_t *) AS_PTR(val);
-            fprintf(f, "<environment> containing: ");
+            fprintf(f, "#<environment, containing: ");
             write(f, env->variables);
             if (env->up != NULL) {
                 fprintf(f, "\n up: ");
                 write(f, PTR_VAL(env->up));
             }
+            fprintf(f, ">\n");
         } else {
-            fprintf(f, "<unknown ptrvalue>");
+            fprintf(f, "#<unknown ptrvalue>");
         }
     } else {
-        fprintf(f, "<unknown value>");
+        fprintf(f, "#<unknown value>");
+    }
+}
+
+// display val as a s-expr
+void display(FILE *f, value_t val) {
+    if (!IS_STRING(val)) {
+        write(f, val);
+    } else {
+        string_t *str = AS_STRING(val);
+        fprintf(f, "%.*s", str->len, str->value);
     }
 }

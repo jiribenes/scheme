@@ -7,4 +7,6 @@
 
 void write(FILE *f, value_t val);
 
+void display(FILE *f, value_t val);
+
 #endif  // _write_h
