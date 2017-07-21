@@ -311,6 +311,24 @@ static value_t builtin_display(vm_t *vm, env_t *env, value_t args) {
     return NIL_VAL;
 }
 
+
+static value_t builtin_set(vm_t *vm, env_t *env, value_t args) {
+    // (set! <sym> <expr>)
+    arity_check(vm, "set!", args, 2, false);
+    value_t arg = AS_CONS(args)->car;
+    if (!IS_SYMBOL(arg)) {
+        error_runtime(vm, "set!: first argument must be a symbol!");
+        return NIL_VAL;
+    }
+
+    symbol_t *sym = AS_SYMBOL(arg);
+
+    arg = AS_CONS(AS_CONS(args)->cdr)->car;
+    value_t val = eval(vm, env, arg);
+    return find_replace(env, sym, val);
+    // error-handling provided by find_replace (for now...)
+}
+
 // TODO Allow functions or, and to be with arbitrary amount of elements
 //      Look at the RxRS for the details
 //      Rewrite using SCM_FOREACH macro
@@ -431,6 +449,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "cdr", 3, builtin_cdr);
     primitive_add(vm, env, "write", 5, builtin_write);
     primitive_add(vm, env, "display", 7, builtin_display);
+    primitive_add(vm, env, "set!", 4, builtin_set);
     primitive_add(vm, env, "or", 2, builtin_or);
     primitive_add(vm, env, "and", 3, builtin_and);
     primitive_add(vm, env, "eval", 4, builtin_eval);
