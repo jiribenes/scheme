@@ -1,0 +1,10 @@
+(begin
+    (test (equal? (cdr '(1 2)) '(2)) #t)
+    (test (equal? (cdr '(a b)) '(b)) #t)
+    (test (equal? (cdr '("aa" "a")) '("a")) #t)
+    (test (equal? (cdr '(1 2 3 4 5)) '(2 3 4 5)) #t)
+    (test (cdr '(1 . 2)) 2)
+    (test (equal? (cdr '((1 . 2) . 2)) 2) #t)
+    (test (equal? (cdr '((1 2 3) . 4)) 4) #t)
+    (test (equal? (cdr '((1 . 2) . (3 . 4))) '(3 . 4)) #t)
+)
