@@ -1,12 +1,16 @@
 #ifndef _vm_h
 #define _vm_h
 
+#include <stdarg.h>  // va_list, ...
 #include <stdlib.h>  // size_t, malloc, realloc
 
 #include "read.h"   // reader_t
 #include "value.h"  // ptrvalue_t, symbol_t, env_t
 
 #define MAX_NUM_TEMP 256
+
+// Signals a runtime error
+void error_runtime(vm_t *vm, const char *format, ...);
 
 struct vm_t {
     // a linked list of all allocated values

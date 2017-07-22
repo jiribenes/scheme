@@ -132,7 +132,8 @@ string_t *string_new(vm_t *vm, const char *text, size_t len) {
 
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
     if (len == 0 || name == NULL) {  // TODO: better logging
-        fprintf(stderr, "Error: NULL/0-len symbols are not allowed");
+        error_runtime(vm, "NULL or 0-length symbols are not allowed!");
+        return NULL;
     }
 
     symbol_t *sym = (symbol_t *) vm_realloc(

@@ -1,3 +1,4 @@
+#include <stdarg.h>  // va_list, ...
 #include <stdio.h>   // fprintf, stderr
 #include <stdlib.h>  // realloc
 #include <string.h>  // memset
@@ -12,6 +13,26 @@
 #include "write.h"
 
 #define MAX_ALLOCATED 1024 * 1024 * 16
+
+void error_runtime(vm_t *vm, const char *format, ...) {
+    vm->has_error = true;
+    if (vm->config.error_fn == NULL) {
+        return;
+    }
+
+    char message[256];
+
+    va_list contents;
+    va_start(contents, format);
+
+    vsnprintf(message, 256, format, contents);
+
+    va_end(contents);
+
+    vm->config.error_fn(vm, -1, message);
+}
+
+/* *** */
 
 static void *scm_realloc_default(void *ptr, size_t new_size) {
     if (new_size == 0) {
@@ -80,8 +101,10 @@ void *vm_realloc(vm_t *vm, void *ptr, size_t old_size, size_t new_size) {
     }
 
     if (vm->allocated > MAX_ALLOCATED) {
-        fprintf(stderr, "Error: Allocated more than %d! (MAX_ALLOCATED)\n",
-                MAX_ALLOCATED);
+        error_runtime(
+            vm,
+            "Can't allocate - already allocated more than %d (MAX_ALLOCATED)!",
+            MAX_ALLOCATED);
         vm->allocated -= new_size;
         return NULL;
     }
@@ -93,30 +116,32 @@ void *vm_realloc(vm_t *vm, void *ptr, size_t old_size, size_t new_size) {
 
 void vm_push_temp(vm_t *vm, ptrvalue_t *ptr) {
     if (ptr == NULL) {
-        fprintf(stderr, "Error: Cannot root NULL\n");
+        error_runtime(vm, "Cannot have a NULL as a temporary root!");
     }
     if (vm->num_temp >= MAX_NUM_TEMP) {
-        fprintf(stderr, "Error: Too many temp roots!\n");
+        error_runtime(
+            vm, "Trying to add a temporary root that is over limit (%d is max)",
+            MAX_NUM_TEMP);
     }
     vm->temp[vm->num_temp++] = ptr;
 }
 
 void vm_pop_temp(vm_t *vm) {
     if (vm->num_temp <= 0) {
-        fprintf(stderr, "Error: No more temp roots to release!\n");
+        error_runtime(vm, "No more temporary roots to release!");
     }
     vm->num_temp--;
 }
 
 /* *** GC *** */
 
-static void mark(value_t val) {
+static void mark(vm_t *vm, value_t val) {
     if (IS_VAL(val)) {
         return;
     }
     ptrvalue_t *ptr = AS_PTR(val);
     if (ptr == NULL) {
-        fprintf(stderr, "Error: marking a NULL\n");
+        error_runtime(vm, "|GC: Cannot mark a NULL!");
     }
     if (ptr->gcmark) {
         return;
@@ -126,16 +151,16 @@ static void mark(value_t val) {
 
     if (ptr->type == T_CONS) {
         cons_t *cons = (cons_t *) ptr;
-        mark(cons->car);
-        mark(cons->cdr);
+        mark(vm, cons->car);
+        mark(vm, cons->cdr);
     } else if (ptr->type == T_ENV) {
         env_t *env = (env_t *) ptr;
-        mark(env->variables);
+        mark(vm, env->variables);
         if (!IS_NIL(env->variables)) {
             cons_t *vars = AS_CONS(env->variables);
             while (true) {
                 value_t pair = vars->car;
-                mark(pair);
+                mark(vm, pair);
                 if (IS_NIL(vars->cdr)) {
                     break;
                 }
@@ -144,29 +169,30 @@ static void mark(value_t val) {
         }
 
         if (env->up != NULL) {
-            mark(PTR_VAL(env->up));
+            mark(vm, PTR_VAL(env->up));
         }
     } else if (ptr->type == T_FUNCTION) {
         function_t *func = (function_t *) ptr;
 
-        mark(func->params);
-        mark(func->body);
-        mark(PTR_VAL(func->env));
+        mark(vm, func->params);
+        mark(vm, func->body);
+        mark(vm, PTR_VAL(func->env));
     }
 }
 
 static void markall(vm_t *vm) {
     env_t *env = vm->env;
-    mark(PTR_VAL(env));
+    mark(vm, PTR_VAL(env));
 
     if (vm->reader != NULL) {
-        mark(vm->reader->tokval);
+        mark(vm, vm->reader->tokval);
     }
 
     for (size_t i = 0; i < vm->num_temp; i++) {
-        mark(PTR_VAL(vm->temp[i]));
+        mark(vm, PTR_VAL(vm->temp[i]));
     }
-    mark(vm->curval);
+
+    mark(vm, vm->curval);
 }
 
 // returns the size of a value
@@ -188,7 +214,8 @@ static size_t vm_size(vm_t *vm, value_t val) {
     } else if (IS_ENV(val)) {
         return sizeof(env_t);
     }
-    fprintf(stderr, "Error: cannot calculate the size of a value!\n");
+    // This should be an assert
+    error_runtime(vm, "Cannot calculate the size of this value!");
     return 0;
 }
 
@@ -241,7 +268,10 @@ void variable_add(vm_t *vm, env_t *env, symbol_t *sym, value_t val) {
 // Creates a new env frame
 env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals) {
     if (cons_len(vars) != cons_len(vals)) {
-        fprintf(stderr, "Error: Number of arguments doesn't match!\n");
+        error_runtime(
+            vm,
+            "Number of arguments doesn't match! (%d parameters, %d arguments)",
+            cons_len(vars), cons_len(vals));
     }
     value_t alist = NIL_VAL;
     cons_t *var = NULL;
@@ -289,9 +319,10 @@ static value_t apply_func(vm_t *vm, env_t *env, function_t *func,
 // Tries to apply the value <fn> in <env> to <args>
 static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
     if (!IS_NIL(args) && !IS_CONS(args)) {
-        fprintf(stderr, "Error: Cannot apply to a non-list\n");
+        error_runtime(vm, "|apply: Cannot apply to a non-list!");
         return NIL_VAL;
     }
+
     if (IS_PRIMITIVE(fn)) {
         primitive_t *prim = AS_PRIMITIVE(fn);
         return prim->fn(vm, env, args);
@@ -301,9 +332,7 @@ static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
         return apply_func(vm, env, func, eargs);
     }
 
-    fprintf(
-        stderr,
-        "Error: Cannot apply something else than a primitive or a function\n");
+    error_runtime(vm, "|apply: Cannot apply something else than a procedure!");
     return NIL_VAL;
 }
 
@@ -323,7 +352,9 @@ value_t find(env_t *env, symbol_t *sym) {
         }
     }
 
-    fprintf(stderr, "Error: Symbol %s not bound\n", sym->name);
+    fprintf(stderr, "|find: Error: Symbol %s not bound\n", sym->name);
+    // error_runtime(vm, "|find: Symbol %s is not bound in environment!",
+    // sym->name);
     return NIL_VAL;
 }
 
@@ -345,7 +376,9 @@ value_t find_replace(env_t *env, symbol_t *sym, value_t new_val) {
         }
     }
 
-    fprintf(stderr, "Error: Symbol %s not bound\n", sym->name);
+    fprintf(stderr, "|find: Error: Symbol %s not bound\n", sym->name);
+    // error_runtime(vm, "|find: Symbol %s is not bound in environment!",
+    // sym->name);
     return NIL_VAL;
 }
 
@@ -391,13 +424,13 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
         value_t args = cons->cdr;
 
         if (!IS_PROCEDURE(fn)) {
-            fprintf(stderr,
-                    "Error: Car of a cons must be a function in eval\n");
+            error_runtime(vm, "|eval: Car of eval'd cons is not a procedure!");
         }
         return apply(vm, env, fn, args);
     }
 
-    fprintf(stderr, "Error: Unknown type to eval!\n");
+    // This should be an assert
+    error_runtime(vm, "|eval: Cannot eval - unknown value type!");
     return NIL_VAL;
 }
 

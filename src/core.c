@@ -8,26 +8,6 @@
 #include "vm.h"
 #include "write.h"
 
-void error_runtime(vm_t *vm, const char *format, ...) {
-    vm->has_error = true;
-    if (vm->config.error_fn == NULL) {
-        return;
-    }
-
-    char message[256];
-
-    va_list contents;
-    va_start(contents, format);
-
-    vsnprintf(message, 256, format, contents);
-
-    va_end(contents);
-
-    vm->config.error_fn(vm, -1, message);
-}
-
-/* *** */
-
 // Checks if there are exactly n arguments (if at_least is false)
 //                  or at least n arguments (if at_least is true)
 bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n,
