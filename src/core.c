@@ -49,7 +49,11 @@ bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n,
     return true;
 }
 
+/* /== -------------------------- ==\ */
 /* *** core environment functions *** */
+/* \== -------------------------- ==/ */
+
+/* *** core - numbers *** */
 
 static value_t add(vm_t *vm, env_t *env, value_t args) {
     if (IS_NIL(args)) {
@@ -144,6 +148,8 @@ static value_t gt(vm_t *vm, env_t *env, value_t args) {
     return TRUE_VAL;
 }
 
+/* *** core - predicates and equalities *** */
+
 // Checks for eq? using the val_eq function from value.h
 // BEWARE: It assumes transitivity (tries only a == b && b == c && c == d ...)
 static value_t eq(vm_t *vm, env_t *env, value_t args) {
@@ -187,6 +193,25 @@ static value_t equal(vm_t *vm, env_t *env, value_t args) {
     }
     return TRUE_VAL;
 }
+
+// type predicate functions
+// they ARE NOT added to environment automatically
+// therefore any change here must be done also in <scm_env_default> fn
+
+#define TYPE_PREDICATE_FN(type, is_type_fn)                                \
+    static value_t builtin_is_##type(vm_t *vm, env_t *env, value_t args) { \
+        value_t eargs = eval_list(vm, env, args);                          \
+        arity_check(vm, #type "?", eargs, 1, false);                       \
+        value_t a = AS_CONS(eargs)->car;                                   \
+        return BOOL_VAL(is_type_fn(a));                                    \
+    }
+
+TYPE_PREDICATE_FN(cons, IS_CONS)
+TYPE_PREDICATE_FN(integer, IS_INT)
+TYPE_PREDICATE_FN(number, IS_NUM)
+TYPE_PREDICATE_FN(string, IS_STRING)
+TYPE_PREDICATE_FN(symbol, IS_SYMBOL)
+TYPE_PREDICATE_FN(procedure, IS_PROCEDURE)
 
 // FIXME I have a feeling that this is not the correct functionality...
 static value_t quote(vm_t *vm, env_t *env, value_t args) {
@@ -282,13 +307,6 @@ static value_t builtin_cons(vm_t *vm, env_t *env, value_t args) {
 
     value_t cons = cons_fn(vm, car, cdr);
     return cons;
-}
-
-static value_t builtin_is_cons(vm_t *vm, env_t *env, value_t args) {
-    value_t eargs = eval_list(vm, env, args);
-    arity_check(vm, "cons?", eargs, 1, false);
-    value_t a = AS_CONS(eargs)->car;
-    return BOOL_VAL(IS_NIL(a) || IS_CONS(a));
 }
 
 static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
@@ -452,16 +470,25 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "-", 1, subtract);
     primitive_add(vm, env, "remainder", 9, builtin_rem);
     primitive_add(vm, env, ">", 1, gt);
+
     primitive_add(vm, env, "eq?", 3, eq);
     primitive_add(vm, env, "equal?", 6, equal);
+
+    primitive_add(vm, env, "cons?", 5, builtin_is_cons);
+    primitive_add(vm, env, "integer?", 8, builtin_is_integer);
+    primitive_add(vm, env, "number?", 7, builtin_is_number);
+    primitive_add(vm, env, "string?", 7, builtin_is_string);
+    primitive_add(vm, env, "symbol?", 7, builtin_is_symbol);
+    primitive_add(vm, env, "procedure?", 10, builtin_is_procedure);
+
     primitive_add(vm, env, "quote", 5, quote);
     primitive_add(vm, env, "list", 4, builtin_list);
+
     primitive_add(vm, env, "begin", 5, begin);
     primitive_add(vm, env, "define", 6, builtin_define);
     primitive_add(vm, env, "lambda", 6, lambda);
     primitive_add(vm, env, "if", 2, builtin_if);
     primitive_add(vm, env, "cons", 4, builtin_cons);
-    primitive_add(vm, env, "cons?", 5, builtin_is_cons);
     primitive_add(vm, env, "car", 3, builtin_car);
     primitive_add(vm, env, "cdr", 3, builtin_cdr);
     primitive_add(vm, env, "write", 5, builtin_write);
