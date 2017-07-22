@@ -117,10 +117,10 @@ typedef struct {
 #define IS_FALSE(val) ((val) == FALSE_VAL)
 #define IS_BOOL(val) (IS_FALSE(val) || IS_TRUE(val))
 
-#define IS_NIL(val) (val == NIL_VAL)
+#define IS_NIL(val) ((val) == NIL_VAL)
 
-#define IS_INT(val) (IS_NUM(val) && (trunc(val) == val))
-#define IS_DOUBLE(val) (IS_NUM(val) && !(trunc(val) == val))
+#define IS_INT(val) (IS_NUM(val) && (trunc(AS_NUM(val)) == AS_NUM(val)))
+#define IS_DOUBLE(val) (IS_NUM(val) && !(trunc(AS_NUM(val)) == AS_NUM(val)))
 
 #define IS_CONS(val) (val_is_ptr(val, T_CONS))
 #define IS_STRING(val) (val_is_ptr(val, T_STRING))
@@ -129,8 +129,10 @@ typedef struct {
 #define IS_FUNCTION(val) (val_is_ptr(val, T_FUNCTION))
 #define IS_ENV(val) (val_is_ptr(val, T_ENV))
 
+#define IS_PROCEDURE(val) (IS_PRIMITIVE(val) || IS_FUNCTION(val))
+
 // C value -> value
-#define BOOL_VAL(b) (b ? TRUE_VAL : FALSE_VAL)
+#define BOOL_VAL(b) ((b) ? TRUE_VAL : FALSE_VAL)
 #define NUM_VAL(num) (num_to_val(num))
 #define PTR_VAL(ptr) (ptr_to_val((ptrvalue_t *) (ptr)))
 
