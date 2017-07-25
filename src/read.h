@@ -1,8 +1,8 @@
 #ifndef _read_h
 #define _read_h
 
-#include "scheme.h"
 #include "config.h"
+#include "scheme.h"
 #include "value.h"
 
 // Types of tokens - no other are permitted

@@ -3,8 +3,8 @@
 
 #include <stdarg.h>
 
-#include "scheme.h"
 #include "config.h"
+#include "scheme.h"
 #include "value.h"
 
 // Called when a runtime error is encountered
