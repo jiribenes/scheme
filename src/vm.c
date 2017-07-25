@@ -111,7 +111,7 @@ void vm_pop_temp(vm_t *vm) {
 /* *** GC *** */
 
 static void mark(value_t val) {
-    if (!IS_PTR(val)) {
+    if (IS_VAL(val)) {
         return;
     }
     ptrvalue_t *ptr = AS_PTR(val);
@@ -171,7 +171,7 @@ static void markall(vm_t *vm) {
 
 // returns the size of a value
 static size_t vm_size(vm_t *vm, value_t val) {
-    if (!IS_PTR(val)) {
+    if (IS_VAL(val)) {
         return 0;
     } else if (IS_CONS(val)) {
         return sizeof(cons_t);
@@ -376,8 +376,7 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list) {
 
 // Evaluates the value <val>
 value_t eval(vm_t *vm, env_t *env, value_t val) {
-    if (!IS_PTR(val) || IS_STRING(val) || IS_PRIMITIVE(val) ||
-        IS_FUNCTION(val)) {
+    if (IS_VAL(val) || IS_STRING(val) || IS_PROCEDURE(val)) {
         // These values are self evaluating
         return val;
     } else if (IS_SYMBOL(val)) {
@@ -390,12 +389,14 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
         value_t fn = cons->car;
         fn = eval(vm, env, cons->car);
         value_t args = cons->cdr;
-        if (!IS_PRIMITIVE(fn) && !IS_FUNCTION(fn)) {
+
+        if (!IS_PROCEDURE(fn)) {
             fprintf(stderr,
                     "Error: Car of a cons must be a function in eval\n");
         }
         return apply(vm, env, fn, args);
     }
+
     fprintf(stderr, "Error: Unknown type to eval!\n");
     return NIL_VAL;
 }

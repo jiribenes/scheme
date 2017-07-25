@@ -246,7 +246,9 @@ bool val_equal(value_t a, value_t b) {
         return true;
     }
 
-    if (!IS_PTR(a) || !IS_PTR(b)) {
+    if (IS_VAL(a) || IS_VAL(b)) {
+        // if both are only plain values,
+        // they should have been equal by <eq?>
         return false;
     }
 
