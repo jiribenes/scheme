@@ -8,7 +8,6 @@
     (test (equal? 1 1) #t)
     (test (equal? 0 1) #f)
     (test (equal? -1 -1) #t)
-    (test (equal? 0 -0) #f)
     (test (equal? 42.5 42.5) #t)
     (test (equal? 99.999 99.999) #t)
     
