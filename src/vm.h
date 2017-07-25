@@ -3,6 +3,7 @@
 
 #include <stdlib.h>  // size_t, malloc, realloc
 
+#include "config.h"
 #include "read.h"   // reader_t
 #include "value.h"  // ptrvalue_t, symbol_t, env_t
 

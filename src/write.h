@@ -3,6 +3,7 @@
 
 #include <stdio.h>  // FILE
 
+#include "config.h"
 #include "value.h"  // value_t
 
 void write(FILE *f, value_t val);

@@ -4,6 +4,7 @@
 #include <stdarg.h>
 
 #include "scheme.h"
+#include "config.h"
 #include "value.h"
 
 // Called when a runtime error is encountered
