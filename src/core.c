@@ -124,6 +124,8 @@ static value_t builtin_rem(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(fmod(AS_NUM(n), AS_NUM(m)));
 }
 
+// TODO: we shouldn't need to remember <prev>,
+//       we just need first...
 static value_t gt(vm_t *vm, env_t *env, value_t args) {
     if (IS_NIL(args)) {
         return TRUE_VAL;
@@ -140,6 +142,30 @@ static value_t gt(vm_t *vm, env_t *env, value_t args) {
             // if we find a pair where the '>' relation doesn't hold,
             // return false
             if (AS_NUM(prev) <= AS_NUM(arg)) {
+                return FALSE_VAL;
+            }
+        }
+        prev = arg;
+    }
+    return TRUE_VAL;
+}
+
+static value_t num_equal(vm_t *vm, env_t *env, value_t args) {
+    if (IS_NIL(args)) {
+        return TRUE_VAL;
+    }
+    value_t eargs = eval_list(vm, env, args);
+    value_t prev = NIL_VAL;
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
+        if (!IS_NUM(arg)) {
+            error_runtime(vm, "=: argument is not a number!");
+            return NIL_VAL;
+        }
+        if (!IS_NIL(prev)) {
+            // if we find a pair where the '==' relation doesn't hold,
+            // return false
+            if (AS_NUM(prev) != AS_NUM(arg)) {
                 return FALSE_VAL;
             }
         }
@@ -470,6 +496,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "-", 1, subtract);
     primitive_add(vm, env, "remainder", 9, builtin_rem);
     primitive_add(vm, env, ">", 1, gt);
+    primitive_add(vm, env, "=", 1, num_equal);
 
     primitive_add(vm, env, "eq?", 3, eq);
     primitive_add(vm, env, "equal?", 6, equal);
