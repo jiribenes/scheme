@@ -237,7 +237,8 @@ static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
         cons_t *body = AS_CONS(rest->cdr);
         value_t val = eval(vm, env, body->car);
         variable_add(vm, env, sym, val);
-        return val;
+
+        return VOID_VAL;
     } else if (IS_CONS(rest->car)) {  // (define (<name> <params...>) <body...>)
         symbol_t *sym = AS_SYMBOL(AS_CONS(rest->car)->car);
         value_t params = AS_CONS(rest->car)->cdr;
@@ -245,7 +246,8 @@ static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
         function_t *func = function_new(vm, env, params, PTR_VAL(body));
         value_t val = eval(vm, env, PTR_VAL(func));
         variable_add(vm, env, sym, val);
-        return val;
+
+        return VOID_VAL;
     } else {
         error_runtime(vm, "define: is wrong - second argument has to be"
                           "either a list or a symbol!");
@@ -340,7 +342,7 @@ static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
     arity_check(vm, "write", eargs, 1, false);
     write(stdout, AS_CONS(eargs)->car);
     fprintf(stdout, "\n");
-    return NIL_VAL;
+    return VOID_VAL;
 }
 
 static value_t builtin_display(vm_t *vm, env_t *env, value_t args) {
@@ -348,7 +350,7 @@ static value_t builtin_display(vm_t *vm, env_t *env, value_t args) {
     arity_check(vm, "write", eargs, 1, false);
     display(stdout, AS_CONS(eargs)->car);
     fprintf(stdout, "\n");
-    return NIL_VAL;
+    return VOID_VAL;
 }
 
 
@@ -365,8 +367,14 @@ static value_t builtin_set(vm_t *vm, env_t *env, value_t args) {
 
     arg = AS_CONS(AS_CONS(args)->cdr)->car;
     value_t val = eval(vm, env, arg);
-    return find_replace(env, sym, val);
-    // error-handling provided by find_replace (for now...)
+    value_t result = find_replace(env, sym, val);
+
+    if (IS_UNDEFINED(result)) {
+        error_runtime(vm, "set!: assignment not allowed - %s is undefined!",
+                      sym->name);
+    }
+
+    return VOID_VAL;
 }
 
 // TODO Allow functions or, and to be with arbitrary amount of elements

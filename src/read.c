@@ -310,7 +310,7 @@ value_t read_source(vm_t *vm, const char *source) {
     reader.tokstart = source;
     reader.cur = source;
     reader.line = 1;
-    reader.tokval = NIL_VAL;
+    reader.tokval = VOID_VAL;
     reader.toktype = TOK_NONE;
 
     vm->reader = &reader;
@@ -328,8 +328,8 @@ value_t read_source(vm_t *vm, const char *source) {
 
     if (vm->has_error) {
         // We have encountered an error, everything is surely borked.
-        vm->curval = NIL_VAL;
-        reader.tokval = NIL_VAL;
+        vm->curval = UNDEFINED_VAL;
+        reader.tokval = UNDEFINED_VAL;
     }
 
     vm->curval = reader.tokval;

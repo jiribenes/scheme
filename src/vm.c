@@ -337,6 +337,7 @@ static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
 }
 
 // Tries to find <sym> in <env>
+// Returns `undefined` if not found
 value_t find(env_t *env, symbol_t *sym) {
     for (env_t *e = env; e != NULL; e = e->up) {
         if (IS_NIL(e->variables)) {
@@ -355,10 +356,11 @@ value_t find(env_t *env, symbol_t *sym) {
     fprintf(stderr, "|find: Error: Symbol %s not bound\n", sym->name);
     // error_runtime(vm, "|find: Symbol %s is not bound in environment!",
     // sym->name);
-    return NIL_VAL;
+    return UNDEFINED_VAL;
 }
 
 // Tries to find <sym> in <env> and replace it's val with <new_val>
+// Returns `undefined` if not found
 // TODO: this is maybe unnecessary duplication with 'find' above?
 value_t find_replace(env_t *env, symbol_t *sym, value_t new_val) {
     for (env_t *e = env; e != NULL; e = e->up) {
@@ -379,7 +381,7 @@ value_t find_replace(env_t *env, symbol_t *sym, value_t new_val) {
     fprintf(stderr, "|find: Error: Symbol %s not bound\n", sym->name);
     // error_runtime(vm, "|find: Symbol %s is not bound in environment!",
     // sym->name);
-    return NIL_VAL;
+    return UNDEFINED_VAL;
 }
 
 // Evaluates all members of list and returns their return values as a list
@@ -408,6 +410,7 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list) {
 }
 
 // Evaluates the value <val>
+// Returns `undefined` if symbol not found
 value_t eval(vm_t *vm, env_t *env, value_t val) {
     if (IS_VAL(val) || IS_STRING(val) || IS_PROCEDURE(val)) {
         // These values are self evaluating
@@ -415,7 +418,12 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
     } else if (IS_SYMBOL(val)) {
         // This is a variable
         symbol_t *sym = AS_SYMBOL(val);
-        return find(env, sym);
+        value_t result = find(env, sym);
+        if (IS_UNDEFINED(result)) {
+            error_runtime(vm, "|eval: Can't eval %s - symbol not bound!",
+                          sym->name);
+        }
+        return result;
     } else if (IS_CONS(val)) {
         // It's a function application
         cons_t *cons = AS_CONS(val);
