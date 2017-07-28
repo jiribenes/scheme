@@ -74,6 +74,8 @@ void library_read(vm_t *vm, env_t *env, const char *library) {
     }
     value_t val = read_source(vm, source);
     eval(vm, env, val);
+
+    free(source);
 }
 
 /* *** */
