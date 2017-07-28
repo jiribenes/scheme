@@ -14,6 +14,7 @@ typedef enum {
     T_SYMBOL,
     T_PRIMITIVE,
     T_FUNCTION,
+    T_MACRO,
     T_ENV
 } ptrvalue_type_t;
 
@@ -103,7 +104,7 @@ typedef struct {
     primitive_fn fn;
 } primitive_t;
 
-// User-defined function
+// User-defined function or a macro
 typedef struct {
     ptrvalue_t p;
 
@@ -128,6 +129,7 @@ typedef struct {
 #define IS_SYMBOL(val) (val_is_ptr(val, T_SYMBOL))
 #define IS_PRIMITIVE(val) (val_is_ptr(val, T_PRIMITIVE))
 #define IS_FUNCTION(val) (val_is_ptr(val, T_FUNCTION))
+#define IS_MACRO(val) (val_is_ptr(val, T_MACRO))
 #define IS_ENV(val) (val_is_ptr(val, T_ENV))
 
 #define IS_PROCEDURE(val) (IS_PRIMITIVE(val) || IS_FUNCTION(val))
@@ -231,6 +233,7 @@ string_t *string_new(vm_t *vm, const char *text, size_t len);
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len);
 primitive_t *primitive_new(vm_t *vm, primitive_fn fn);
 function_t *function_new(vm_t *vm, env_t *env, value_t params, value_t body);
+function_t *macro_new(vm_t *vm, env_t *env, value_t params, value_t body);
 env_t *env_new(vm_t *vm, value_t variables, env_t *up);
 
 // Makes sure that there are no duplicit symbols

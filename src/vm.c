@@ -171,7 +171,7 @@ static void mark(vm_t *vm, value_t val) {
         if (env->up != NULL) {
             mark(vm, PTR_VAL(env->up));
         }
-    } else if (ptr->type == T_FUNCTION) {
+    } else if (ptr->type == T_FUNCTION || ptr->type == T_MACRO) {
         function_t *func = (function_t *) ptr;
 
         mark(vm, func->params);
@@ -209,7 +209,7 @@ static size_t vm_size(vm_t *vm, value_t val) {
         return sizeof(symbol_t) + sizeof(char) * (sym->len + 1);
     } else if (IS_PRIMITIVE(val)) {
         return sizeof(primitive_t);
-    } else if (IS_FUNCTION(val)) {
+    } else if (IS_FUNCTION(val) || IS_MACRO(val)) {
         return sizeof(function_t);
     } else if (IS_ENV(val)) {
         return sizeof(env_t);

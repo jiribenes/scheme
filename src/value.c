@@ -38,7 +38,7 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_PRIMITIVE) {
         vm_realloc(vm, ptr, 0, 0);
-    } else if (ptr->type == T_FUNCTION) {
+    } else if (ptr->type == T_FUNCTION || ptr->type == T_MACRO) {
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_ENV) {
         vm_realloc(vm, ptr, 0, 0);
@@ -171,6 +171,19 @@ function_t *function_new(vm_t *vm, env_t *env, value_t params, value_t body) {
     fn->body = body;
 
     return fn;
+}
+
+function_t *macro_new(vm_t *vm, env_t *env, value_t params, value_t body) {
+    function_t *macro =
+        (function_t *) vm_realloc(vm, NULL, 0, sizeof(function_t));
+
+    ptr_init(vm, &macro->p, T_MACRO);
+
+    macro->env = env;
+    macro->params = params;
+    macro->body = body;
+
+    return macro;
 }
 
 env_t *env_new(vm_t *vm, value_t variables, env_t *up) {
