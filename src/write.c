@@ -60,6 +60,12 @@ void write(FILE *f, value_t val) {
         fprintf(f, "#t");
     } else if (IS_FALSE(val)) {
         fprintf(f, "#f");
+    } else if (IS_UNDEFINED(val)) {
+        fprintf(f, "#<undefined>");
+    } else if (IS_VOID(val)) {
+        fprintf(f, "#<void>");
+    } else if (IS_EOF(val)) {
+        fprintf(f, "#<eof>");
     } else if (IS_PTR(val)) {
         if (IS_CONS(val)) {
             cons_t *cons = AS_CONS(val);
@@ -93,9 +99,10 @@ void write(FILE *f, value_t val) {
 
 // display val as a s-expr
 void display(FILE *f, value_t val) {
-    if (!IS_STRING(val)) {
+    // void is not printed with display
+    if (!IS_STRING(val) && !IS_VOID(val)) {
         write(f, val);
-    } else {
+    } else if (IS_STRING(val)) {
         string_t *str = AS_STRING(val);
         fprintf(f, "%.*s", str->len, str->value);
     }

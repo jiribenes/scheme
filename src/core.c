@@ -412,6 +412,10 @@ static value_t builtin_eval(vm_t *vm, env_t *env, value_t args) {
     return eval(vm, env, AS_CONS(eargs)->car);
 }
 
+static value_t builtin_void(vm_t *vm, env_t *env, value_t args) {
+    return VOID_VAL;
+}
+
 /* *** */
 #ifdef DEBUG
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
@@ -438,6 +442,11 @@ env_t *scm_env_default(vm_t *vm) {
     symbol_t *pi_sym = symbol_intern(vm, "pi", 2);
     value_t pi = NUM_VAL(3.1415);
     variable_add(vm, env, pi_sym, pi);
+
+    symbol_t *eof_sym = symbol_intern(vm, "eof", 3);
+    variable_add(vm, env, eof_sym, EOF_VAL);
+    symbol_t *undefined_sym = symbol_intern(vm, "undefined", 9);
+    variable_add(vm, env, undefined_sym, UNDEFINED_VAL);
 
     primitive_add(vm, env, "+", 1, add);
     primitive_add(vm, env, "*", 1, multiply);
@@ -471,7 +480,9 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "set!", 4, builtin_set);
     primitive_add(vm, env, "or", 2, builtin_or);
     primitive_add(vm, env, "and", 3, builtin_and);
+
     primitive_add(vm, env, "eval", 4, builtin_eval);
+    primitive_add(vm, env, "void", 4, builtin_void);
 #ifdef DEBUG
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);

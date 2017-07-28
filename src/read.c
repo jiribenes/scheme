@@ -319,11 +319,9 @@ value_t read_source(vm_t *vm, const char *source) {
     /* new here */
     next_token(&reader);
 
-    symbol_t *eof = symbol_intern(vm, "eof", 3);
-
     if (reader.toktype == TOK_EOF) {
-        vm->curval = PTR_VAL(eof);
-        reader.tokval = PTR_VAL(eof);
+        vm->curval = EOF_VAL;
+        reader.tokval = EOF_VAL;
     } else {
         read1(&reader);
     }

@@ -29,6 +29,15 @@
                 #t
                 #f)))
 
+    (define (void? x)
+        (eq? x (void)))
+
+    (define (undefined? x)
+        (eq? x undefined))
+
+    (define (eof-object? x)
+        (eq? x eof))
+
     (define boolean? bool?)
 
     (define null '())

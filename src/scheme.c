@@ -92,8 +92,8 @@ void file_run(const char *filename) {
     value_t val = read_source(vm, source);
     value_t result = eval(vm, env, val);
 
-    fprintf(stdout, "Result:\n");
-    write(stdout, result);
+    fprintf(stdout, "Result:");
+    display(stdout, result);
     fprintf(stdout, "\n");
 
     vm_free(vm);
@@ -126,8 +126,10 @@ void repl_run() {
         value_t val = read_source(vm, line);
         value_t result = eval(vm, env, val);
 
-        write(stdout, result);
-        fprintf(stdout, "\n");
+        if (!IS_VOID(result)) {
+            display(stdout, result);
+            fprintf(stdout, "\n");
+        }
     }
 
     fprintf(stdout, "Quitting!\n");

@@ -32,7 +32,16 @@ typedef uint64_t value_t;
 
 #else  // !NANTAG
 
-typedef enum { V_NIL, V_TRUE, V_FALSE, V_NUM, V_PTR } value_type_t;
+typedef enum {
+    V_NIL,
+    V_TRUE,
+    V_FALSE,
+    V_UNDEFINED,
+    V_VOID,
+    V_EOF,
+    V_NUM,
+    V_PTR
+} value_type_t;
 
 typedef struct {
     value_type_t type;
@@ -141,8 +150,8 @@ typedef struct {
 #define QUIET_NAN ((uint64_t) 0x7ffc000000000000)
 
 // used for singletons
-// --------------------------------------------------------------11
-#define MASK_TAG (3)
+// -------------------------------------------------------------111
+#define MASK_TAG (7)
 
 #define GET_TAG(val) ((int) ((val) & (MASK_TAG)))
 
@@ -152,14 +161,24 @@ typedef struct {
 #define TAG_NIL (1)
 #define TAG_TRUE (2)
 #define TAG_FALSE (3)
+#define TAG_UNDEFINED (4)
+#define TAG_VOID (5)
+#define TAG_EOF (6)
+#define TAG_UNUSED (7)  // this is unused !!!!
 
 #define NIL_VAL ((value_t)(uint64_t)(QUIET_NAN | TAG_NIL))
 #define TRUE_VAL ((value_t)(uint64_t)(QUIET_NAN | TAG_TRUE))
 #define FALSE_VAL ((value_t)(uint64_t)(QUIET_NAN | TAG_FALSE))
+#define UNDEFINED_VAL ((value_t)(uint64_t)(QUIET_NAN | TAG_UNDEFINED))
+#define VOID_VAL ((value_t)(uint64_t)(QUIET_NAN | TAG_VOID))
+#define EOF_VAL ((value_t)(uint64_t)(QUIET_NAN | TAG_EOF))
 
 #define IS_NIL(val) ((val) == NIL_VAL)
 #define IS_TRUE(val) ((val) == TRUE_VAL)
 #define IS_FALSE(val) ((val) == FALSE_VAL)
+#define IS_UNDEFINED(val) ((val) == UNDEFINED_VAL)
+#define IS_VOID(val) ((val) == VOID_VAL)
+#define IS_EOF(val) ((val) == EOF_VAL)
 
 // returns true if val is type <X> in IS_<X>
 #define IS_NUM(val) (((val) & (QUIET_NAN)) != QUIET_NAN)
@@ -185,11 +204,18 @@ typedef struct {
 #define IS_NIL(val) ((val).type == V_NIL)
 #define IS_TRUE(val) ((val).type == V_TRUE)
 #define IS_FALSE(val) ((val).type == V_FALSE)
+#define IS_UNDEFINED(val) ((val).type == V_UNDEFINED)
+#define IS_VOID(val) ((val).type == V_VOID)
+#define IS_EOF(val) ((val).type == V_EOF)
+
 #define IS_NUM(val) ((val).type == V_NUM)
 
 #define NIL_VAL ((value_t){V_NIL, {0}})
 #define TRUE_VAL ((value_t){V_TRUE, {0}})
 #define FALSE_VAL ((value_t){V_FALSE, {0}})
+#define UNDEFINED_VAL ((value_t){V_UNDEFINED, {0}})
+#define VOID_VAL ((value_t){V_VOID, {0}})
+#define EOF_VAL ((value_t){V_EOF, {0}})
 
 #endif  // NANTAG
 
