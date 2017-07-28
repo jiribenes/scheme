@@ -426,6 +426,13 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
         return result;
     } else if (IS_CONS(val)) {
         // It's a function application
+        value_t expanded = expand(vm, env, val);
+
+        if (!IS_EQ(expanded, val)) {
+            // macros encountered and expanded, now eval the expanded value
+            return eval(vm, env, expanded);
+        }
+
         cons_t *cons = AS_CONS(val);
         value_t fn = cons->car;
         fn = eval(vm, env, cons->car);
@@ -448,4 +455,25 @@ value_t begin(vm_t *vm, env_t *env, value_t val) {
     value_t arg, iter;
     SCM_FOREACH (arg, AS_CONS(val), iter) { result = eval(vm, env, arg); }
     return result;
+}
+
+value_t expand(vm_t *vm, env_t *env, value_t val) {
+    symbol_t *sym;
+    if (IS_SYMBOL(val)) {
+        sym = AS_SYMBOL(val);
+    } else if (IS_CONS(val) && IS_SYMBOL(AS_CONS(val)->car)) {
+        sym = AS_SYMBOL(AS_CONS(val)->car);
+    } else {
+        return val;
+    }
+
+    value_t found = find(env, sym);
+    if (IS_UNDEFINED(found) || !IS_MACRO(found)) {
+        return val;
+    }
+
+    // TODO: If ever a 'AS_MACRO' is created, here is a good place to put it
+    function_t *macro = AS_FUNCTION(found);
+    value_t args = AS_CONS(val)->cdr;
+    return apply_func(vm, env, macro, args);
 }

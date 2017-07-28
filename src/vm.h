@@ -61,6 +61,7 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list);
 value_t eval(vm_t *vm, env_t *env, value_t val);
 // evaluates all arguments in [val] and returns the latest value
 value_t begin(vm_t *vm, env_t *env, value_t val);
+value_t expand(vm_t *vm, env_t *env, value_t val);
 
 void vm_push_temp(vm_t *vm, ptrvalue_t *ptr);
 void vm_pop_temp(vm_t *vm);
