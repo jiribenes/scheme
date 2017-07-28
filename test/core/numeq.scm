@@ -1,0 +1,12 @@
+(begin
+    (test (equal? (= 1 1) #t) #t)
+    (test (equal? (= 0 1) #f) #t)
+    (test (equal? (= -1 -1) #t) #t)
+    (test (equal? (= 42.5 42.5) #t) #t)
+    (test (equal? (= 99.999 99.999) #t) #t)
+    (test (equal? (= 0 -0) #t) #t)
+    (test (equal? (= 1e9 1e-9) #f) #t)
+    (test (equal? (= 0 0) #t) #t)
+    (test (equal? (= 1 -1) #f) #t)
+    (test (equal? (= 1e40 1e40) #t) #t)
+)

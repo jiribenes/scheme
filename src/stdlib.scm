@@ -5,12 +5,22 @@
     (define (cdar x) (cdr (car x)))
     (define (cddr x) (cdr (cdr x)))
 
+    (define (caaar x) (car (car (car x))))
+    (define (caadr x) (car (car (cdr x))))
+    (define (cadar x) (car (cdr (car x))))
+    (define (caddr x) (car (cdr (cdr x))))
+    (define (cdaar x) (cdr (car (car x))))
+    (define (cdadr x) (cdr (car (cdr x))))
+    (define (cddar x) (cdr (cdr (car x))))
+    (define (cdddr x) (cdr (cdr (cdr x))))
+
     (define pair? cons?)
+
     (define true #t)
-    (define null '())
     (define false #f)
-    (define (null? x)
-        (eq? x '()))
+
+    (define (not x)
+        (if x #f #t))
 
     (define (bool? x)
         (if (eq? x #f)
@@ -19,8 +29,11 @@
                 #t
                 #f)))
 
-    (define (not x)
-        (if x #f #t))
+    (define boolean? bool?)
+
+    (define null '())
+    (define (null? x)
+        (eq? x '()))
 
     (define (map fn lst)
         (if (null? lst)
@@ -51,7 +64,7 @@
 
     (define (reduce fn lst)
         (foldl fn (car lst) (cdr lst)))
-    
+
     (define (test a b)
         (write
             (eq? a b)))

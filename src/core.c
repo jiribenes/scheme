@@ -104,6 +104,8 @@ static value_t builtin_rem(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(fmod(AS_NUM(n), AS_NUM(m)));
 }
 
+// TODO: we shouldn't need to remember <prev>,
+//       we just need first...
 static value_t gt(vm_t *vm, env_t *env, value_t args) {
     if (IS_NIL(args)) {
         return TRUE_VAL;
@@ -120,6 +122,30 @@ static value_t gt(vm_t *vm, env_t *env, value_t args) {
             // if we find a pair where the '>' relation doesn't hold,
             // return false
             if (AS_NUM(prev) <= AS_NUM(arg)) {
+                return FALSE_VAL;
+            }
+        }
+        prev = arg;
+    }
+    return TRUE_VAL;
+}
+
+static value_t num_equal(vm_t *vm, env_t *env, value_t args) {
+    if (IS_NIL(args)) {
+        return TRUE_VAL;
+    }
+    value_t eargs = eval_list(vm, env, args);
+    value_t prev = NIL_VAL;
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
+        if (!IS_NUM(arg)) {
+            error_runtime(vm, "=: argument is not a number!");
+            return NIL_VAL;
+        }
+        if (!IS_NIL(prev)) {
+            // if we find a pair where the '==' relation doesn't hold,
+            // return false
+            if (AS_NUM(prev) != AS_NUM(arg)) {
                 return FALSE_VAL;
             }
         }
@@ -406,38 +432,6 @@ static value_t builtin_env(vm_t *vm, env_t *env, value_t args) {
 
 /* *** */
 
-// This function is reaaaally unsafe. Please don't break it.
-value_t file_read(vm_t *vm, const char *filename) {
-    FILE *f = fopen(filename, "rb");
-    fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    char *string = (char *) malloc(fsize + 1);
-    size_t bytes_read = fread(string, fsize, 1, f);
-    fclose(f);
-    if (bytes_read != 1) {
-        error_runtime(vm, "Could not read file %s!", filename);
-        free(string);
-        return NIL_VAL;
-    }
-    string[fsize] = '\0';
-
-    value_t val = read_source(vm, string);
-#ifdef DEBUG
-    fprintf(stdout, "I read in %zu bytes: ", bytes_read);
-    write(stdout, val);
-    fprintf(stdout, "\n");
-#endif
-    free(string);
-    return val;
-}
-
-static void stdlib_load(vm_t *vm, env_t *env, const char *filename) {
-    value_t val = file_read(vm, filename);
-    eval(vm, env, val);
-}
-
 env_t *scm_env_default(vm_t *vm) {
     env_t *env = env_new(vm, NIL_VAL, NULL);
 
@@ -450,6 +444,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "-", 1, subtract);
     primitive_add(vm, env, "remainder", 9, builtin_rem);
     primitive_add(vm, env, ">", 1, gt);
+    primitive_add(vm, env, "=", 1, num_equal);
 
     primitive_add(vm, env, "eq?", 3, eq);
     primitive_add(vm, env, "equal?", 6, equal);
@@ -481,7 +476,6 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
 #endif
-    stdlib_load(vm, env, "src/stdlib.scm");
 
     return env;
 }

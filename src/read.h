@@ -1,6 +1,7 @@
 #ifndef _read_h
 #define _read_h
 
+#include "config.h"
 #include "scheme.h"
 #include "value.h"
 
