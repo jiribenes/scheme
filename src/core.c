@@ -452,38 +452,6 @@ static value_t builtin_env(vm_t *vm, env_t *env, value_t args) {
 
 /* *** */
 
-// This function is reaaaally unsafe. Please don't break it.
-value_t file_read(vm_t *vm, const char *filename) {
-    FILE *f = fopen(filename, "rb");
-    fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    char *string = (char *) malloc(fsize + 1);
-    size_t bytes_read = fread(string, fsize, 1, f);
-    fclose(f);
-    if (bytes_read != 1) {
-        error_runtime(vm, "Could not read file %s!", filename);
-        free(string);
-        return NIL_VAL;
-    }
-    string[fsize] = '\0';
-
-    value_t val = read_source(vm, string);
-#ifdef DEBUG
-    fprintf(stdout, "I read in %zu bytes: ", bytes_read);
-    write(stdout, val);
-    fprintf(stdout, "\n");
-#endif
-    free(string);
-    return val;
-}
-
-static void stdlib_load(vm_t *vm, env_t *env, const char *filename) {
-    value_t val = file_read(vm, filename);
-    eval(vm, env, val);
-}
-
 env_t *scm_env_default(vm_t *vm) {
     env_t *env = env_new(vm, NIL_VAL, NULL);
 
@@ -528,7 +496,6 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
 #endif
-    stdlib_load(vm, env, "src/stdlib.scm");
 
     return env;
 }

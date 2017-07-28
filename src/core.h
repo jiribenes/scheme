@@ -15,9 +15,6 @@ void error_runtime(vm_t *vm, const char *format, ...);
 bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n,
                  bool at_least);
 
-// Reads a file and parses it
-value_t file_read(vm_t *vm, const char *filename);
-
 // Loads a default environment
 env_t *scm_env_default(vm_t *vm);
 
