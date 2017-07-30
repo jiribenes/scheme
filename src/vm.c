@@ -452,8 +452,12 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
 }
 
 // Evaluates expressions in order, returns the last evaluated
+// or #<void> if <val> is empty (NIL)
 value_t begin(vm_t *vm, env_t *env, value_t val) {
-    value_t result = NIL_VAL;
+    value_t result = VOID_VAL;
+    if (IS_NIL(val)) {
+        return result;
+    }
     value_t arg, iter;
     SCM_FOREACH (arg, AS_CONS(val), iter) { result = eval(vm, env, arg); }
     return result;
