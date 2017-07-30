@@ -90,6 +90,15 @@
     (define (reduce fn lst)
         (foldl fn (car lst) (cdr lst)))
 
+    (define-macro (when test . then)
+        (list 'if test
+              (cons 'begin then)))
+
+    (define-macro (unless test . then)
+        (list 'if
+              (cons 'not test)
+              (cons 'begin branch)))
+
     (define (test a b)
         (write
             (eq? a b)))
