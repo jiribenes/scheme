@@ -5,31 +5,20 @@
 #include "write.h"
 
 static void write_cons(FILE *f, cons_t *cons) {
-    fprintf(f, "(");
-    cons_t *temp = cons;
+    value_t arg, iter;
+    SCM_FOREACH (arg, cons, iter) {
+        write(f, arg);
 
-    if (IS_NIL(temp->car)) {
-        fprintf(f, "()");  // write(f, temp->car);
-    }
-
-    while (!IS_NIL(temp->car)) {
-        write(f, temp->car);
-
-        if (!IS_NIL(temp->cdr)) {
+        if (IS_NIL(AS_CONS(iter)->cdr)) {
+            return;
+        } else if (IS_CONS(AS_CONS(iter)->cdr)) {
             fprintf(f, " ");
         } else {
-            break;
-        }
-
-        if (!IS_CONS(temp->cdr)) {
-            fprintf(f, ". ");
-            write(f, temp->cdr);
-            break;
-        } else {
-            temp = AS_CONS(temp->cdr);
+            fprintf(f, " . ");
+            write(f, AS_CONS(iter)->cdr);
+            return;
         }
     }
-    fprintf(f, ")");
 }
 
 static void write_string(FILE *f, string_t *str) {
@@ -84,7 +73,10 @@ void write(FILE *f, value_t val) {
     } else if (IS_PTR(val)) {
         if (IS_CONS(val)) {
             cons_t *cons = AS_CONS(val);
+
+            fprintf(f, "(");
             write_cons(f, cons);
+            fprintf(f, ")");
         } else if (IS_STRING(val)) {
             string_t *str = AS_STRING(val);
             write_string(f, str);
