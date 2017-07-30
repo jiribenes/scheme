@@ -267,29 +267,31 @@ void variable_add(vm_t *vm, env_t *env, symbol_t *sym, value_t val) {
 
 // Creates a new env frame
 env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals) {
-    if (cons_len(vars) != cons_len(vals)) {
-        error_runtime(
-            vm,
-            "Number of arguments doesn't match! (%d parameters, %d arguments)",
-            cons_len(vars), cons_len(vals));
-    }
     value_t alist = NIL_VAL;
-    cons_t *var = NULL;
-    cons_t *val = NULL;
-    if (!IS_NIL(vars)) {
-        var = AS_CONS(vars);
-        val = AS_CONS(vals);
-        while (!IS_NIL(var->car)) {
-            value_t pair = cons_fn(vm, var->car, val->car);
-            value_t temp = cons_fn(vm, pair, alist);
-            alist = temp;
+    value_t vars_iter, vals_iter;
 
-            if (IS_NIL(var->cdr)) {
-                break;
-            }
-            var = AS_CONS(var->cdr);
-            val = AS_CONS(val->cdr);
+    // TODO: should we create a macro - like SCM_ASSOC_FOREACH?
+    for (vars_iter = vars, vals_iter = vals; IS_CONS(vars_iter);
+         vars_iter = AS_CONS(vars_iter)->cdr,
+        vals_iter = AS_CONS(vals_iter)->cdr) {
+        if (!IS_CONS(vals_iter)) {
+            // TODO: Add proper function arity?
+            error_runtime(vm, "Number of arguments doesn't match!");
         }
+
+        value_t par = AS_CONS(vars_iter)->car;
+        value_t arg = AS_CONS(vals_iter)->car;
+
+        value_t pair = cons_fn(vm, par, arg);
+        value_t temp = cons_fn(vm, pair, alist);
+
+        alist = temp;
+    }
+    if (!IS_NIL(vars_iter)) {
+        value_t pair = cons_fn(vm, vars_iter, vals_iter);
+        value_t temp = cons_fn(vm, pair, alist);
+
+        alist = temp;
     }
     env_t *new_env = env_new(vm, alist, env);
     return new_env;

@@ -279,19 +279,26 @@ static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
     // (lambda (<params...>) <body...>)
 
-    if (IS_NIL(AS_CONS(args)->car)) {  // no parameters
+    if (IS_NIL(AS_CONS(args)->car)) {
+        // no parameters -> (lambda () <body...>)
         value_t body = AS_CONS(args)->cdr;
         function_t *func = function_new(vm, env, NIL_VAL, body);
         return PTR_VAL(func);
     }
+
+    if (IS_SYMBOL(AS_CONS(args)->car)) {
+        // variadic -> (lambda param <body...>)
+        value_t param = AS_CONS(args)->car;
+        value_t body = AS_CONS(args)->cdr;
+        function_t *func = function_new(vm, env, param, body);
+        return PTR_VAL(func);
+    }
+
     // TODO: Rewrite using SCM_FOREACH macro
     for (cons_t *cons = AS_CONS(AS_CONS(args)->car);;
          cons = AS_CONS(cons->cdr)) {
         if (!IS_SYMBOL(cons->car)) {
             error_runtime(vm, "lambda: all parameters must be symbols!");
-            return NIL_VAL;
-        } else if (!IS_NIL(cons->cdr) && !IS_CONS(cons->cdr)) {
-            error_runtime(vm, "lambda: parameter list must not be dotted");
             return NIL_VAL;
         }
 
@@ -299,6 +306,7 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
             break;
         }
     }
+
     value_t params = AS_CONS(args)->car;
     value_t body = AS_CONS(args)->cdr;
     function_t *func = function_new(vm, env, params, body);
