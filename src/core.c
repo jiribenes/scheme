@@ -265,15 +265,32 @@ static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
         value_t params = AS_CONS(rest->car)->cdr;
         cons_t *body = AS_CONS(rest->cdr);
         function_t *func = function_new(vm, env, params, PTR_VAL(body));
-        value_t val = eval(vm, env, PTR_VAL(func));
-        variable_add(vm, env, sym, val);
+        variable_add(vm, env, sym, PTR_VAL(func));
 
         return VOID_VAL;
     } else {
-        error_runtime(vm, "define: is wrong - second argument has to be"
+        error_runtime(vm, "define: is wrong - first argument has to be"
                           "either a list or a symbol!");
         return NIL_VAL;
     }
+}
+
+static value_t define_macro(vm_t *vm, env_t *env, value_t args) {
+    // (define-macro (<name> <params...>) <body...>)
+    cons_t *rest = AS_CONS(args);
+    if (!IS_CONS(rest->car)) {
+        error_runtime(vm, "define-macro: first argument has to be a list!");
+        return NIL_VAL;
+    }
+
+    symbol_t *sym = AS_SYMBOL(AS_CONS(rest->car)->car);
+    value_t params = AS_CONS(rest->car)->cdr;
+    cons_t *body = AS_CONS(rest->cdr);
+
+    function_t *macro = macro_new(vm, env, params, PTR_VAL(body));
+    variable_add(vm, env, sym, PTR_VAL(macro));
+
+    return VOID_VAL;
 }
 
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
@@ -449,6 +466,20 @@ static value_t builtin_eval(vm_t *vm, env_t *env, value_t args) {
     return eval(vm, env, AS_CONS(eargs)->car);
 }
 
+static value_t builtin_expand(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "expand", args, 1, false);
+    return expand(vm, env, AS_CONS(args)->car);
+}
+
+// TODO: Can we do this a bit better?
+static value_t builtin_gensym(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "gensym", args, 0, false);
+    static uint32_t count = 0;
+    char buffer[16];
+    snprintf(buffer, sizeof(buffer), "g%d", count++);
+    return PTR_VAL(symbol_new(vm, buffer, 16));
+}
+
 static value_t builtin_void(vm_t *vm, env_t *env, value_t args) {
     return VOID_VAL;
 }
@@ -509,6 +540,7 @@ env_t *scm_env_default(vm_t *vm) {
 
     primitive_add(vm, env, "begin", 5, begin);
     primitive_add(vm, env, "define", 6, builtin_define);
+    primitive_add(vm, env, "define-macro", 12, define_macro);
     primitive_add(vm, env, "lambda", 6, lambda);
     primitive_add(vm, env, "if", 2, builtin_if);
     primitive_add(vm, env, "cons", 4, builtin_cons);
@@ -521,6 +553,9 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "and", 3, builtin_and);
 
     primitive_add(vm, env, "eval", 4, builtin_eval);
+    primitive_add(vm, env, "expand", 6, builtin_expand);
+    primitive_add(vm, env, "gensym", 6, builtin_gensym);
+
     primitive_add(vm, env, "void", 4, builtin_void);
 #ifdef DEBUG
     primitive_add(vm, env, "gc", 2, builtin_gc);

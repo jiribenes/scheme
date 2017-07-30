@@ -171,7 +171,7 @@ static void mark(vm_t *vm, value_t val) {
         if (env->up != NULL) {
             mark(vm, PTR_VAL(env->up));
         }
-    } else if (ptr->type == T_FUNCTION) {
+    } else if (ptr->type == T_FUNCTION || ptr->type == T_MACRO) {
         function_t *func = (function_t *) ptr;
 
         mark(vm, func->params);
@@ -209,7 +209,7 @@ static size_t vm_size(vm_t *vm, value_t val) {
         return sizeof(symbol_t) + sizeof(char) * (sym->len + 1);
     } else if (IS_PRIMITIVE(val)) {
         return sizeof(primitive_t);
-    } else if (IS_FUNCTION(val)) {
+    } else if (IS_FUNCTION(val) || IS_MACRO(val)) {
         return sizeof(function_t);
     } else if (IS_ENV(val)) {
         return sizeof(env_t);
@@ -428,6 +428,13 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
         return result;
     } else if (IS_CONS(val)) {
         // It's a function application
+        value_t expanded = expand(vm, env, val);
+
+        if (!IS_EQ(expanded, val)) {
+            // macros encountered and expanded, now eval the expanded value
+            return eval(vm, env, expanded);
+        }
+
         cons_t *cons = AS_CONS(val);
         value_t fn = cons->car;
         fn = eval(vm, env, cons->car);
@@ -450,4 +457,25 @@ value_t begin(vm_t *vm, env_t *env, value_t val) {
     value_t arg, iter;
     SCM_FOREACH (arg, AS_CONS(val), iter) { result = eval(vm, env, arg); }
     return result;
+}
+
+value_t expand(vm_t *vm, env_t *env, value_t val) {
+    symbol_t *sym;
+    if (IS_SYMBOL(val)) {
+        sym = AS_SYMBOL(val);
+    } else if (IS_CONS(val) && IS_SYMBOL(AS_CONS(val)->car)) {
+        sym = AS_SYMBOL(AS_CONS(val)->car);
+    } else {
+        return val;
+    }
+
+    value_t found = find(env, sym);
+    if (IS_UNDEFINED(found) || !IS_MACRO(found)) {
+        return val;
+    }
+
+    // TODO: If ever a 'AS_MACRO' is created, here is a good place to put it
+    function_t *macro = AS_FUNCTION(found);
+    value_t args = AS_CONS(val)->cdr;
+    return apply_func(vm, env, macro, args);
 }

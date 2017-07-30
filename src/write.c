@@ -87,6 +87,8 @@ void write(FILE *f, value_t val) {
             fprintf(f, "#<primitive>");
         } else if (IS_FUNCTION(val)) {
             fprintf(f, "#<function>");
+        } else if (IS_MACRO(val)) {
+            fprintf(f, "#<macro>");
         } else if (IS_ENV(val)) {
             env_t *env = (env_t *) AS_PTR(val);
             fprintf(f, "#<environment, containing: ");
