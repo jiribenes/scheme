@@ -442,6 +442,15 @@ static value_t builtin_expand(vm_t *vm, env_t *env, value_t args) {
     return expand(vm, env, AS_CONS(args)->car);
 }
 
+// TODO: Can we do this a bit better?
+static value_t builtin_gensym(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "gensym", args, 0, false);
+    static uint32_t count = 0;
+    char buffer[16];
+    snprintf(buffer, sizeof(buffer), "g%d", count++);
+    return PTR_VAL(symbol_new(vm, buffer, 16));
+}
+
 static value_t builtin_void(vm_t *vm, env_t *env, value_t args) {
     return VOID_VAL;
 }
@@ -514,6 +523,8 @@ env_t *scm_env_default(vm_t *vm) {
 
     primitive_add(vm, env, "eval", 4, builtin_eval);
     primitive_add(vm, env, "expand", 6, builtin_expand);
+    primitive_add(vm, env, "gensym", 6, builtin_gensym);
+
     primitive_add(vm, env, "void", 4, builtin_void);
 #ifdef DEBUG
     primitive_add(vm, env, "gc", 2, builtin_gc);
