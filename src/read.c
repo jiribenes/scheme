@@ -107,6 +107,9 @@ static void next_token(reader_t *reader) {
     } else if (((*reader->cur) == '-') && is_digit(peek_next_char(reader))) {
         reader->toktype = TOK_NUMBER;
         reader->tokstart = reader->cur;
+    } else if (((*reader->cur) == '+') && is_digit(peek_next_char(reader))) {
+        reader->toktype = TOK_NUMBER;
+        reader->tokstart = reader->cur;
     } else if ((*reader->cur) == '\0') {
         reader->toktype = TOK_EOF;
         reader->tokstart = reader->cur;
@@ -122,12 +125,13 @@ static void next_token(reader_t *reader) {
 static void read1(reader_t *reader);
 static void read_list(reader_t *reader);
 
+// TODO: Support reading +-nan.0, +-inf.0
 static void read_number(reader_t *reader) {
     errno = 0;
 
     double d = strtod(reader->tokstart, NULL);
 
-    if ((*reader->cur) == '-') {
+    if ((*reader->cur) == '-' || (*reader->cur) == '+') {
         next_char(reader);
     }
 
