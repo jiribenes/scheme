@@ -1,3 +1,4 @@
+#include <math.h>   // isnan, isinf
 #include <stdio.h>  // FILE, fprintf, stderr
 
 #include "value.h"
@@ -50,10 +51,24 @@ static void write_string(FILE *f, string_t *str) {
     fprintf(f, "\"");
 }
 
+static void write_number(FILE *f, double d) {
+    if (isnan(d)) {
+        fprintf(f, "+nan.0");
+    } else if (isinf(d)) {
+        if (d > 0) {
+            fprintf(f, "+inf.0");
+        } else {
+            fprintf(f, "-inf.0");
+        }
+    } else {
+        fprintf(f, "%.14g", d);
+    }
+}
+
 // write val as a s-expr
 void write(FILE *f, value_t val) {
     if (IS_NUM(val)) {
-        fprintf(f, "%.14g", AS_NUM(val));
+        write_number(f, AS_NUM(val));
     } else if (IS_NIL(val)) {
         fprintf(f, "()");
     } else if (IS_TRUE(val)) {
