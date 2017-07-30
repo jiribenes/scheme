@@ -104,6 +104,27 @@ static value_t builtin_rem(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(fmod(AS_NUM(n), AS_NUM(m)));
 }
 
+static value_t builtin_div(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "/", args, 1, true);
+    double result = 1.0F;
+    value_t eargs = eval_list(vm, env, args);
+    value_t arg = AS_CONS(eargs)->car;
+    result = AS_NUM(arg);
+
+    if (IS_NIL(AS_CONS(eargs)->cdr)) {
+        return NUM_VAL(result);
+    }
+    value_t iter;
+    SCM_FOREACH (arg, AS_CONS(AS_CONS(eargs)->cdr), iter) {
+        if (!IS_NUM(arg)) {
+            error_runtime(vm, "/: argument is not a number!");
+            return NIL_VAL;
+        }
+        result /= AS_NUM(arg);
+    }
+    return NUM_VAL(result);
+}
+
 // TODO: we shouldn't need to remember <prev>,
 //       we just need first...
 static value_t gt(vm_t *vm, env_t *env, value_t args) {
@@ -460,6 +481,8 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "*", 1, multiply);
     primitive_add(vm, env, "-", 1, subtract);
     primitive_add(vm, env, "remainder", 9, builtin_rem);
+    primitive_add(vm, env, "/", 1, builtin_div);
+
     primitive_add(vm, env, ">", 1, gt);
     primitive_add(vm, env, "=", 1, num_equal);
 
