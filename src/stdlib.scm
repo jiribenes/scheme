@@ -40,6 +40,22 @@
 
     (define boolean? bool?)
 
+    (define (nan? x)
+        (if (number? x)
+            (if (not (= x x))
+                #t
+                #f) 
+            #f))
+
+    (define inf (/ 1 0))
+
+    (define (infinite? x)
+        (if (number? x)
+            (if (or (= x inf) (= x (- inf)))
+                #t
+                #f)
+            #f))
+
     (define null '())
     (define (null? x)
         (eq? x '()))
