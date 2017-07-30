@@ -6,7 +6,7 @@ import os.path as P
 import os
 import re
 
-DEBUG_READ_PATTERN = re.compile(r'I read in .*')
+DEBUG_PATTERN = re.compile(r'DEBUG.*')
 RESULT_PATTERN = re.compile(r'Result: .*')
 TRUE_PATTERN = re.compile(r'#t')
 FALSE_PATTERN = re.compile(r'#f')
@@ -14,18 +14,18 @@ FALSE_PATTERN = re.compile(r'#f')
 
 def run_test(test_path, expected):
     passed = 0
-    proc = Popen(['./scheme.out', test_path], stdin=PIPE, stdout=PIPE,
-                 stderr=PIPE)
+    proc = Popen(
+        ['./scheme.out', test_path], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
     out, err = proc.communicate()
 
     out = out.decode('utf-8').replace('\r\n', '\n')
 
-    line_no = 1
+    test_no = 1
     failed = []
 
     for line in out.split('\n'):
-        match = DEBUG_READ_PATTERN.search(line)
+        match = DEBUG_PATTERN.search(line)
         if match:
             continue
 
@@ -39,11 +39,15 @@ def run_test(test_path, expected):
 
         match = FALSE_PATTERN.search(line)
         if match:
-            failed.append(line_no)
+            failed.append(test_no)
 
-        line_no += 1
+        test_no += 1
 
-    assert passed + len(failed) == expected
+    assert passed + len(failed) == expected, """
+    Something went wrong in {file}!
+    Here is the output:
+    {out}""".format(
+        file=test_path, out=out)
 
     return failed
 
@@ -61,9 +65,11 @@ def main(basepath):
     total_failed = 0
 
     # Recursively finds all scm test files in test/ folder
-
-    tests = [P.join(dirpath, f) for (dirpath, dirnames, files) in
-             os.walk(basepath) for f in files if f.endswith('.scm')]
+    tests = [
+        P.join(dirpath, f)
+        for (dirpath, dirnames, files) in os.walk(basepath) for f in files
+        if f.endswith('.scm')
+    ]
 
     for test in tests:
         expected = count_tests(test)
@@ -73,11 +79,11 @@ def main(basepath):
         total_failed += len(failed)
 
         for fail in failed:
-            print('FAIL: test #{} in file: {} (absolute path: {})!'.format(fail,
-                    P.basename(test), test))
+            print('FAIL: test #{} in file: {} (absolute path: {})!'.format(
+                fail, P.basename(test), test))
 
-    print('Tests finished! {} succeeded and {} failed!'.format(total
-            - total_failed, total_failed))
+    print('Tests finished! {} succeeded and {} failed!'.format(
+        total - total_failed, total_failed))
 
 
 if __name__ == '__main__':
