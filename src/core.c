@@ -339,7 +339,7 @@ static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
 
     // if it's true, return <then>
     if (AS_BOOL(condition)) {
-        value_t then = eval(vm, env, AS_CONS(AS_CONS(args)->cdr)->car);
+        value_t then = AS_CONS(AS_CONS(args)->cdr)->car;
         return eval(vm, env, then);
     }
 
