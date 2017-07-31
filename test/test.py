@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from subprocess import Popen, PIPE
 import os.path as P
 import os
 import re
+from subprocess import Popen, PIPE
+from sys import exit
 
 DEBUG_PATTERN = re.compile(r'DEBUG.*')
 RESULT_PATTERN = re.compile(r'Result: .*')
@@ -101,6 +102,10 @@ def main(basepath):
 
     print('Tests finished! {} succeeded, {} failed, {} errors!'.format(
         total - total_failed, total_failed, total_errors))
+
+    # If any test fail or error unexpectedly, return EXIT_FAILURE
+    if (total_failed > 0 or total_errors > 0):
+        exit(1)
 
 
 if __name__ == '__main__':
