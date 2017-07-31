@@ -8,6 +8,7 @@ import re
 
 DEBUG_PATTERN = re.compile(r'DEBUG.*')
 RESULT_PATTERN = re.compile(r'Result: .*')
+ERROR_PATTERN = re.compile(r'ERROR', re.IGNORECASE)
 TRUE_PATTERN = re.compile(r'#t')
 FALSE_PATTERN = re.compile(r'#f')
 
@@ -20,11 +21,16 @@ def run_test(test_path, expected):
     out, err = proc.communicate()
 
     out = out.decode('utf-8').replace('\r\n', '\n')
+    err = err.decode('utf-8').replace('\r\n', '\n')
 
     test_no = 1
+    line_no = 0
     failed = []
+    errors = []
 
     for line in out.split('\n'):
+        line_no += 1
+
         match = DEBUG_PATTERN.search(line)
         if match:
             continue
@@ -33,23 +39,29 @@ def run_test(test_path, expected):
         if match:
             continue
 
+        match = ERROR_PATTERN.search(line)
+        if match:
+            errors.append((line_no, line))
+
         match = TRUE_PATTERN.search(line)
         if match:
             passed += 1
 
         match = FALSE_PATTERN.search(line)
         if match:
-            failed.append(test_no)
+            failed.append((line_no, test_no, line))
 
         test_no += 1
 
-    assert passed + len(failed) == expected, """
-    Something went wrong in {file}!
-    Here is the output:
-    {out}""".format(
-        file=test_path, out=out)
+    for line in err.split('\n'):
+        match = ERROR_PATTERN.search(line)
+        if match:
+            errors.append(line)
 
-    return failed
+    if (passed + len(failed) != expected):
+        print('Something went wrong in {}!'.format(test_path))
+
+    return failed, errors
 
 
 def count_tests(test_path):
@@ -63,6 +75,7 @@ def count_tests(test_path):
 def main(basepath):
     total = 0
     total_failed = 0
+    total_errors = 0
 
     # Recursively finds all scm test files in test/ folder
     tests = [
@@ -73,17 +86,21 @@ def main(basepath):
 
     for test in tests:
         expected = count_tests(test)
-        failed = run_test(test, expected)
+        failed, errors = run_test(test, expected)
 
         total += expected
         total_failed += len(failed)
+        total_errors += len(errors)
 
-        for fail in failed:
-            print('FAIL: test #{} in file: {} (absolute path: {})!'.format(
-                fail, P.basename(test), test))
+        for line_no, test_no, fail in failed:
+            print('FAIL: file {} - line {}: test #{} (absolute path: {})!'.
+                  format(P.basename(test), line_no, test_no, test))
 
-    print('Tests finished! {} succeeded and {} failed!'.format(
-        total - total_failed, total_failed))
+        for err in errors:
+            print('ERROR: file {}: {}'.format(P.basename(test), err))
+
+    print('Tests finished! {} succeeded, {} failed, {} errors!'.format(
+        total - total_failed, total_failed, total_errors))
 
 
 if __name__ == '__main__':
