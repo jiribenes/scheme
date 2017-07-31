@@ -314,10 +314,16 @@ static value_t lambda(vm_t *vm, env_t *env, value_t args) {
     // TODO: Rewrite using SCM_FOREACH macro
     for (cons_t *cons = AS_CONS(AS_CONS(args)->car);;
          cons = AS_CONS(cons->cdr)) {
+        if (!IS_CONS(cons->cdr) && !IS_NIL(cons->cdr) && IS_SYMBOL(cons->cdr)) {
+            // variadic (lambda (a b . rest) <body...>)
+            break;
+        }
+
         if (!IS_SYMBOL(cons->car)) {
             error_runtime(vm, "lambda: all parameters must be symbols!");
             return NIL_VAL;
         }
+
 
         if (IS_NIL(cons->cdr)) {
             break;
