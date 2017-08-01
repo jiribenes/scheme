@@ -336,18 +336,30 @@ static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     arity_check(vm, "write", eargs, 1, false);
     write(stdout, AS_CONS(eargs)->car);
-    fprintf(stdout, "\n");
     return VOID_VAL;
 }
 
 static value_t builtin_display(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
-    arity_check(vm, "write", eargs, 1, false);
+    arity_check(vm, "display", eargs, 1, false);
     display(stdout, AS_CONS(eargs)->car);
+    return VOID_VAL;
+}
+
+static value_t builtin_newline(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "newline", args, 0, false);
     fprintf(stdout, "\n");
     return VOID_VAL;
 }
 
+static value_t builtin_read(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "read", args, 0, false);
+    char line[1024];
+    if (!fgets(line, 1024, stdin)) {
+        return EOF_VAL;
+    }
+    return read_source(vm, line);
+}
 
 static value_t builtin_set(vm_t *vm, env_t *env, value_t args) {
     // (set! <sym> <expr>)
@@ -503,8 +515,12 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "cons", 4, builtin_cons);
     primitive_add(vm, env, "car", 3, builtin_car);
     primitive_add(vm, env, "cdr", 3, builtin_cdr);
+
     primitive_add(vm, env, "write", 5, builtin_write);
     primitive_add(vm, env, "display", 7, builtin_display);
+    primitive_add(vm, env, "newline", 7, builtin_newline);
+    primitive_add(vm, env, "read", 4, builtin_read);
+
     primitive_add(vm, env, "set!", 4, builtin_set);
     primitive_add(vm, env, "or", 2, builtin_or);
     primitive_add(vm, env, "and", 3, builtin_and);

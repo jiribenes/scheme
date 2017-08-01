@@ -14,6 +14,14 @@
     (define (cddar x) (cdr (cdr (car x))))
     (define (cdddr x) (cdr (cdr (cdr x))))
 
+    (define (writeln x)
+        (write x)
+        (newline))
+
+    (define (displayln x)
+        (display x)
+        (newline))
+
     (define pair? cons?)
 
     (define true #t)
@@ -111,7 +119,7 @@
               (cons 'begin branch)))
 
     (define (test a b)
-        (write
+        (writeln
             (eq? a b)))
 
 
