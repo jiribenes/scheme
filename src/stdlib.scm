@@ -47,7 +47,7 @@
                 #f) 
             #f))
 
-    (define inf (/ 1 0))
+    (define inf (builtin/ 1 0))
 
     (define (infinite? x)
         (if (number? x)
@@ -89,6 +89,22 @@
 
     (define (reduce fn lst)
         (foldl fn (car lst) (cdr lst)))
+
+    (define (apply fn args)
+        (eval (cons fn 
+                    (map (lambda (x) (list 'quote x))
+                         args))))
+
+    (define (+ . args) (foldl builtin+ 0 args))
+    (define (- a . args)
+        (if (null? args)
+            (builtin- 0 a)
+            (builtin- a (apply + args))))
+    (define (* . args) (foldl builtin* 1 args))
+    (define (/ a . args)
+        (if (null? args)
+            (builtin/ 1 a)
+            (builtin/ a (apply * args))))
 
     (define-macro (when test . then)
         (list 'if test

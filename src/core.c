@@ -35,59 +35,23 @@ bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n,
 
 /* *** core - numbers *** */
 
-static value_t add(vm_t *vm, env_t *env, value_t args) {
-    if (IS_NIL(args)) {
-        return NUM_VAL(0.0F);
+#define BUILTIN_NUM_FN(name, op)                                            \
+    static value_t builtin_##name(vm_t *vm, env_t *env, value_t args) {     \
+        value_t eargs = eval_list(vm, env, args);                           \
+        arity_check(vm, "builtin" #op, eargs, 2, false);                    \
+        value_t a = AS_CONS(eargs)->car;                                    \
+        value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;                      \
+        if (!IS_NUM(a) || !IS_NUM(b)) {                                     \
+            error_runtime(vm, "builtin" #op ": argument is not a number!"); \
+            return NIL_VAL;                                                 \
+        }                                                                   \
+        return NUM_VAL(AS_NUM(a) op AS_NUM(b));                             \
     }
-    value_t eargs = eval_list(vm, env, args);
-    double result = 0.0F;
-    value_t arg, iter;
-    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
-        if (!IS_NUM(arg)) {
-            error_runtime(vm, "+: argument is not a number!");
-            return NIL_VAL;
-        }
-        result += AS_NUM(arg);
-    }
-    return NUM_VAL(result);
-}
 
-static value_t multiply(vm_t *vm, env_t *env, value_t args) {
-    if (IS_NIL(args)) {
-        return NUM_VAL(1.0F);
-    }
-    value_t eargs = eval_list(vm, env, args);
-    double result = 1.0F;
-    value_t arg, iter;
-    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
-        if (!IS_NUM(arg)) {
-            error_runtime(vm, "*: argument is not a number!");
-            return NIL_VAL;
-        }
-        result *= AS_NUM(arg);
-    }
-    return NUM_VAL(result);
-}
-
-static value_t subtract(vm_t *vm, env_t *env, value_t args) {
-    arity_check(vm, "-", args, 1, true);
-    double result = 0.0F;
-    value_t eargs = eval_list(vm, env, args);
-    value_t arg = AS_CONS(eargs)->car;
-    result = AS_NUM(arg);
-    if (IS_NIL(AS_CONS(eargs)->cdr)) {
-        return NUM_VAL(-result);
-    }
-    value_t iter;
-    SCM_FOREACH (arg, AS_CONS(AS_CONS(eargs)->cdr), iter) {
-        if (!IS_NUM(arg)) {
-            error_runtime(vm, "-: argument is not a number!");
-            return NIL_VAL;
-        }
-        result -= AS_NUM(arg);
-    }
-    return NUM_VAL(result);
-}
+BUILTIN_NUM_FN(add, +)
+BUILTIN_NUM_FN(mul, *)
+BUILTIN_NUM_FN(sub, -)
+BUILTIN_NUM_FN(div, /)
 
 static value_t builtin_rem(vm_t *vm, env_t *env, value_t args) {
     // (remainder <n> <m>) => n `rem` m
@@ -102,27 +66,6 @@ static value_t builtin_rem(vm_t *vm, env_t *env, value_t args) {
     }
 
     return NUM_VAL(fmod(AS_NUM(n), AS_NUM(m)));
-}
-
-static value_t builtin_div(vm_t *vm, env_t *env, value_t args) {
-    arity_check(vm, "/", args, 1, true);
-    double result = 1.0F;
-    value_t eargs = eval_list(vm, env, args);
-    value_t arg = AS_CONS(eargs)->car;
-    result = AS_NUM(arg);
-
-    if (IS_NIL(AS_CONS(eargs)->cdr)) {
-        return NUM_VAL(result);
-    }
-    value_t iter;
-    SCM_FOREACH (arg, AS_CONS(AS_CONS(eargs)->cdr), iter) {
-        if (!IS_NUM(arg)) {
-            error_runtime(vm, "/: argument is not a number!");
-            return NIL_VAL;
-        }
-        result /= AS_NUM(arg);
-    }
-    return NUM_VAL(result);
 }
 
 // TODO: we shouldn't need to remember <prev>,
@@ -522,11 +465,12 @@ env_t *scm_env_default(vm_t *vm) {
     symbol_t *undefined_sym = symbol_intern(vm, "undefined", 9);
     variable_add(vm, env, undefined_sym, UNDEFINED_VAL);
 
-    primitive_add(vm, env, "+", 1, add);
-    primitive_add(vm, env, "*", 1, multiply);
-    primitive_add(vm, env, "-", 1, subtract);
+
+    primitive_add(vm, env, "builtin+", 8, builtin_add);
+    primitive_add(vm, env, "builtin*", 8, builtin_mul);
+    primitive_add(vm, env, "builtin-", 8, builtin_sub);
+    primitive_add(vm, env, "builtin/", 8, builtin_div);
     primitive_add(vm, env, "remainder", 9, builtin_rem);
-    primitive_add(vm, env, "/", 1, builtin_div);
 
     primitive_add(vm, env, ">", 1, gt);
     primitive_add(vm, env, "=", 1, num_equal);
