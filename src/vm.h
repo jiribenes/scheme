@@ -59,6 +59,8 @@ value_t find_replace(env_t *env, symbol_t *sym, value_t new_val);
 value_t eval_list(vm_t *vm, env_t *env, value_t list);
 // evaluates a value
 value_t eval(vm_t *vm, env_t *env, value_t val);
+// applies <fn> to <args>
+value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args);
 // evaluates all arguments in [val] and returns the latest value
 value_t begin(vm_t *vm, env_t *env, value_t val);
 value_t expand(vm_t *vm, env_t *env, value_t val);

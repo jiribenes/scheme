@@ -319,7 +319,7 @@ static value_t apply_func(vm_t *vm, env_t *env, function_t *func,
 }
 
 // Tries to apply the value <fn> in <env> to <args>
-static value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
+value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
     if (!IS_NIL(args) && !IS_CONS(args)) {
         error_runtime(vm, "|apply: Cannot apply to a non-list!");
         return NIL_VAL;
