@@ -1,6 +1,8 @@
 # Scheme
 
-This project is a small implementation of an opinionated Scheme Lisp dialect with cca ~1800 LOC and ~800 semicolons.
+This project is a tiny, readable implementation of a Scheme Lisp dialect with cca ~1800 LOC (without comments and blank lines) and ~1000 semicolons.
+
+[![Build Status](https://api.travis-ci.org/jiribenes/scheme.svg?branch=master)](https://travis-ci.org/jiribenes/scheme)
 
 ## The REPL
 
@@ -15,11 +17,22 @@ There you can write simple (one-line) programs and get them evaluated immediatel
 
 A script has to begin with
 ```scheme
-(begin <rest> ...)
+(begin 
+    <first expression>
+    <second expression>
+    ...)
 ```
 For reference, see the folder examples/ in this repository
 
+Run scripts using
+```
+./scheme.out <path/to/script>
+```
+
 ## Language
+
+This is quite old - there have been many new values and procedures added recently,
+this README will be updated soon(ish).
 
 ### Values
 
