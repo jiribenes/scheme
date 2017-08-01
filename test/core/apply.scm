@@ -1,0 +1,11 @@
+(begin
+    (define (identity . args) args)
+    (test (equal? (apply identity (list 1 2 3 4 5)) (list 1 2 3 4 5)) #t)
+    (test (equal? (apply identity '(1)) '(1)) #t)
+    (test (equal? (apply list '(1 2 3 4 5)) (list 1 2 3 4 5)) #t)
+    (test (equal? (apply cons '(1 2)) '(1 . 2)) #t)
+    (define (cube x) (* x x x))
+    (test (equal? (apply cube '(2)) 8) #t)
+    (define (add x y) (+ x y))
+    (test (equal? (apply add '(3 4)) 7) #t)
+)
