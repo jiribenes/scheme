@@ -422,9 +422,15 @@ static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t builtin_eval(vm_t *vm, env_t *env, value_t args) {
-    arity_check(vm, "eval", args, 1, false);
     value_t eargs = eval_list(vm, env, args);
-    return eval(vm, env, AS_CONS(eargs)->car);
+    arity_check(vm, "eval", eargs, 1, true);
+    value_t first = AS_CONS(eargs)->car;
+    if (cons_len(eargs) == 2) {
+        value_t second = AS_CONS(AS_CONS(eargs)->cdr)->car;
+        return eval(vm, (env_t *) AS_PTR(second), first);
+    } else {
+        return eval(vm, env, first);
+    }
 }
 
 static value_t builtin_apply(vm_t *vm, env_t *env, value_t args) {
@@ -535,6 +541,9 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
 #endif
+
+    symbol_t *sym_env = symbol_intern(vm, "cur-env", 7);
+    variable_add(vm, env, sym_env, PTR_VAL(env));
 
     return env;
 }
