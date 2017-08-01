@@ -380,7 +380,7 @@ value_t find_replace(env_t *env, symbol_t *sym, value_t new_val) {
         }
     }
 
-    fprintf(stderr, "|find: Error: Symbol %s not bound\n", sym->name);
+    fprintf(stderr, "|find-replace: Error: Symbol %s not bound\n", sym->name);
     // error_runtime(vm, "|find: Symbol %s is not bound in environment!",
     // sym->name);
     return UNDEFINED_VAL;
