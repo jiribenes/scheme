@@ -90,11 +90,6 @@
     (define (reduce fn lst)
         (foldl fn (car lst) (cdr lst)))
 
-    (define (apply fn args)
-        (eval (cons fn 
-                    (map (lambda (x) (list 'quote x))
-                         args))))
-
     (define (+ . args) (foldl builtin+ 0 args))
     (define (- a . args)
         (if (null? args)

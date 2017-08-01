@@ -415,6 +415,14 @@ static value_t builtin_eval(vm_t *vm, env_t *env, value_t args) {
     return eval(vm, env, AS_CONS(eargs)->car);
 }
 
+static value_t builtin_apply(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "apply", args, 2, false);
+    value_t eargs = eval_list(vm, env, args);
+    value_t fn = AS_CONS(eargs)->car;
+    value_t fn_args = AS_CONS(AS_CONS(eargs)->cdr)->car;
+    return apply(vm, env, fn, fn_args);
+}
+
 static value_t builtin_expand(vm_t *vm, env_t *env, value_t args) {
     arity_check(vm, "expand", args, 1, false);
     return expand(vm, env, AS_CONS(args)->car);
@@ -465,7 +473,6 @@ env_t *scm_env_default(vm_t *vm) {
     symbol_t *undefined_sym = symbol_intern(vm, "undefined", 9);
     variable_add(vm, env, undefined_sym, UNDEFINED_VAL);
 
-
     primitive_add(vm, env, "builtin+", 8, builtin_add);
     primitive_add(vm, env, "builtin*", 8, builtin_mul);
     primitive_add(vm, env, "builtin-", 8, builtin_sub);
@@ -503,6 +510,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "and", 3, builtin_and);
 
     primitive_add(vm, env, "eval", 4, builtin_eval);
+    primitive_add(vm, env, "apply", 5, builtin_apply);
     primitive_add(vm, env, "expand", 6, builtin_expand);
     primitive_add(vm, env, "gensym", 6, builtin_gensym);
 
