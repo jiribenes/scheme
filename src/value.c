@@ -46,7 +46,6 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
 }
 
 /* *** HASHING *** */
-/* currently mostly unused */
 
 /* Uses the pretty good FNV-1a hash, see
  * http://www.isthe.com/chongo/tech/comp/fnv/index.html */
@@ -54,15 +53,15 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
 const uint32_t HASH_PRIME = 16777619;
 const uint32_t HASH_SEED = 2166136261u;
 
-/* UNUSED
 static uint32_t hash_ptr(ptrvalue_t *ptr) {
     if (ptr->type == T_STRING) {
-        return ((string_t*) ptr)->hash;
+        // all strings are hashed when created!
+        return ((string_t *) ptr)->hash;
     } else {
-        return 0; //TODO: log error - mutable
+        return 0;  // TODO: log error - mutable
     }
 }
-
+/*
 inline static uint32_t hash_octet(uint8_t octet, uint32_t hash) {
     return (hash ^ octet) * 16777619;
 }*/
@@ -90,8 +89,9 @@ static inline uint32_t hash_number(uint64_t num) {
 
     return hash;
 }
-/* UNUSED
-static uint32_t hash_value(value_t val) {
+
+uint32_t hash_value(value_t val) {
+#if NANTAG
     if (IS_PTR(val)) {
         return hash_ptr(AS_PTR(val));
     } else {
@@ -99,7 +99,26 @@ static uint32_t hash_value(value_t val) {
         data.bits = val;
         return hash_number(data.bits);
     }
-}*/
+#else   // ! NANTAG
+    switch (val.type) {
+        case V_NIL:
+            return 0;
+        case V_TRUE:
+            return 1;
+        case V_FALSE:
+            return 2;
+        case V_UNDEFINED:
+            return 3;
+        case V_NUM:
+            return hash_number(AS_NUM(val));
+        case V_PTR:
+            return hash_ptr(AS_PTR(val));
+        default:
+            return 0;
+    }
+#endif  // NANTAG
+}
+
 /* *** ptrvalue creating *** */
 cons_t *cons_new(vm_t *vm) {
     cons_t *cons = (cons_t *) vm_realloc(vm, NULL, 0, sizeof(cons_t));

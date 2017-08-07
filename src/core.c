@@ -483,6 +483,18 @@ static value_t builtin_env(vm_t *vm, env_t *env, value_t args) {
     }
     return NIL_VAL;
 }
+
+static value_t builtin_hash(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "hash", eargs, 1, false);
+
+    value_t arg = AS_CONS(eargs)->car;
+    if (IS_VAL(arg) || IS_STRING(arg)) {
+        return NUM_VAL(hash_value(arg));
+    }
+    error_runtime(vm, "hash: cannot hash non-immutable type");
+    return UNDEFINED_VAL;
+}
 #endif
 
 /* *** */
@@ -550,6 +562,7 @@ env_t *scm_env_default(vm_t *vm) {
 #ifdef DEBUG
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
+    primitive_add(vm, env, "hash", 4, builtin_hash);
 #endif
 
     symbol_t *sym_env = symbol_intern(vm, "cur-env", 7);

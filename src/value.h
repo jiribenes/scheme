@@ -311,6 +311,12 @@ static inline bool val_eq(value_t a, value_t b) {
 #endif  // NANTAG
 }
 
+/* *** hashing *** */
+
+// hashes a value
+// (careful, has to be immutable [IS_VAL || IS_STRING])
+uint32_t hash_value(value_t val);
+
 /* *** looping *** */
 
 // For each value `val` in cons pair `cons` using iterator `iter`,
