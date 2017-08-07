@@ -225,31 +225,38 @@ value_t cons_fn(vm_t *vm, value_t a, value_t b) {
     return PTR_VAL(result);
 }
 
-// TODO: rewrite this to be more readable
+// Finds the length of a cons cell
+// Returns 0 if list is empty
+//        -1 if list is circular
+//         n if list's length is n
+//      -2-n if list's length is n and is dotted
 uint32_t cons_len(value_t val) {
     uint32_t len = 0;
 
-    if (IS_NIL(val)) {
-        return 0;
-    }
+    // Uses Floyd's cycle finding algorithm
+    value_t fast, slow;
+    fast = slow = val;
 
-    cons_t *temp = AS_CONS(val);
-
-    if (IS_NIL(temp->cdr)) {
-        return 1;
-    }
-
-    while (true) {  // this could be a little dangerous...
-        if (!IS_CONS(temp->cdr)) {
-            fprintf(stderr, "Error: Can't find the length of a dotted list!");
-            return 0;
+    while (true) {
+        if (IS_NIL(fast)) {
+            return len;
         }
-
-        temp = AS_CONS(temp->cdr);
-        len++;
-
-        if (IS_NIL(temp->cdr)) {
-            return ++len;
+        if (IS_CONS(fast) && !IS_NIL(AS_CONS(fast)->cdr) && !IS_CONS(AS_CONS(fast)->cdr)) {
+            return -2-len;
+        }
+        fast = AS_CONS(fast)->cdr;
+        ++len;
+        if (IS_NIL(fast)) {
+            return len;
+        }
+        if (IS_CONS(fast) && !IS_NIL(AS_CONS(fast)->cdr) && !IS_CONS(AS_CONS(fast)->cdr)) {
+            return -2-len;
+        }
+        fast = AS_CONS(fast)->cdr;
+        slow = AS_CONS(slow)->cdr;
+        ++len;
+        if (IS_EQ(fast, slow)) {
+            return -1;
         }
     }
 }
