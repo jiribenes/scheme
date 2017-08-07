@@ -22,8 +22,6 @@
         (display x)
         (newline))
 
-    (define pair? cons?)
-
     (define true #t)
     (define false #f)
 
@@ -67,6 +65,14 @@
     (define null '())
     (define (null? x)
         (eq? x '()))
+
+    (define pair? cons?)
+    (define (list? x)
+        (if (not (or (cons? x)
+                     (null? x)))
+            #f
+            (define len (builtin-length x))
+            (or (> len 0) (= len 0))))
 
     (define (map fn lst)
         (if (null? lst)
