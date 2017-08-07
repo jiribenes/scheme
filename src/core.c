@@ -1,6 +1,7 @@
 #include <math.h>    // fmod
 #include <stdarg.h>  // va_list
 #include <stdio.h>   // FILE
+#include <time.h>    // clock(), CLOCKS_PER_SECOND
 
 #include "core.h"
 #include "scheme.h"
@@ -459,6 +460,11 @@ static value_t builtin_void(vm_t *vm, env_t *env, value_t args) {
     return VOID_VAL;
 }
 
+static value_t builtin_time(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "time", args, 0, false);
+    return NUM_VAL((double) clock() / (CLOCKS_PER_SEC / 1000.0F));
+}
+
 static value_t builtin_length(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     arity_check(vm, "builtin-length", eargs, 1, false);
@@ -543,6 +549,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "gensym", 6, builtin_gensym);
 
     primitive_add(vm, env, "builtin-length", 14, builtin_length);
+    primitive_add(vm, env, "current-time", 12, builtin_time);
 
     primitive_add(vm, env, "void", 4, builtin_void);
 #ifdef DEBUG
