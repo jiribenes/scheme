@@ -14,6 +14,8 @@
     (define (cddar x) (cdr (cdr (car x))))
     (define (cdddr x) (cdr (cdr (cdr x))))
 
+    (define (list . args) args)
+
     (define (writeln x)
         (write x)
         (newline))
@@ -128,5 +130,6 @@
         (writeln
             (eq? a b)))
 
+    (define loaded-time (current-time))
 
     'stdlib)

@@ -190,10 +190,6 @@ static value_t quote(vm_t *vm, env_t *env, value_t args) {
     return AS_CONS(args)->car;
 }
 
-static value_t builtin_list(vm_t *vm, env_t *env, value_t args) {
-    return eval_list(vm, env, args);
-}
-
 static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
     cons_t *rest = AS_CONS(args);
 
@@ -523,7 +519,6 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "procedure?", 10, builtin_is_procedure);
 
     primitive_add(vm, env, "quote", 5, quote);
-    primitive_add(vm, env, "list", 4, builtin_list);
 
     primitive_add(vm, env, "begin", 5, begin);
     primitive_add(vm, env, "define", 6, builtin_define);
