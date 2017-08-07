@@ -459,6 +459,12 @@ static value_t builtin_void(vm_t *vm, env_t *env, value_t args) {
     return VOID_VAL;
 }
 
+static value_t builtin_length(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "builtin-length", eargs, 1, false);
+    return NUM_VAL(cons_len(AS_CONS(eargs)->car));
+}
+
 /* *** */
 #ifdef DEBUG
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
@@ -535,6 +541,8 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "apply", 5, builtin_apply);
     primitive_add(vm, env, "expand", 6, builtin_expand);
     primitive_add(vm, env, "gensym", 6, builtin_gensym);
+
+    primitive_add(vm, env, "builtin-length", 14, builtin_length);
 
     primitive_add(vm, env, "void", 4, builtin_void);
 #ifdef DEBUG

@@ -230,8 +230,8 @@ value_t cons_fn(vm_t *vm, value_t a, value_t b) {
 //        -1 if list is circular
 //         n if list's length is n
 //      -2-n if list's length is n and is dotted
-uint32_t cons_len(value_t val) {
-    uint32_t len = 0;
+int32_t cons_len(value_t val) {
+    int32_t len = 0;
 
     // Uses Floyd's cycle finding algorithm
     value_t fast, slow;
@@ -241,16 +241,18 @@ uint32_t cons_len(value_t val) {
         if (IS_NIL(fast)) {
             return len;
         }
-        if (IS_CONS(fast) && !IS_NIL(AS_CONS(fast)->cdr) && !IS_CONS(AS_CONS(fast)->cdr)) {
-            return -2-len;
+        if (IS_CONS(fast) && !IS_NIL(AS_CONS(fast)->cdr) &&
+            !IS_CONS(AS_CONS(fast)->cdr)) {
+            return -2 - len;
         }
         fast = AS_CONS(fast)->cdr;
         ++len;
         if (IS_NIL(fast)) {
             return len;
         }
-        if (IS_CONS(fast) && !IS_NIL(AS_CONS(fast)->cdr) && !IS_CONS(AS_CONS(fast)->cdr)) {
-            return -2-len;
+        if (IS_CONS(fast) && !IS_NIL(AS_CONS(fast)->cdr) &&
+            !IS_CONS(AS_CONS(fast)->cdr)) {
+            return -2 - len;
         }
         fast = AS_CONS(fast)->cdr;
         slow = AS_CONS(slow)->cdr;

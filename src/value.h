@@ -244,7 +244,7 @@ symbol_t *symbol_intern(vm_t *vm, const char *name, size_t len);
 value_t cons_fn(vm_t *vm, value_t a, value_t b);
 
 // Gets the length of a cons cell
-uint32_t cons_len(value_t val);
+int32_t cons_len(value_t val);
 
 /* *** conversion utilities *** */
 
