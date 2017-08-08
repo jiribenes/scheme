@@ -313,8 +313,8 @@ static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     arity_check(vm, "car", eargs, 1, false);
     value_t a = AS_CONS(eargs)->car;
-    if (IS_NIL(a)) {
-        error_runtime(vm, "car: cannot give car of NIL");
+    if (!IS_CONS(a)) {
+        error_runtime(vm, "car: argument is not a cons cell!");
     }
     return AS_CONS(a)->car;
 }
@@ -323,8 +323,8 @@ static value_t builtin_cdr(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     arity_check(vm, "cdr", eargs, 1, false);
     value_t a = AS_CONS(eargs)->car;
-    if (IS_NIL(a)) {
-        error_runtime(vm, "cdr: cannot give cdr of NIL");
+    if (!IS_CONS(a)) {
+        error_runtime(vm, "cdr: argument is not a cons cell!");
     }
     return AS_CONS(a)->cdr;
 }
