@@ -144,6 +144,8 @@ typedef struct {
 #define AS_NUM(val) (val_to_num(val))
 #define AS_INT(val) ((int64_t) trunc(val_to_num(val)))
 
+#define MAKE_STRING(vm, s) (string_new((vm), (s), sizeof(s) - 1))
+
 #if NANTAG
 
 // 1---------------------------------------------------------------
