@@ -467,6 +467,18 @@ static value_t builtin_length(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(cons_len(AS_CONS(eargs)->car));
 }
 
+static value_t builtin_error(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "error", eargs, 1, false);
+    value_t arg = AS_CONS(eargs)->car;
+    if (!IS_STRING(arg)) {
+        error_runtime(vm, "error: argument must be a string");
+        return UNDEFINED_VAL;
+    }
+    error_runtime(vm, AS_STRING(arg)->value);
+    return VOID_VAL;
+}
+
 /* *** */
 #ifdef DEBUG
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
@@ -556,6 +568,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "gensym", 6, builtin_gensym);
 
     primitive_add(vm, env, "builtin-length", 14, builtin_length);
+    primitive_add(vm, env, "error", 5, builtin_error);
     primitive_add(vm, env, "current-time", 12, builtin_time);
 
     primitive_add(vm, env, "void", 4, builtin_void);
