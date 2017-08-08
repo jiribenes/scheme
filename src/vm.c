@@ -12,7 +12,7 @@
 #include "vm.h"
 #include "write.h"
 
-#define MAX_ALLOCATED 1024 * 1024 * 16
+#define MAX_ALLOCATED 1024 * 1024 * 32  // 32 MB
 
 void error_runtime(vm_t *vm, const char *format, ...) {
     vm->has_error = true;
@@ -49,8 +49,8 @@ void scm_config_default(scm_config_t *config) {
 
     // TODO: tweak the initial and min heap sizes
     config->heap_size_initial = 512 * 1024;  // 512 kB
-    config->heap_size_min = 64 * 1024;       // 64 kB
-    config->heap_growth = 0.5;               // 50%
+    config->heap_size_min = 64 * 1024;       //  64 kB
+    config->heap_growth = 0.5;               //  50%
 }
 
 vm_t *vm_new(scm_config_t *config) {
@@ -99,7 +99,7 @@ void *vm_realloc(vm_t *vm, void *ptr, size_t old_size, size_t new_size) {
     if (new_size > 0 && vm->allocated > vm->gc_threshold) {
         vm_gc(vm);
     }
-
+#if !NOGC
     if (vm->allocated > MAX_ALLOCATED) {
         error_runtime(
             vm,
@@ -108,7 +108,7 @@ void *vm_realloc(vm_t *vm, void *ptr, size_t old_size, size_t new_size) {
         vm->allocated -= new_size;
         return NULL;
     }
-
+#endif  // !NOGC
     return vm->config.realloc_fn(ptr, new_size);
 }
 

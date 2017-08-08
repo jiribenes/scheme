@@ -7,4 +7,8 @@
 #define NANTAG 1
 #endif
 
+#ifndef NOGC
+#define NOGC 0
+#endif
+
 #endif  // _config_h
