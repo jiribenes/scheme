@@ -436,8 +436,7 @@ value_t eval(vm_t *vm, env_t *env, value_t val) {
         }
 
         cons_t *cons = AS_CONS(val);
-        value_t fn = cons->car;
-        fn = eval(vm, env, cons->car);
+        value_t fn = eval(vm, env, cons->car);
         value_t args = cons->cdr;
 
         if (!IS_PROCEDURE(fn)) {
