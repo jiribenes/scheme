@@ -142,6 +142,7 @@ static void mark(vm_t *vm, value_t val) {
     ptrvalue_t *ptr = AS_PTR(val);
     if (ptr == NULL) {
         error_runtime(vm, "|GC: Cannot mark a NULL!");
+        return;
     }
     if (ptr->gcmark) {
         return;
