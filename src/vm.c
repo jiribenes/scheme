@@ -222,10 +222,10 @@ static size_t vm_size(vm_t *vm, value_t val) {
 
 // A very basic mark and sweep GC
 void vm_gc(vm_t *vm) {
-#ifdef NOGC
+#if NOGC
     return;
 #endif  // NOGC
-#ifdef DEBUG
+#if DEBUG
     fprintf(stdout, "GC started\n");
     size_t allocated_prev = vm->allocated;
     double time_start = (double) clock() / CLOCKS_PER_SEC;
@@ -248,7 +248,7 @@ void vm_gc(vm_t *vm) {
     if (vm->gc_threshold < vm->config.heap_size_min) {
         vm->gc_threshold = vm->config.heap_size_min;
     }
-#ifdef DEBUG
+#if DEBUG
     double time_delta = ((double) clock() / CLOCKS_PER_SEC) - time_start;
     fprintf(stdout, "GC finished: %zuB previously, %zuB now (%zuB gc'd), "
                     "new threshold at %zuB! Time delta: %.3lfs.\n",

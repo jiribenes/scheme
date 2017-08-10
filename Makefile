@@ -5,7 +5,7 @@ C_OPTIONS = -std=c99
 
 C_LIBS = -lm
 
-DEBUG_OPTIONS = -O0 -DDEBUG -g -Wno-unused-function
+DEBUG_OPTIONS = -O0 -DDEBUG=1 -g -Wno-unused-function
 RELEASE_OPTIONS = -O3
 
 HEADERS := $(wildcard include/*.h src/*.h)

@@ -480,7 +480,7 @@ static value_t builtin_error(vm_t *vm, env_t *env, value_t args) {
 }
 
 /* *** */
-#ifdef DEBUG
+#if DEBUG
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
     vm_gc(vm);
     return NIL_VAL;
