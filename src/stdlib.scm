@@ -64,6 +64,15 @@
                 #f)
             #f))
 
+    (define (>= a b)
+        (or (= a b) (> a b)))
+
+    (define (<= a b)
+        (not (> a b)))
+
+    (define (< a b)
+        (not (>= a b)))
+
     (define null '())
     (define (null? x)
         (eq? x '()))
