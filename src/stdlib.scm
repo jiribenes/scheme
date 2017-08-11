@@ -83,8 +83,19 @@
                      (null? x)))
             #f
             (define len (builtin-length x))
-            (or (> len 0) (= len 0))))
+            (>= len 0)))
 
+    (define (length lst)
+        (define len (builtin-length lst))
+        (if (>= lst 0)
+            len
+            (error "length: argument is not 'list?'")))
+
+    (define (list-copy lst)
+        (if (list? lst)
+            (apply list lst)
+            (error "list-copy: argument is not 'list?'")))
+            
     (define (map fn lst)
         (if (null? lst)
             '()
@@ -134,6 +145,16 @@
         (list 'if
               (cons 'not test)
               (cons 'begin branch)))
+
+    (define (drop n lst)
+        (if (null? lst)
+            '()
+            (if (= n 0)
+                lst
+                (drop (- n 1) (cdr lst)))))
+
+    (define (list-ref lst i)
+        (car (drop i lst)))
 
     (define (test a b)
         (writeln
