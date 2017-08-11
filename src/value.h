@@ -323,8 +323,8 @@ uint32_t hash_value(value_t val);
 
 // For each value `val` in cons pair `cons` using iterator `iter`,
 // do something
-#define SCM_FOREACH(val, cons, iter)                                     \
-    for (iter = PTR_VAL(cons); !IS_NIL(iter); iter = AS_CONS(iter)->cdr) \
-        if ((val = AS_CONS(iter)->car), true)
+#define SCM_FOREACH(val, cons, iter)                                         \
+    for ((iter) = PTR_VAL(cons); !IS_NIL(iter); (iter) = AS_CONS(iter)->cdr) \
+        if (((val) = AS_CONS(iter)->car), true)
 
 #endif  // _value_h
