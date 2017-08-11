@@ -6,6 +6,7 @@ import os
 import re
 from subprocess import Popen, PIPE
 from sys import exit
+from threading import Timer
 
 DEBUG_PATTERN = re.compile(r'DEBUG.*')
 RESULT_PATTERN = re.compile(r'Result: .*')
@@ -19,7 +20,21 @@ def run_test(test_path, expected):
     proc = Popen(
         ['./scheme.out', test_path], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
-    out, err = proc.communicate()
+    timeout = [False]
+    def callback(proc):
+        timeout[0] = True
+        proc.kill()
+
+    timer = Timer(5, callback, [proc])
+
+    try:
+        timer.start()
+        out, err = proc.communicate()
+
+        if timeout[0]:
+            return [], ["timed out"]
+    finally:
+        timer.cancel()
 
     out = out.decode('utf-8').replace('\r\n', '\n')
     err = err.decode('utf-8').replace('\r\n', '\n')
@@ -39,10 +54,6 @@ def run_test(test_path, expected):
         match = RESULT_PATTERN.search(line)
         if match:
             continue
-
-        match = ERROR_PATTERN.search(line)
-        if match:
-            errors.append((line_no, line))
 
         match = TRUE_PATTERN.search(line)
         if match:
