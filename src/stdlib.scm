@@ -87,7 +87,7 @@
 
     (define (length lst)
         (define len (builtin-length lst))
-        (if (>= lst 0)
+        (if (>= len 0)
             len
             (error "length: argument is not 'list?'")))
 
