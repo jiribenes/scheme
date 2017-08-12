@@ -367,9 +367,16 @@ bool val_equal(value_t a, value_t b) {
         vector_t *veca = (vector_t *) pa;
         vector_t *vecb = (vector_t *) pb;
 
-        return veca->count == vecb->count &&
-               memcmp(veca->data, vecb->data, veca->count * sizeof(value_t)) ==
-                   0;
+        if (veca->count != vecb->count) {
+            return false;
+        }
+
+        for (uint32_t i = 0; i < veca->count; i++) {
+            if (!val_equal(veca->data[i], vecb->data[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     return false;
