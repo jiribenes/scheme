@@ -309,6 +309,19 @@ int32_t cons_len(value_t val) {
     }
 }
 
+// Pushes <val> to the back of <vec>
+// (equivalent to std::vector.push_back(val))
+void vector_push(vm_t *vm, vector_t *vec, value_t val) {
+    if (vec->count + 1 > vec->capacity) {
+        uint32_t capacity = vec->capacity ? vec->capacity << 1 : 2;
+        vec->data = (value_t *) vm_realloc(vm, vec->data,
+                                           vec->capacity * sizeof(value_t),
+                                           capacity * sizeof(value_t));
+        vec->capacity = capacity;
+    }
+    vec->data[vec->count++] = val;
+}
+
 /* *** equality *** */
 bool val_equal(value_t a, value_t b) {
     if (val_eq(a, b)) {

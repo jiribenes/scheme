@@ -260,6 +260,10 @@ value_t cons_fn(vm_t *vm, value_t a, value_t b);
 // Gets the length of a cons cell
 int32_t cons_len(value_t val);
 
+// Pushes <val> to the back of <vec>
+// (equivalent to std::vector.push_back(val))
+void vector_push(vm_t *vm, vector_t *vec, value_t val);
+
 /* *** conversion utilities *** */
 
 // a conversion type from double to uint64_t
