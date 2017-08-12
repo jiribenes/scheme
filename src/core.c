@@ -548,6 +548,22 @@ static value_t builtin_time(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL((double) clock() / (CLOCKS_PER_SEC / 1000.0F));
 }
 
+// Exits the program - this procedure is really harsh
+// TODO: Can we just stop the interpret loop and exit more gracefully?
+static value_t builtin_exit(vm_t *vm, env_t *env, value_t args) {
+    // (exit <status>)
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "exit", eargs, 1, false);
+    value_t arg = AS_CONS(eargs)->car;
+    if (!IS_INT(arg)) {
+        error_runtime(vm, "exit: argument must be an integer");
+        return UNDEFINED_VAL;
+    }
+    int exit_status = AS_INT(arg);
+    vm_free(vm);
+    exit(exit_status);
+}
+
 /* *** debug functions *** */
 
 #if DEBUG
@@ -653,6 +669,7 @@ env_t *scm_env_default(vm_t *vm) {
     /* other library functions */
     primitive_add(vm, env, "error", 5, builtin_error);
     primitive_add(vm, env, "current-time", 12, builtin_time);
+    primitive_add(vm, env, "exit", 4, builtin_exit);
 
 #ifdef DEBUG
     primitive_add(vm, env, "gc", 2, builtin_gc);
