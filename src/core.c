@@ -119,7 +119,7 @@ static value_t num_equal(vm_t *vm, env_t *env, value_t args) {
     return TRUE_VAL;
 }
 
-/* *** core - predicates and equalities *** */
+/* *** core - types and predicates *** */
 
 // Checks for eq? using the val_eq function from value.h
 // BEWARE: It assumes transitivity (tries only a == b && b == c && c == d ...)
@@ -165,10 +165,8 @@ static value_t equal(vm_t *vm, env_t *env, value_t args) {
     return TRUE_VAL;
 }
 
-// type predicate functions
-// they ARE NOT added to environment automatically
+// these ARE NOT added to environment automatically
 // therefore any change here must be done also in <scm_env_default> fn
-
 #define TYPE_PREDICATE_FN(type, is_type_fn)                                \
     static value_t builtin_is_##type(vm_t *vm, env_t *env, value_t args) { \
         value_t eargs = eval_list(vm, env, args);                          \
@@ -185,11 +183,15 @@ TYPE_PREDICATE_FN(symbol, IS_SYMBOL)
 TYPE_PREDICATE_FN(procedure, IS_PROCEDURE)
 TYPE_PREDICATE_FN(vector, IS_VECTOR)
 
-// FIXME I have a feeling that this is not the correct functionality...
-static value_t quote(vm_t *vm, env_t *env, value_t args) {
-    arity_check(vm, "quote", args, 1, false);
-    return AS_CONS(args)->car;
+static value_t builtin_void(vm_t *vm, env_t *env, value_t args) {
+    return VOID_VAL;
 }
+
+static value_t builtin_undefined(vm_t *vm, env_t *env, value_t args) {
+    return UNDEFINED_VAL;
+}
+
+/* *** core - special constructs - flow control *** */
 
 static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
     cons_t *rest = AS_CONS(args);
@@ -214,24 +216,6 @@ static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
                           "either a list or a symbol!");
         return NIL_VAL;
     }
-}
-
-static value_t define_macro(vm_t *vm, env_t *env, value_t args) {
-    // (define-macro (<name> <params...>) <body...>)
-    cons_t *rest = AS_CONS(args);
-    if (!IS_CONS(rest->car)) {
-        error_runtime(vm, "define-macro: first argument has to be a list!");
-        return NIL_VAL;
-    }
-
-    symbol_t *sym = AS_SYMBOL(AS_CONS(rest->car)->car);
-    value_t params = AS_CONS(rest->car)->cdr;
-    cons_t *body = AS_CONS(rest->cdr);
-
-    function_t *macro = macro_new(vm, env, params, PTR_VAL(body));
-    variable_add(vm, env, sym, PTR_VAL(macro));
-
-    return VOID_VAL;
 }
 
 static value_t lambda(vm_t *vm, env_t *env, value_t args) {
@@ -300,35 +284,30 @@ static value_t builtin_if(vm_t *vm, env_t *env, value_t args) {
     return begin(vm, env, otherwise);
 }
 
-static value_t builtin_cons(vm_t *vm, env_t *env, value_t args) {
-    arity_check(vm, "cons", args, 2, false);
-
-    value_t car = eval(vm, env, AS_CONS(args)->car);
-    value_t cdr = eval(vm, env, AS_CONS(AS_CONS(args)->cdr)->car);
-
-    value_t cons = cons_fn(vm, car, cdr);
-    return cons;
-}
-
-static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
-    value_t eargs = eval_list(vm, env, args);
-    arity_check(vm, "car", eargs, 1, false);
-    value_t a = AS_CONS(eargs)->car;
-    if (!IS_CONS(a)) {
-        error_runtime(vm, "car: argument is not a cons cell!");
+static value_t builtin_set(vm_t *vm, env_t *env, value_t args) {
+    // (set! <sym> <expr>)
+    arity_check(vm, "set!", args, 2, false);
+    value_t arg = AS_CONS(args)->car;
+    if (!IS_SYMBOL(arg)) {
+        error_runtime(vm, "set!: first argument must be a symbol!");
+        return NIL_VAL;
     }
-    return AS_CONS(a)->car;
+
+    symbol_t *sym = AS_SYMBOL(arg);
+
+    arg = AS_CONS(AS_CONS(args)->cdr)->car;
+    value_t val = eval(vm, env, arg);
+    value_t result = find_replace(env, sym, val);
+
+    if (IS_UNDEFINED(result)) {
+        error_runtime(vm, "set!: assignment not allowed - %s is undefined!",
+                      sym->name);
+    }
+
+    return VOID_VAL;
 }
 
-static value_t builtin_cdr(vm_t *vm, env_t *env, value_t args) {
-    value_t eargs = eval_list(vm, env, args);
-    arity_check(vm, "cdr", eargs, 1, false);
-    value_t a = AS_CONS(eargs)->car;
-    if (!IS_CONS(a)) {
-        error_runtime(vm, "cdr: argument is not a cons cell!");
-    }
-    return AS_CONS(a)->cdr;
-}
+/* *** core - I/O *** */
 
 static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
@@ -359,28 +338,7 @@ static value_t builtin_read(vm_t *vm, env_t *env, value_t args) {
     return read_source(vm, line);
 }
 
-static value_t builtin_set(vm_t *vm, env_t *env, value_t args) {
-    // (set! <sym> <expr>)
-    arity_check(vm, "set!", args, 2, false);
-    value_t arg = AS_CONS(args)->car;
-    if (!IS_SYMBOL(arg)) {
-        error_runtime(vm, "set!: first argument must be a symbol!");
-        return NIL_VAL;
-    }
-
-    symbol_t *sym = AS_SYMBOL(arg);
-
-    arg = AS_CONS(AS_CONS(args)->cdr)->car;
-    value_t val = eval(vm, env, arg);
-    value_t result = find_replace(env, sym, val);
-
-    if (IS_UNDEFINED(result)) {
-        error_runtime(vm, "set!: assignment not allowed - %s is undefined!",
-                      sym->name);
-    }
-
-    return VOID_VAL;
-}
+/* *** core - or, and *** */
 
 // TODO Allow functions or, and to be with arbitrary amount of elements
 //      Look at the RxRS for the details
@@ -419,6 +377,26 @@ static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
     return BOOL_VAL(result);
 }
 
+/* *** core - macros, eval *** */
+
+static value_t define_macro(vm_t *vm, env_t *env, value_t args) {
+    // (define-macro (<name> <params...>) <body...>)
+    cons_t *rest = AS_CONS(args);
+    if (!IS_CONS(rest->car)) {
+        error_runtime(vm, "define-macro: first argument has to be a list!");
+        return NIL_VAL;
+    }
+
+    symbol_t *sym = AS_SYMBOL(AS_CONS(rest->car)->car);
+    value_t params = AS_CONS(rest->car)->cdr;
+    cons_t *body = AS_CONS(rest->cdr);
+
+    function_t *macro = macro_new(vm, env, params, PTR_VAL(body));
+    variable_add(vm, env, sym, PTR_VAL(macro));
+
+    return VOID_VAL;
+}
+
 static value_t builtin_eval(vm_t *vm, env_t *env, value_t args) {
     value_t eargs = eval_list(vm, env, args);
     arity_check(vm, "eval", eargs, 1, true);
@@ -453,17 +431,41 @@ static value_t builtin_gensym(vm_t *vm, env_t *env, value_t args) {
     return PTR_VAL(symbol_new(vm, buffer, 16));
 }
 
-static value_t builtin_void(vm_t *vm, env_t *env, value_t args) {
-    return VOID_VAL;
+static value_t quote(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "quote", args, 1, false);
+    return AS_CONS(args)->car;
 }
 
-static value_t builtin_undefined(vm_t *vm, env_t *env, value_t args) {
-    return UNDEFINED_VAL;
+/* *** core - list functions *** */
+
+static value_t builtin_cons(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "cons", args, 2, false);
+
+    value_t car = eval(vm, env, AS_CONS(args)->car);
+    value_t cdr = eval(vm, env, AS_CONS(AS_CONS(args)->cdr)->car);
+
+    value_t cons = cons_fn(vm, car, cdr);
+    return cons;
 }
 
-static value_t builtin_time(vm_t *vm, env_t *env, value_t args) {
-    arity_check(vm, "time", args, 0, false);
-    return NUM_VAL((double) clock() / (CLOCKS_PER_SEC / 1000.0F));
+static value_t builtin_car(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "car", eargs, 1, false);
+    value_t a = AS_CONS(eargs)->car;
+    if (!IS_CONS(a)) {
+        error_runtime(vm, "car: argument is not a cons cell!");
+    }
+    return AS_CONS(a)->car;
+}
+
+static value_t builtin_cdr(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "cdr", eargs, 1, false);
+    value_t a = AS_CONS(eargs)->car;
+    if (!IS_CONS(a)) {
+        error_runtime(vm, "cdr: argument is not a cons cell!");
+    }
+    return AS_CONS(a)->cdr;
 }
 
 static value_t builtin_length(vm_t *vm, env_t *env, value_t args) {
@@ -472,19 +474,8 @@ static value_t builtin_length(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(cons_len(AS_CONS(eargs)->car));
 }
 
-static value_t builtin_error(vm_t *vm, env_t *env, value_t args) {
-    value_t eargs = eval_list(vm, env, args);
-    arity_check(vm, "error", eargs, 1, false);
-    value_t arg = AS_CONS(eargs)->car;
-    if (!IS_STRING(arg)) {
-        error_runtime(vm, "error: argument must be a string");
-        return UNDEFINED_VAL;
-    }
-    error_runtime(vm, AS_STRING(arg)->value);
-    return VOID_VAL;
-}
 
-/* *** Vector *** */
+/* *** core - vector functions *** */
 
 static value_t builtin_vec_length(vm_t *vm, env_t *env, value_t args) {
     // (vector-length <vec>)
@@ -560,7 +551,27 @@ static value_t builtin_vec_make(vm_t *vm, env_t *env, value_t args) {
     return PTR_VAL(vec);
 }
 
-/* *** */
+/* *** core - other library functions *** */
+
+static value_t builtin_error(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "error", eargs, 1, false);
+    value_t arg = AS_CONS(eargs)->car;
+    if (!IS_STRING(arg)) {
+        error_runtime(vm, "error: argument must be a string");
+        return UNDEFINED_VAL;
+    }
+    error_runtime(vm, AS_STRING(arg)->value);
+    return VOID_VAL;
+}
+
+static value_t builtin_time(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "time", args, 0, false);
+    return NUM_VAL((double) clock() / (CLOCKS_PER_SEC / 1000.0F));
+}
+
+/* *** debug functions *** */
+
 #if DEBUG
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
     vm_gc(vm);
@@ -590,18 +601,14 @@ static value_t builtin_hash(vm_t *vm, env_t *env, value_t args) {
 }
 #endif
 
-/* *** */
+/* *** DEFAULT ENVIRONMENT *** */
 
 env_t *scm_env_default(vm_t *vm) {
     env_t *env = env_new(vm, NIL_VAL, NULL);
 
+    /* numeric functions */
     symbol_t *pi_sym = symbol_intern(vm, "pi", 2);
-    value_t pi = NUM_VAL(3.1415);
-    variable_add(vm, env, pi_sym, pi);
-
-    symbol_t *eof_sym = symbol_intern(vm, "eof", 3);
-    variable_add(vm, env, eof_sym, EOF_VAL);
-
+    variable_add(vm, env, pi_sym, NUM_VAL(3.14159265358979323846));
     primitive_add(vm, env, "builtin+", 8, builtin_add);
     primitive_add(vm, env, "builtin*", 8, builtin_mul);
     primitive_add(vm, env, "builtin-", 8, builtin_sub);
@@ -611,6 +618,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, ">", 1, gt);
     primitive_add(vm, env, "=", 1, num_equal);
 
+    /* types and predicates */
     primitive_add(vm, env, "eq?", 3, eq);
     primitive_add(vm, env, "equal?", 6, equal);
 
@@ -621,43 +629,51 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "symbol?", 7, builtin_is_symbol);
     primitive_add(vm, env, "procedure?", 10, builtin_is_procedure);
     primitive_add(vm, env, "vector?", 7, builtin_is_vector);
+    primitive_add(vm, env, "void", 4, builtin_void);
+    primitive_add(vm, env, "undefined", 9, builtin_undefined);
+    symbol_t *eof_sym = symbol_intern(vm, "eof", 3);
+    variable_add(vm, env, eof_sym, EOF_VAL);
 
-    primitive_add(vm, env, "quote", 5, quote);
-
+    /* special constructs - flow control */
     primitive_add(vm, env, "begin", 5, begin);
     primitive_add(vm, env, "define", 6, builtin_define);
-    primitive_add(vm, env, "define-macro", 12, define_macro);
     primitive_add(vm, env, "lambda", 6, lambda);
     primitive_add(vm, env, "if", 2, builtin_if);
-    primitive_add(vm, env, "cons", 4, builtin_cons);
-    primitive_add(vm, env, "car", 3, builtin_car);
-    primitive_add(vm, env, "cdr", 3, builtin_cdr);
+    primitive_add(vm, env, "set!", 4, builtin_set);
 
+    /* I/O */
     primitive_add(vm, env, "write", 5, builtin_write);
     primitive_add(vm, env, "display", 7, builtin_display);
     primitive_add(vm, env, "newline", 7, builtin_newline);
     primitive_add(vm, env, "read", 4, builtin_read);
 
-    primitive_add(vm, env, "set!", 4, builtin_set);
+    /* or/and */
     primitive_add(vm, env, "or", 2, builtin_or);
     primitive_add(vm, env, "and", 3, builtin_and);
 
+    /* macros, eval */
+    primitive_add(vm, env, "define-macro", 12, define_macro);
     primitive_add(vm, env, "eval", 4, builtin_eval);
     primitive_add(vm, env, "apply", 5, builtin_apply);
     primitive_add(vm, env, "expand", 6, builtin_expand);
     primitive_add(vm, env, "gensym", 6, builtin_gensym);
+    primitive_add(vm, env, "quote", 5, quote);
 
+    /* list functions */
+    primitive_add(vm, env, "cons", 4, builtin_cons);
+    primitive_add(vm, env, "car", 3, builtin_car);
+    primitive_add(vm, env, "cdr", 3, builtin_cdr);
     primitive_add(vm, env, "builtin-length", 14, builtin_length);
-    primitive_add(vm, env, "error", 5, builtin_error);
-    primitive_add(vm, env, "current-time", 12, builtin_time);
 
-    primitive_add(vm, env, "void", 4, builtin_void);
-    primitive_add(vm, env, "undefined", 9, builtin_undefined);
-
+    /* vector functions */
     primitive_add(vm, env, "vector-length", 13, builtin_vec_length);
     primitive_add(vm, env, "vector-ref", 10, builtin_vec_ref);
     primitive_add(vm, env, "vector-set!", 11, builtin_vec_set);
     primitive_add(vm, env, "make-vector", 11, builtin_vec_make);
+
+    /* other library functions */
+    primitive_add(vm, env, "error", 5, builtin_error);
+    primitive_add(vm, env, "current-time", 12, builtin_time);
 
 #ifdef DEBUG
     primitive_add(vm, env, "gc", 2, builtin_gc);

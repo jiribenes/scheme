@@ -10,7 +10,7 @@ static void write_cons(FILE *f, cons_t *cons) {
     int32_t len = cons_len(PTR_VAL(cons));
     if (len == -1) {
         fprintf(f, "#<circular list>");
-        return; 
+        return;
     }
 
     value_t arg, iter;
