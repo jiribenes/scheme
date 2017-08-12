@@ -183,6 +183,7 @@ TYPE_PREDICATE_FN(number, IS_NUM)
 TYPE_PREDICATE_FN(string, IS_STRING)
 TYPE_PREDICATE_FN(symbol, IS_SYMBOL)
 TYPE_PREDICATE_FN(procedure, IS_PROCEDURE)
+TYPE_PREDICATE_FN(vector, IS_VECTOR)
 
 // FIXME I have a feeling that this is not the correct functionality...
 static value_t quote(vm_t *vm, env_t *env, value_t args) {
@@ -479,6 +480,82 @@ static value_t builtin_error(vm_t *vm, env_t *env, value_t args) {
     return VOID_VAL;
 }
 
+/* *** Vector *** */
+
+static value_t builtin_vec_length(vm_t *vm, env_t *env, value_t args) {
+    // (vector-length <vec>)
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "vector-length", eargs, 1, false);
+    value_t arg = AS_CONS(eargs)->car;
+    if (!IS_VECTOR(arg)) {
+        error_runtime(vm, "vector-length: argument must be a vector");
+        return UNDEFINED_VAL;
+    }
+    return NUM_VAL(AS_VECTOR(arg)->count);
+}
+
+static value_t builtin_vec_ref(vm_t *vm, env_t *env, value_t args) {
+    // (vector-ref! <vec> <k>)
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "vector-ref", eargs, 2, false);
+    value_t first = AS_CONS(eargs)->car;
+    value_t second = AS_CONS(AS_CONS(eargs)->cdr)->car;
+    if (!IS_VECTOR(first)) {
+        error_runtime(vm, "vector-ref: first argument must be a vector");
+        return UNDEFINED_VAL;
+    }
+    vector_t *vec = AS_VECTOR(first);
+    if (!IS_INT(second) ||
+        !(AS_INT(second) >= 0 && AS_INT(second) < vec->count)) {
+        error_runtime(
+            vm, "vector-ref: second argument must be a valid integer in range");
+        return UNDEFINED_VAL;
+    }
+    return vec->data[AS_INT(second)];
+}
+
+static value_t builtin_vec_set(vm_t *vm, env_t *env, value_t args) {
+    // (vector-set! <vec> <k> <obj>)
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "vector-set!", eargs, 3, false);
+    value_t first = AS_CONS(eargs)->car;
+    value_t second = AS_CONS(AS_CONS(eargs)->cdr)->car;
+    value_t third = AS_CONS(AS_CONS(AS_CONS(eargs)->cdr)->cdr)->car;
+    if (!IS_VECTOR(first)) {
+        error_runtime(vm, "vector-set!: first argument must be a vector");
+        return UNDEFINED_VAL;
+    }
+    vector_t *vec = AS_VECTOR(first);
+    if (!IS_INT(second) ||
+        !(AS_INT(second) >= 0 && AS_INT(second) < vec->count)) {
+        error_runtime(
+            vm,
+            "vector-set!: second argument must be a valid integer in range");
+        return UNDEFINED_VAL;
+    }
+    vec->data[AS_INT(second)] = third;
+    return VOID_VAL;
+}
+
+static value_t builtin_vec_make(vm_t *vm, env_t *env, value_t args) {
+    // (make-vector <k> <fill>)
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "make-vector", eargs, 2, false);
+    value_t first = AS_CONS(eargs)->car;
+    value_t second = AS_CONS(AS_CONS(eargs)->cdr)->car;
+    if (!IS_INT(first) || AS_INT(first) < 0) {
+        error_runtime(
+            vm, "make-vector: first argument must be a positive integer!");
+        return UNDEFINED_VAL;
+    }
+    uint32_t count = AS_INT(first);
+    vector_t *vec = vector_new(vm, count);
+    for (uint32_t i = 0; i < count; i++) {
+        vec->data[i] = second;
+    }
+    return PTR_VAL(vec);
+}
+
 /* *** */
 #if DEBUG
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
@@ -541,6 +618,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "string?", 7, builtin_is_string);
     primitive_add(vm, env, "symbol?", 7, builtin_is_symbol);
     primitive_add(vm, env, "procedure?", 10, builtin_is_procedure);
+    primitive_add(vm, env, "vector?", 7, builtin_is_vector);
 
     primitive_add(vm, env, "quote", 5, quote);
 
@@ -572,6 +650,12 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "current-time", 12, builtin_time);
 
     primitive_add(vm, env, "void", 4, builtin_void);
+
+    primitive_add(vm, env, "vector-length", 13, builtin_vec_length);
+    primitive_add(vm, env, "vector-ref", 10, builtin_vec_ref);
+    primitive_add(vm, env, "vector-set!", 11, builtin_vec_set);
+    primitive_add(vm, env, "make-vector", 11, builtin_vec_make);
+
 #ifdef DEBUG
     primitive_add(vm, env, "gc", 2, builtin_gc);
     primitive_add(vm, env, "env", 3, builtin_env);
