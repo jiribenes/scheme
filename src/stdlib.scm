@@ -50,7 +50,7 @@
 
     (define (nan? x)
         (if (number? x)
-            (if (not (= x x))
+            (if (not (builtin= x x))
                 #t
                 #f) 
             #f))
@@ -59,19 +59,10 @@
 
     (define (infinite? x)
         (if (number? x)
-            (if (or (= x inf) (= x (- inf)))
+            (if (or (builtin= x inf) (builtin= x (builtin- 0 inf)))
                 #t
                 #f)
             #f))
-
-    (define (>= a b)
-        (or (= a b) (> a b)))
-
-    (define (<= a b)
-        (not (> a b)))
-
-    (define (< a b)
-        (not (>= a b)))
 
     (define null '())
     (define (null? x)
@@ -136,6 +127,26 @@
         (if (null? args)
             (builtin/ 1 a)
             (builtin/ a (apply * args))))
+
+    (define (pairs lst)
+        (if (null? (cdr lst))
+            '()
+            (cons (list (car lst) (cadr lst))
+                  (pairs (cdr lst)))))
+
+    (define (pairs-op fn)
+        (lambda args
+            (if (or (null? args) (null? (cdr args)))
+                #t
+                (reduce and
+                        (map (lambda (pair) (apply fn pair))
+                             (pairs args))))))
+
+    (define = (pairs-op builtin=))
+    (define > (pairs-op builtin>))
+    (define < (pairs-op builtin<))
+    (define (>= . args) (not (apply < args)))
+    (define (<= . args) (not (apply > args)))
 
     (define-macro (when test . then)
         (list 'if test

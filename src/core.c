@@ -36,6 +36,9 @@ bool arity_check(vm_t *vm, const char *fn_name, value_t args, int n,
 
 /* *** core - numbers *** */
 
+// This macro creates unsafe operations builtin<op>
+// as C functions 'builtin_<name>'.
+// These still have to be put into scm_config_default to be registered!
 #define BUILTIN_NUM_FN(name, op)                                            \
     static value_t builtin_##name(vm_t *vm, env_t *env, value_t args) {     \
         value_t eargs = eval_list(vm, env, args);                           \
@@ -69,55 +72,22 @@ static value_t builtin_rem(vm_t *vm, env_t *env, value_t args) {
     return NUM_VAL(fmod(AS_NUM(n), AS_NUM(m)));
 }
 
-// TODO: we shouldn't need to remember <prev>,
-//       we just need first...
-static value_t gt(vm_t *vm, env_t *env, value_t args) {
-    if (IS_NIL(args)) {
-        return TRUE_VAL;
+#define BUILTIN_NUM_COMP(name, op, scm_name)                                \
+    static value_t builtin_num_##name(vm_t *vm, env_t *env, value_t args) { \
+        value_t eargs = eval_list(vm, env, args);                           \
+        arity_check(vm, scm_name, eargs, 2, false);                         \
+        value_t a = AS_CONS(eargs)->car;                                    \
+        value_t b = AS_CONS(AS_CONS(eargs)->cdr)->car;                      \
+        if (!IS_NUM(a) || !IS_NUM(b)) {                                     \
+            error_runtime(vm, #scm_name ": argument is not a number!");     \
+            return NIL_VAL;                                                 \
+        }                                                                   \
+        return BOOL_VAL(AS_NUM(a) op AS_NUM(b));                            \
     }
-    value_t eargs = eval_list(vm, env, args);
-    value_t prev = NIL_VAL;
-    value_t arg, iter;
-    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
-        if (!IS_NUM(arg)) {
-            error_runtime(vm, ">: argument is not a number!");
-            return NIL_VAL;
-        }
-        if (!IS_NIL(prev)) {
-            // if we find a pair where the '>' relation doesn't hold,
-            // return false
-            if (AS_NUM(prev) <= AS_NUM(arg)) {
-                return FALSE_VAL;
-            }
-        }
-        prev = arg;
-    }
-    return TRUE_VAL;
-}
 
-static value_t num_equal(vm_t *vm, env_t *env, value_t args) {
-    if (IS_NIL(args)) {
-        return TRUE_VAL;
-    }
-    value_t eargs = eval_list(vm, env, args);
-    value_t prev = NIL_VAL;
-    value_t arg, iter;
-    SCM_FOREACH (arg, AS_CONS(eargs), iter) {
-        if (!IS_NUM(arg)) {
-            error_runtime(vm, "=: argument is not a number!");
-            return NIL_VAL;
-        }
-        if (!IS_NIL(prev)) {
-            // if we find a pair where the '==' relation doesn't hold,
-            // return false
-            if (AS_NUM(prev) != AS_NUM(arg)) {
-                return FALSE_VAL;
-            }
-        }
-        prev = arg;
-    }
-    return TRUE_VAL;
-}
+BUILTIN_NUM_COMP(gt, >, "builtin>")
+BUILTIN_NUM_COMP(lt, <, "builtin<")
+BUILTIN_NUM_COMP(eq, ==, "builtin=")
 
 /* *** core - types and predicates *** */
 
@@ -624,8 +594,9 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "builtin/", 8, builtin_div);
     primitive_add(vm, env, "remainder", 9, builtin_rem);
 
-    primitive_add(vm, env, ">", 1, gt);
-    primitive_add(vm, env, "=", 1, num_equal);
+    primitive_add(vm, env, "builtin>", 8, builtin_num_gt);
+    primitive_add(vm, env, "builtin<", 8, builtin_num_lt);
+    primitive_add(vm, env, "builtin=", 8, builtin_num_eq);
 
     /* types and predicates */
     primitive_add(vm, env, "eq?", 3, eq);
