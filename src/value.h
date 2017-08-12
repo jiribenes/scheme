@@ -15,6 +15,7 @@ typedef enum {
     T_PRIMITIVE,
     T_FUNCTION,
     T_MACRO,
+    T_VECTOR,
     T_ENV
 } ptrvalue_type_t;
 
@@ -114,6 +115,14 @@ typedef struct {
     value_t body;
 } function_t;
 
+// A dynamic array (vector) type
+typedef struct {
+    ptrvalue_t p;
+
+    uint32_t capacity, count;
+    value_t *data;
+} vector_t;
+
 // C value -> value
 #define BOOL_VAL(b) ((b) ? TRUE_VAL : FALSE_VAL)
 #define NUM_VAL(num) (num_to_val(num))
@@ -130,6 +139,7 @@ typedef struct {
 #define IS_PRIMITIVE(val) (val_is_ptr(val, T_PRIMITIVE))
 #define IS_FUNCTION(val) (val_is_ptr(val, T_FUNCTION))
 #define IS_MACRO(val) (val_is_ptr(val, T_MACRO))
+#define IS_VECTOR(val) (val_is_ptr(val, T_VECTOR))
 #define IS_ENV(val) (val_is_ptr(val, T_ENV))
 
 #define IS_PROCEDURE(val) (IS_PRIMITIVE(val) || IS_FUNCTION(val))
@@ -140,6 +150,7 @@ typedef struct {
 #define AS_SYMBOL(val) ((symbol_t *) AS_PTR(val))
 #define AS_PRIMITIVE(val) ((primitive_t *) AS_PTR(val))
 #define AS_FUNCTION(val) ((function_t *) AS_PTR(val))
+#define AS_VECTOR(val) ((vector_t *) AS_PTR(val))
 
 #define AS_NUM(val) (val_to_num(val))
 #define AS_INT(val) ((int64_t) trunc(val_to_num(val)))
@@ -236,6 +247,7 @@ symbol_t *symbol_new(vm_t *vm, const char *name, size_t len);
 primitive_t *primitive_new(vm_t *vm, primitive_fn fn);
 function_t *function_new(vm_t *vm, env_t *env, value_t params, value_t body);
 function_t *macro_new(vm_t *vm, env_t *env, value_t params, value_t body);
+vector_t *vector_new(vm_t *vm, uint32_t count);
 env_t *env_new(vm_t *vm, value_t variables, env_t *up);
 
 // Makes sure that there are no duplicit symbols

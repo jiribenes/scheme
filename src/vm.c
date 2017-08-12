@@ -212,6 +212,9 @@ static size_t vm_size(vm_t *vm, value_t val) {
         return sizeof(primitive_t);
     } else if (IS_FUNCTION(val) || IS_MACRO(val)) {
         return sizeof(function_t);
+    } else if (IS_VECTOR(val)) {
+        vector_t *vec = AS_VECTOR(val);
+        return sizeof(vector_t) + sizeof(value_t) * (vec->capacity);
     } else if (IS_ENV(val)) {
         return sizeof(env_t);
     }

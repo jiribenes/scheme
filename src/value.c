@@ -40,6 +40,16 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_FUNCTION || ptr->type == T_MACRO) {
         vm_realloc(vm, ptr, 0, 0);
+    } else if (ptr->type == T_VECTOR) {
+        vector_t *vec = (vector_t *) ptr;
+
+        vm_realloc(vm, vec->data, 0, 0);
+
+        vec->data = NULL;
+        vec->capacity = 0;
+        vec->count = 0;
+
+        vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_ENV) {
         vm_realloc(vm, ptr, 0, 0);
     }
@@ -205,6 +215,23 @@ function_t *macro_new(vm_t *vm, env_t *env, value_t params, value_t body) {
     return macro;
 }
 
+vector_t *vector_new(vm_t *vm, uint32_t count) {
+    value_t *data = NULL;
+    if (count > 0) {
+        data = (value_t *) vm_realloc(vm, NULL, 0, sizeof(value_t) * count);
+    }
+
+    vector_t *vec = (vector_t *) vm_realloc(vm, NULL, 0, sizeof(vector_t));
+
+    ptr_init(vm, &vec->p, T_VECTOR);
+
+    vec->capacity = count;
+    vec->count = count;
+    vec->data = data;
+
+    return vec;
+}
+
 env_t *env_new(vm_t *vm, value_t variables, env_t *up) {
     env_t *env = (env_t *) vm_realloc(vm, NULL, 0, sizeof(env_t));
 
@@ -323,6 +350,13 @@ bool val_equal(value_t a, value_t b) {
             fprintf(stderr, "Error: symbol not interned!");
         }
         return false;
+    } else if (pa->type == T_VECTOR) {
+        vector_t *veca = (vector_t *) pa;
+        vector_t *vecb = (vector_t *) pb;
+
+        return veca->count == vecb->count &&
+               memcmp(veca->data, vecb->data, veca->count * sizeof(value_t)) ==
+                   0;
     }
 
     return false;
