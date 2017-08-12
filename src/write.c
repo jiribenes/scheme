@@ -5,6 +5,14 @@
 #include "write.h"
 
 static void write_cons(FILE *f, cons_t *cons) {
+    // First check if the list is circular
+    // (we don't want to recurse forever)
+    int32_t len = cons_len(PTR_VAL(cons));
+    if (len == -1) {
+        fprintf(f, "#<circular list>");
+        return; 
+    }
+
     value_t arg, iter;
     SCM_FOREACH (arg, cons, iter) {
         write(f, arg);
