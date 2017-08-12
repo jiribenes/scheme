@@ -156,6 +156,42 @@
     (define (list-ref lst i)
         (car (drop i lst)))
 
+    (define (vector . args)
+        (define len (length args))
+        (define vec (make-vector len 0))
+        (define (vec-set i rest)
+            (if (= i len)
+                vec
+                (begin
+                    (vector-set! vec i (car rest))
+                    (vec-set (+ i 1) (cdr rest)))))
+        (vec-set 0 args))
+
+    (define (list->vector lst) (apply vector lst))
+
+    (define (vector->list vec)
+        (define len (vector-length vec))
+        (define (helper i)
+            (if (= i len)
+                '()
+                (cons (vector-ref vec i) (proc (+ i 1)))))
+        (helper 0))
+
+    (define (vector-map fn vec)
+        (define len (vector-length vec))
+        (define new-vec (make-vector len 0))
+        (define (helper i)
+            (if (= i len)
+                new-vec
+                (begin
+                    (define elem (fn (vector-ref vec i)))
+                    (vector-set! new-vec i elem)
+                    (helper (+ i 1)))))
+        (helper 0))
+
+    (define (vector-empty? vec)
+        (= (vector-length vec) 0))
+
     (define (test a b)
         (writeln
             (eq? a b)))
