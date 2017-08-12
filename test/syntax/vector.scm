@@ -1,0 +1,11 @@
+(begin
+    (test (equal? #() (make-vector 0 0)) #t)
+    (test (equal? #(1) (make-vector 1 1)) #t)
+    (test (equal? #(2 2) (make-vector 2 2)) #t)
+    (test (equal? #(0 0 0 0 0) (make-vector 5 0)) #t)
+    (test (equal? #(a a a a a) (make-vector 5 'a)) #t)
+    (test (equal? #(1 2 3) (vector 1 2 3)) #t)
+    (test (equal? #("a" "a" "a") (make-vector 3 "a")) #t)
+    (test (equal? #(#t #t) (make-vector 2 #t)) #t)
+    (test (equal? #(1 a (1 2) 3) (vector 1 'a '(1 2) 3)) #t)
+)
