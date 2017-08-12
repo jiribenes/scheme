@@ -340,41 +340,50 @@ static value_t builtin_read(vm_t *vm, env_t *env, value_t args) {
 
 /* *** core - or, and *** */
 
-// TODO Allow functions or, and to be with arbitrary amount of elements
-//      Look at the RxRS for the details
-//      Rewrite using SCM_FOREACH macro
+// TODO: When we have better macros, replace these :)
+
+// Tries to evaluate arguments sequentially (short-circuits)
+// If any arg is #t, returns #t, else #f
+// (or #t (error "err")) => #t
 static value_t builtin_or(vm_t *vm, env_t *env, value_t args) {
-    value_t eargs = eval_list(vm, env, args);
-    arity_check(vm, "or", eargs, 2, true);
-    bool result = AS_BOOL(AS_CONS(eargs)->car);
-    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
-        if (!IS_BOOL(cons->car)) {
+    if (IS_NIL(args)) {
+        return FALSE_VAL;
+    }
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(args), iter) {
+        value_t earg = eval(vm, env, arg);
+        if (!IS_BOOL(earg)) {
             error_runtime(vm, "or: argument is not a bool!");
-            return NIL_VAL;
+            return UNDEFINED_VAL;
         }
-        result |= AS_BOOL(cons->car);
-        if (IS_NIL(cons->cdr)) {
-            break;
+
+        if (IS_TRUE(earg)) {
+            return TRUE_VAL;
         }
     }
-    return BOOL_VAL(result);
+    return FALSE_VAL;
 }
 
+// Tries to evaluate arguments sequentially (short-circuits)
+// If any arg is #f, returns #f, else #t
+// (and #f (error "err")) => #f
 static value_t builtin_and(vm_t *vm, env_t *env, value_t args) {
-    value_t eargs = eval_list(vm, env, args);
-    arity_check(vm, "and", eargs, 2, true);
-    bool result = AS_BOOL(AS_CONS(eargs)->car);
-    for (cons_t *cons = AS_CONS(eargs);; cons = AS_CONS(cons->cdr)) {
-        if (!IS_BOOL(cons->car)) {
+    if (IS_NIL(args)) {
+        return TRUE_VAL;
+    }
+    value_t arg, iter;
+    SCM_FOREACH (arg, AS_CONS(args), iter) {
+        value_t earg = eval(vm, env, arg);
+        if (!IS_BOOL(earg)) {
             error_runtime(vm, "and: argument is not a bool!");
-            return NIL_VAL;
+            return UNDEFINED_VAL;
         }
-        result &= AS_BOOL(cons->car);
-        if (IS_NIL(cons->cdr)) {
-            break;
+
+        if (IS_FALSE(earg)) {
+            return FALSE_VAL;
         }
     }
-    return BOOL_VAL(result);
+    return TRUE_VAL;
 }
 
 /* *** core - macros, eval *** */
