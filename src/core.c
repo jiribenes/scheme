@@ -457,6 +457,10 @@ static value_t builtin_void(vm_t *vm, env_t *env, value_t args) {
     return VOID_VAL;
 }
 
+static value_t builtin_undefined(vm_t *vm, env_t *env, value_t args) {
+    return UNDEFINED_VAL;
+}
+
 static value_t builtin_time(vm_t *vm, env_t *env, value_t args) {
     arity_check(vm, "time", args, 0, false);
     return NUM_VAL((double) clock() / (CLOCKS_PER_SEC / 1000.0F));
@@ -597,8 +601,6 @@ env_t *scm_env_default(vm_t *vm) {
 
     symbol_t *eof_sym = symbol_intern(vm, "eof", 3);
     variable_add(vm, env, eof_sym, EOF_VAL);
-    symbol_t *undefined_sym = symbol_intern(vm, "undefined", 9);
-    variable_add(vm, env, undefined_sym, UNDEFINED_VAL);
 
     primitive_add(vm, env, "builtin+", 8, builtin_add);
     primitive_add(vm, env, "builtin*", 8, builtin_mul);
@@ -650,6 +652,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "current-time", 12, builtin_time);
 
     primitive_add(vm, env, "void", 4, builtin_void);
+    primitive_add(vm, env, "undefined", 9, builtin_undefined);
 
     primitive_add(vm, env, "vector-length", 13, builtin_vec_length);
     primitive_add(vm, env, "vector-ref", 10, builtin_vec_ref);

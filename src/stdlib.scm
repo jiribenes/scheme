@@ -41,7 +41,7 @@
         (eq? x (void)))
 
     (define (undefined? x)
-        (eq? x undefined))
+        (eq? x (undefined)))
 
     (define (eof-object? x)
         (eq? x eof))
