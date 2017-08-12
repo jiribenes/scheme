@@ -178,6 +178,12 @@ static void mark(vm_t *vm, value_t val) {
         mark(vm, func->params);
         mark(vm, func->body);
         mark(vm, PTR_VAL(func->env));
+    } else if (ptr->type == T_VECTOR) {
+        vector_t *vec = (vector_t *) ptr;
+
+        for (uint32_t i = 0; i < vec->count; i++) {
+            mark(vm, vec->data[i]);
+        }
     }
 }
 
@@ -418,7 +424,7 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list) {
 // Evaluates the value <val>
 // Returns `undefined` if symbol not found
 value_t eval(vm_t *vm, env_t *env, value_t val) {
-    if (IS_VAL(val) || IS_STRING(val) || IS_PROCEDURE(val)) {
+    if (IS_VAL(val) || IS_STRING(val) || IS_PROCEDURE(val) || IS_VECTOR(val)) {
         // These values are self evaluating
         return val;
     } else if (IS_SYMBOL(val)) {
