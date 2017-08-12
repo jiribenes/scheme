@@ -92,11 +92,7 @@ void file_run(const char *filename) {
     library_read(vm, env, "src/stdlib.scm");
 
     value_t val = read_source(vm, source);
-    value_t result = eval(vm, env, val);
-
-    fprintf(stdout, "Result:");
-    display(stdout, result);
-    fprintf(stdout, "\n");
+    eval(vm, env, val);
 
     vm_free(vm);
     free(source);
