@@ -54,6 +54,17 @@ static void write_number(FILE *f, double d) {
     }
 }
 
+static void write_vector(FILE *f, vector_t *vec) {
+    fprintf(f, "#(");
+    for (uint32_t i = 0; i < vec->count; i++) {
+        write(f, vec->data[i]);
+        if (i + 1 != vec->count) {
+            fprintf(f, " ");
+        }
+    }
+    fprintf(f, ")");
+}
+
 // write val as a s-expr
 void write(FILE *f, value_t val) {
     if (IS_NUM(val)) {
@@ -89,6 +100,9 @@ void write(FILE *f, value_t val) {
             fprintf(f, "#<function>");
         } else if (IS_MACRO(val)) {
             fprintf(f, "#<macro>");
+        } else if (IS_VECTOR(val)) {
+            vector_t *vec = AS_VECTOR(val);
+            write_vector(f, vec);
         } else if (IS_ENV(val)) {
             env_t *env = (env_t *) AS_PTR(val);
             fprintf(f, "#<environment, containing: ");
