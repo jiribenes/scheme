@@ -209,6 +209,26 @@ static void read_symbol(reader_t *reader) {
     reader->tokval = PTR_VAL(sym);
 }
 
+static void read_vector(reader_t *reader) {
+    next_char(reader);  // consumes '#'
+    next_char(reader);  // consumes '('
+
+    vector_t *vec = vector_new(reader->vm, 0);
+    while (reader->toktype != TOK_EOF) {
+        next_token(reader);
+        if (reader->toktype == TOK_RPAREN) {
+            reader->tokval = PTR_VAL(vec);
+            next_char(reader);
+            return;
+        } else {
+            read1(reader);
+            value_t elem = reader->tokval;
+            vector_push(reader->vm, vec, elem);
+        }
+    }
+}
+
+
 static void read1(reader_t *reader) {
     eat_whitespace(reader);
 
@@ -232,11 +252,13 @@ static void read1(reader_t *reader) {
             next_char(reader);
             next_char(reader);
             reader->tokval = FALSE_VAL;
+        } else if (peek_next_char(reader) == '(') {
+            // vector => #(elem1 elem2 elem3 ... )
+            read_vector(reader);
         } else {
             error_print(reader, reader->line,
                         "Invalid token beginning with # - "
-                        "#t, #f are the only symbols that "
-                        "can begin with #");
+                        "only #t, #f and #(...) are supported");
         }
     } else if (reader->toktype == TOK_RPAREN) {
         error_print(reader, reader->line, "Unexpected ')'");
