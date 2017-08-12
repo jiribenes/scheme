@@ -76,6 +76,7 @@ vm_t *vm_new(scm_config_t *config) {
     vm->reader = NULL;
 
     vm->curval = NIL_VAL;
+    vm->gensym_count = 0;
 
     vm->has_error = false;
 

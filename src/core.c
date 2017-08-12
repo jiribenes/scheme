@@ -404,9 +404,8 @@ static value_t builtin_expand(vm_t *vm, env_t *env, value_t args) {
 // TODO: Can we do this a bit better?
 static value_t builtin_gensym(vm_t *vm, env_t *env, value_t args) {
     arity_check(vm, "gensym", args, 0, false);
-    static uint32_t count = 0;
     char buffer[16];
-    snprintf(buffer, sizeof(buffer), "g%u", count++);
+    snprintf(buffer, sizeof(buffer), "g%u", vm->gensym_count++);
     return PTR_VAL(symbol_new(vm, buffer, 16));
 }
 
