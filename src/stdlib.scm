@@ -189,6 +189,16 @@
                     (helper (+ i 1)))))
         (helper 0))
 
+    (define (vector-fill! vec fill)
+        (define len (vector-length vec))
+        (define (helper i)
+            (if (= i len)
+                (void)
+                (begin
+                    (vector-set! vec i fill)
+                    (helper (+ i 1)))))
+        (helper 0))
+
     (define (vector-empty? vec)
         (= (vector-length vec) 0))
 
