@@ -278,6 +278,46 @@ static value_t builtin_set(vm_t *vm, env_t *env, value_t args) {
     return VOID_VAL;
 }
 
+static value_t builtin_let(vm_t *vm, env_t *env, value_t args) {
+    // (let ((a 10) (b 20) ...) <exprs...>)
+    arity_check(vm, "let", args, 2, true);
+    value_t bindings = AS_CONS(args)->car;
+    if (!IS_CONS(bindings) && !IS_NIL(bindings)) {
+        error_runtime(vm, "let: bindings (first argument) must be a list!");
+        return UNDEFINED_VAL;
+    }
+
+    value_t vars = NIL_VAL;
+    value_t vals = NIL_VAL;
+    if (!IS_NIL(bindings)) {
+        value_t binding, iter;
+        SCM_FOREACH (binding, AS_CONS(bindings), iter) {
+            if (!IS_CONS(binding) || cons_len(binding) != 2) {
+                error_runtime(vm,
+                              "let: binding is not of type (variable value)!");
+                return UNDEFINED_VAL;
+            }
+            value_t var = AS_CONS(binding)->car;
+            value_t val = AS_CONS(AS_CONS(binding)->cdr)->car;
+            if (!IS_SYMBOL(var)) {
+                error_runtime(vm,
+                              "let: left side of the binding is not a symbol!");
+                return UNDEFINED_VAL;
+            }
+            value_t temp = cons_fn(vm, var, vars);
+            vars = temp;
+
+            value_t val_eval = eval(vm, env, val);
+            temp = cons_fn(vm, val_eval, vals);
+            vals = temp;
+        }
+    }
+
+    env_t *new_env = env_push(vm, env, vars, vals);
+    value_t body = AS_CONS(args)->cdr;
+    return begin(vm, new_env, body);
+}
+
 /* *** core - I/O *** */
 
 static value_t builtin_write(vm_t *vm, env_t *env, value_t args) {
@@ -668,6 +708,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "lambda", 6, lambda);
     primitive_add(vm, env, "if", 2, builtin_if);
     primitive_add(vm, env, "set!", 4, builtin_set);
+    primitive_add(vm, env, "let", 3, builtin_let);
 
     /* I/O */
     primitive_add(vm, env, "write", 5, builtin_write);

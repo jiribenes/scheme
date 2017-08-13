@@ -1,12 +1,11 @@
 (begin
     (define counter 
-        ((lambda (x) 
-            (lambda () 
+        (let ((x 0))
+            (lambda ()
                 (set! x (+ x 1))
-                x)) 
-         0))
+                x)))
 
-    (display (counter))
-    (display (counter))
-    (display (counter))
+    (displayln (counter))
+    (displayln (counter))
+    (displayln (counter))
 )

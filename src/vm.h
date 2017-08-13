@@ -53,6 +53,9 @@ void primitive_add(vm_t *vm, env_t *env, const char *name, size_t len,
 // adds a variable to env
 void variable_add(vm_t *vm, env_t *env, symbol_t *sym, value_t val);
 
+// pushes a new environment frame
+env_t *env_push(vm_t *vm, env_t *env, value_t vars, value_t vals);
+
 // tries to find a <sym> in <env>
 value_t find(env_t *env, symbol_t *sym);
 
