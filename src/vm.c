@@ -75,6 +75,8 @@ vm_t *vm_new(scm_config_t *config) {
     vm->env = NULL;
     vm->reader = NULL;
 
+    vm->top_env = NULL;
+
     vm->curval = NIL_VAL;
     vm->gensym_count = 0;
 
@@ -425,7 +427,8 @@ value_t eval_list(vm_t *vm, env_t *env, value_t list) {
 // Evaluates the value <val>
 // Returns `undefined` if symbol not found
 value_t eval(vm_t *vm, env_t *env, value_t val) {
-    if (IS_VAL(val) || IS_STRING(val) || IS_PROCEDURE(val) || IS_VECTOR(val)) {
+    if (IS_VAL(val) || IS_STRING(val) || IS_PROCEDURE(val) || IS_VECTOR(val) ||
+        IS_ENV(val)) {
         // These values are self evaluating
         return val;
     } else if (IS_SYMBOL(val)) {

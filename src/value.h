@@ -151,6 +151,7 @@ typedef struct {
 #define AS_PRIMITIVE(val) ((primitive_t *) AS_PTR(val))
 #define AS_FUNCTION(val) ((function_t *) AS_PTR(val))
 #define AS_VECTOR(val) ((vector_t *) AS_PTR(val))
+#define AS_ENV(val) ((env_t *) AS_PTR(val))
 
 #define AS_NUM(val) (val_to_num(val))
 #define AS_INT(val) ((int64_t) trunc(val_to_num(val)))

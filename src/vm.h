@@ -31,6 +31,8 @@ struct vm_t {
     env_t *env;
     reader_t *reader;
 
+    env_t *top_env;
+
     value_t curval;
 
     uint32_t gensym_count;

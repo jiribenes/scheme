@@ -152,6 +152,7 @@ TYPE_PREDICATE_FN(string, IS_STRING)
 TYPE_PREDICATE_FN(symbol, IS_SYMBOL)
 TYPE_PREDICATE_FN(procedure, IS_PROCEDURE)
 TYPE_PREDICATE_FN(vector, IS_VECTOR)
+TYPE_PREDICATE_FN(environment, IS_ENV)
 
 static value_t builtin_void(vm_t *vm, env_t *env, value_t args) {
     return VOID_VAL;
@@ -567,18 +568,48 @@ static value_t builtin_exit(vm_t *vm, env_t *env, value_t args) {
 /* *** debug functions *** */
 
 #if DEBUG
-static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
-    vm_gc(vm);
-    return NIL_VAL;
+
+static value_t builtin_env_cur(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "current-environment", args, 0, false);
+    return PTR_VAL(env);
 }
 
-static value_t builtin_env(vm_t *vm, env_t *env, value_t args) {
-    env_t *e = env;
-    while (e != NULL) {
-        write(stdout, e->variables);
-        fprintf(stdout, "\n");
-        e = e->up;
+static value_t builtin_env_top(vm_t *vm, env_t *env, value_t args) {
+    arity_check(vm, "top-level-environment", args, 0, false);
+    return PTR_VAL(vm->top_env);
+}
+
+static value_t builtin_env_vars(vm_t *vm, env_t *env, value_t args) {
+    // (environment-variables <env>)
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "environment-variables", eargs, 1, false);
+    if (!IS_ENV(AS_CONS(eargs)->car)) {
+        error_runtime(vm,
+                      "environment-variables: argument must be an environment");
+        return UNDEFINED_VAL;
     }
+    return AS_ENV(AS_CONS(eargs)->car)->variables;
+}
+
+static value_t builtin_env_up(vm_t *vm, env_t *env, value_t args) {
+    // (environment-parent <env>)
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "environment-parent", eargs, 1, false);
+    if (!IS_ENV(AS_CONS(eargs)->car)) {
+        write(stderr, AS_CONS(eargs)->car);
+        error_runtime(vm,
+                      "environment-parent: argument must be an environment");
+        return UNDEFINED_VAL;
+    }
+    env_t *e = AS_ENV(AS_CONS(eargs)->car);
+    if (e->up == NULL) {
+        return NIL_VAL;
+    }
+    return PTR_VAL(e->up);
+}
+
+static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
+    vm_gc(vm);
     return NIL_VAL;
 }
 
@@ -599,6 +630,7 @@ static value_t builtin_hash(vm_t *vm, env_t *env, value_t args) {
 
 env_t *scm_env_default(vm_t *vm) {
     env_t *env = env_new(vm, NIL_VAL, NULL);
+    vm->top_env = env;
 
     /* numeric functions */
     symbol_t *pi_sym = symbol_intern(vm, "pi", 2);
@@ -624,6 +656,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "symbol?", 7, builtin_is_symbol);
     primitive_add(vm, env, "procedure?", 10, builtin_is_procedure);
     primitive_add(vm, env, "vector?", 7, builtin_is_vector);
+    primitive_add(vm, env, "environment?", 12, builtin_is_environment);
     primitive_add(vm, env, "void", 4, builtin_void);
     primitive_add(vm, env, "undefined", 9, builtin_undefined);
     symbol_t *eof_sym = symbol_intern(vm, "eof", 3);
@@ -672,13 +705,14 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "exit", 4, builtin_exit);
 
 #ifdef DEBUG
+    primitive_add(vm, env, "current-environment", 19, builtin_env_cur);
+    primitive_add(vm, env, "top-level-environment", 21, builtin_env_top);
+    primitive_add(vm, env, "environment-variables", 21, builtin_env_vars);
+    primitive_add(vm, env, "environment-parent", 18, builtin_env_up);
+
     primitive_add(vm, env, "gc", 2, builtin_gc);
-    primitive_add(vm, env, "env", 3, builtin_env);
     primitive_add(vm, env, "hash", 4, builtin_hash);
 #endif
-
-    symbol_t *sym_env = symbol_intern(vm, "cur-env", 7);
-    variable_add(vm, env, sym_env, PTR_VAL(env));
 
     return env;
 }

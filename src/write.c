@@ -113,13 +113,11 @@ void write(FILE *f, value_t val) {
             write_vector(f, vec);
         } else if (IS_ENV(val)) {
             env_t *env = (env_t *) AS_PTR(val);
-            fprintf(f, "#<environment, containing: ");
-            write(f, env->variables);
-            if (env->up != NULL) {
-                fprintf(f, "\n up: ");
-                write(f, PTR_VAL(env->up));
+            fprintf(f, "#<");
+            if (env == NULL) {
+                fprintf(f, "top level ");
             }
-            fprintf(f, ">\n");
+            fprintf(f, "environment>");
         } else {
             fprintf(f, "#<unknown ptrvalue>");
         }

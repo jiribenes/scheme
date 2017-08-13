@@ -13,7 +13,7 @@
         ((lambda (expr)
             (if (not (eof-object? expr))
                 (begin
-                    (define result (eval expr cur-env))
+                    (define result (eval expr (top-level-environment)))
                     (if (not (void? result))
                         (writeln result))
                     (repl))))
