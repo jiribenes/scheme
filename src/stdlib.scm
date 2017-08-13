@@ -154,8 +154,8 @@
 
     (define-macro (unless test . then)
         (list 'if
-              (cons 'not test)
-              (cons 'begin branch)))
+              (list 'not test)
+              (cons 'begin then)))
 
     (define (drop n lst)
         (if (null? lst)
