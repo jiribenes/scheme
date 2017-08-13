@@ -102,6 +102,7 @@ typedef value_t (*primitive_fn)(vm_t *vm, env_t *env, value_t args);
 typedef struct {
     ptrvalue_t p;
 
+    symbol_t *name;
     primitive_fn fn;
 } primitive_t;
 
@@ -109,6 +110,7 @@ typedef struct {
 typedef struct {
     ptrvalue_t p;
 
+    symbol_t *name;
     env_t *env;
 
     value_t params;

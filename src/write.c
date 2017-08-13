@@ -103,11 +103,36 @@ void write(FILE *f, value_t val) {
             symbol_t *sym = AS_SYMBOL(val);
             fprintf(f, "%s", sym->name);
         } else if (IS_PRIMITIVE(val)) {
-            fprintf(f, "#<primitive>");
+            // TODO: A lot of repetition going on here, can we shorten this?
+            primitive_t *prim = AS_PRIMITIVE(val);
+            fprintf(f, "#<primitive ");
+            if (prim->name != NULL) {
+                display(f, PTR_VAL(prim->name));
+            } else {
+                fprintf(f, "?");
+            }
+            fprintf(f, ">");
         } else if (IS_FUNCTION(val)) {
-            fprintf(f, "#<function>");
+            fprintf(f, "#<function ");
+            function_t *fn = AS_FUNCTION(val);
+            if (fn->name != NULL) {
+                display(f, PTR_VAL(fn->name));
+            } else {
+                fprintf(f, "?");
+            }
+            fprintf(f, " ");
+            write(f, fn->params);
+            fprintf(f, ">");
         } else if (IS_MACRO(val)) {
-            fprintf(f, "#<macro>");
+            fprintf(f, "#<macro ");
+            // TODO: If we ever have a AS_MACRO C macro, use it here
+            function_t *mac = AS_FUNCTION(val);
+            if (mac->name != NULL) {
+                display(f, PTR_VAL(mac->name));
+            } else {
+                fprintf(f, "?");
+            }
+            fprintf(f, ">");
         } else if (IS_VECTOR(val)) {
             vector_t *vec = AS_VECTOR(val);
             write_vector(f, vec);

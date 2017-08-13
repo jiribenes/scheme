@@ -175,8 +175,17 @@ static void mark(vm_t *vm, value_t val) {
         if (env->up != NULL) {
             mark(vm, PTR_VAL(env->up));
         }
+    } else if (ptr->type == T_PRIMITIVE) {
+        primitive_t *prim = (primitive_t *) ptr;
+        if (prim->name != NULL) {
+            mark(vm, PTR_VAL(prim->name));
+        }
     } else if (ptr->type == T_FUNCTION || ptr->type == T_MACRO) {
         function_t *func = (function_t *) ptr;
+
+        if (func->name != NULL) {
+            mark(vm, PTR_VAL(func->name));
+        }
 
         mark(vm, func->params);
         mark(vm, func->body);
@@ -315,6 +324,8 @@ void primitive_add(vm_t *vm, env_t *env, const char *name, size_t len,
     symbol_t *sym = symbol_intern(vm, name, len);
 
     primitive_t *prim = primitive_new(vm, fn);
+
+    prim->name = sym;
 
     variable_add(vm, env, sym, PTR_VAL(prim));
 }

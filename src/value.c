@@ -185,6 +185,7 @@ primitive_t *primitive_new(vm_t *vm, primitive_fn fn) {
 
     ptr_init(vm, &prim->p, T_PRIMITIVE);
 
+    prim->name = NULL;
     prim->fn = fn;
 
     return prim;
@@ -194,6 +195,8 @@ function_t *function_new(vm_t *vm, env_t *env, value_t params, value_t body) {
     function_t *fn = (function_t *) vm_realloc(vm, NULL, 0, sizeof(function_t));
 
     ptr_init(vm, &fn->p, T_FUNCTION);
+
+    fn->name = NULL;
 
     fn->env = env;
     fn->params = params;
@@ -207,6 +210,8 @@ function_t *macro_new(vm_t *vm, env_t *env, value_t params, value_t body) {
         (function_t *) vm_realloc(vm, NULL, 0, sizeof(function_t));
 
     ptr_init(vm, &macro->p, T_MACRO);
+
+    macro->name = NULL;
 
     macro->env = env;
     macro->params = params;

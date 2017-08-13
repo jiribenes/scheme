@@ -167,10 +167,19 @@ static value_t builtin_undefined(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
     cons_t *rest = AS_CONS(args);
 
-    if (IS_SYMBOL(rest->car)) {  // (define <name> <body...>)
+    if (IS_SYMBOL(rest->car)) {  // (define <name> <body>)
         symbol_t *sym = AS_SYMBOL(rest->car);
-        cons_t *body = AS_CONS(rest->cdr);
-        value_t val = eval(vm, env, body->car);
+        value_t body = AS_CONS(rest->cdr)->car;
+        value_t val = eval(vm, env, body);
+
+        if (IS_FUNCTION(val)) {
+            // If <body> is a nameless function, set its name to <name>
+            // (we won't do any renaming...)
+            function_t *func = AS_FUNCTION(val);
+            if (func->name == NULL) {
+                func->name = sym;
+            }
+        }
         variable_add(vm, env, sym, val);
 
         return VOID_VAL;
@@ -178,7 +187,10 @@ static value_t builtin_define(vm_t *vm, env_t *env, value_t args) {
         symbol_t *sym = AS_SYMBOL(AS_CONS(rest->car)->car);
         value_t params = AS_CONS(rest->car)->cdr;
         cons_t *body = AS_CONS(rest->cdr);
+
         function_t *func = function_new(vm, env, params, PTR_VAL(body));
+        func->name = sym;
+
         variable_add(vm, env, sym, PTR_VAL(func));
 
         return VOID_VAL;
@@ -308,6 +320,16 @@ static value_t builtin_let(vm_t *vm, env_t *env, value_t args) {
             vars = temp;
 
             value_t val_eval = eval(vm, env, val);
+
+            // If value in binding is an unnamed function,
+            // set it's name to var in binding
+            if (IS_FUNCTION(val_eval)) {
+                function_t *func = AS_FUNCTION(val_eval);
+                symbol_t *sym = AS_SYMBOL(var);
+                if (func->name == NULL) {
+                    func->name = sym;
+                }
+            }
             temp = cons_fn(vm, val_eval, vals);
             vals = temp;
         }
@@ -412,6 +434,8 @@ static value_t define_macro(vm_t *vm, env_t *env, value_t args) {
     cons_t *body = AS_CONS(rest->cdr);
 
     function_t *macro = macro_new(vm, env, params, PTR_VAL(body));
+    macro->name = sym;
+
     variable_add(vm, env, sym, PTR_VAL(macro));
 
     return VOID_VAL;
