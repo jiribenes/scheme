@@ -4,22 +4,22 @@
         (displayln "Use Ctrl+D to exit!")
         (newline))
 
+    (define (tle-eval expr)
+        (eval expr (top-level-environment)))
+
     (define (goodbye)
         (newline)
         (displayln "Quitting!"))
 
     (define (repl)
         (display ">> ")
-        ((lambda (expr)
+        (let ((expr (read)))
             (if (not (eof-object? expr))
-                (begin
-                    (define result (eval expr (top-level-environment)))
-                    (if (not (void? result))
-                        (writeln result))
-                    (repl))))
-        (read)))
+                (let ((result (tle-eval expr)))
+                     (if (not (void? result))
+                             (writeln result))
+                     (repl)))))
 
     (welcome)
     (repl)
     (goodbye))
-
