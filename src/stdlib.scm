@@ -31,11 +31,7 @@
         (if x #f #t))
 
     (define (bool? x)
-        (if (eq? x #f)
-            #t
-            (if (eq? x #t)
-                #t
-                #f)))
+        (or (eq? x #t) (eq? x #f)))
 
     (define (void? x)
         (eq? x (void)))
@@ -49,20 +45,13 @@
     (define boolean? bool?)
 
     (define (nan? x)
-        (if (number? x)
-            (if (not (builtin= x x))
-                #t
-                #f) 
-            #f))
+        (and (number? x) (not (builtin= x x))))
 
     (define inf (builtin/ 1 0))
 
     (define (infinite? x)
-        (if (number? x)
-            (if (or (builtin= x inf) (builtin= x (builtin- 0 inf)))
-                #t
-                #f)
-            #f))
+        (and (number? x)
+             (or (builtin= x inf) (builtin= x (builtin- 0 inf)))))
 
     (define null '())
     (define (null? x)
@@ -73,14 +62,14 @@
         (if (not (or (cons? x)
                      (null? x)))
             #f
-            (define len (builtin-length x))
-            (>= len 0)))
+            (let ((len (builtin-length x)))
+                 (>= len 0))))
 
     (define (length lst)
-        (define len (builtin-length lst))
-        (if (>= len 0)
-            len
-            (error "length: argument is not 'list?'")))
+        (let ((len (builtin-length lst)))
+             (if (>= len 0)
+                 len
+                 (error "length: argument is not 'list?'"))))
 
     (define (list-copy lst)
         (if (list? lst)
@@ -166,6 +155,13 @@
 
     (define (list-ref lst i)
         (car (drop i lst)))
+
+    (define (member? lst x)
+        (if (null? lst)
+            #f
+            (if (equal? x (car lst))
+                #t
+                (member? (cdr lst) x))))
 
     (define (vector . args)
         (define len (length args))
