@@ -196,6 +196,15 @@
                     (helper (+ i 1)))))
         (helper 0))
 
+    (define (vector-for-each fn vec)
+        (define len (vector-length vec))
+        (define (helper i)
+            (if (= i len)
+                (void)
+                (fn (vector-ref vec i))
+                (helper (+ i 1))))
+        (helper 0))
+
     (define (vector-fill! vec fill)
         (define len (vector-length vec))
         (define (helper i)
