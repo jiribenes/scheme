@@ -682,7 +682,7 @@ static value_t builtin_hash(vm_t *vm, env_t *env, value_t args) {
     arity_check(vm, "hash", eargs, 1, false);
 
     value_t arg = AS_CONS(eargs)->car;
-    if (IS_VAL(arg) || IS_STRING(arg)) {
+    if (IS_VAL(arg) || IS_STRING(arg) || IS_SYMBOL(arg)) {
         return NUM_VAL(hash_value(arg));
     }
     error_runtime(vm, "hash: cannot hash non-immutable type");

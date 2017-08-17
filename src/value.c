@@ -63,28 +63,24 @@ void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
 const uint32_t HASH_PRIME = 16777619;
 const uint32_t HASH_SEED = 2166136261u;
 
-static uint32_t hash_ptr(ptrvalue_t *ptr) {
-    if (ptr->type == T_STRING) {
-        // all strings are hashed when created!
-        return ((string_t *) ptr)->hash;
-    } else {
-        return 0;  // TODO: log error - mutable
-    }
-}
 /*
 inline static uint32_t hash_octet(uint8_t octet, uint32_t hash) {
     return (hash ^ octet) * 16777619;
 }*/
 
-static void hash_string(string_t *str) {
+static uint32_t hash_string_like(const char *s, uint32_t len) {
     uint32_t hash = HASH_SEED;
 
-    for (uint32_t i = 0; i < str->len; i++) {
-        hash ^= str->value[i];
+    for (uint32_t i = 0; i < len; i++) {
+        hash ^= s[i];
         hash *= HASH_PRIME;
     }
 
-    str->hash = hash;
+    return hash;
+}
+
+static inline void hash_string(string_t *str) {
+    str->hash = hash_string_like(str->value, str->len);
 }
 
 static inline uint32_t hash_number(uint64_t num) {
@@ -98,6 +94,18 @@ static inline uint32_t hash_number(uint64_t num) {
     }
 
     return hash;
+}
+
+static uint32_t hash_ptr(ptrvalue_t *ptr) {
+    if (ptr->type == T_STRING) {
+        // all strings are hashed when created!
+        return ((string_t *) ptr)->hash;
+    } else if (ptr->type == T_SYMBOL) {
+        symbol_t *sym = (symbol_t *) ptr;
+        return hash_string_like(sym->name, sym->len);
+    } else {
+        return 0;  // TODO: log error - mutable
+    }
 }
 
 uint32_t hash_value(value_t val) {
