@@ -629,6 +629,18 @@ static value_t builtin_exit(vm_t *vm, env_t *env, value_t args) {
     exit(exit_status);
 }
 
+static value_t builtin_hash(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "hash", eargs, 1, false);
+
+    value_t arg = AS_CONS(eargs)->car;
+    if (IS_VAL(arg) || IS_STRING(arg) || IS_SYMBOL(arg)) {
+        return NUM_VAL(hash_value(arg));
+    }
+    error_runtime(vm, "hash: cannot hash non-immutable type");
+    return UNDEFINED_VAL;
+}
+
 /* *** debug functions *** */
 
 #if DEBUG
@@ -675,18 +687,6 @@ static value_t builtin_env_up(vm_t *vm, env_t *env, value_t args) {
 static value_t builtin_gc(vm_t *vm, env_t *env, value_t args) {
     vm_gc(vm);
     return NIL_VAL;
-}
-
-static value_t builtin_hash(vm_t *vm, env_t *env, value_t args) {
-    value_t eargs = eval_list(vm, env, args);
-    arity_check(vm, "hash", eargs, 1, false);
-
-    value_t arg = AS_CONS(eargs)->car;
-    if (IS_VAL(arg) || IS_STRING(arg) || IS_SYMBOL(arg)) {
-        return NUM_VAL(hash_value(arg));
-    }
-    error_runtime(vm, "hash: cannot hash non-immutable type");
-    return UNDEFINED_VAL;
 }
 #endif
 
@@ -768,6 +768,7 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "error", 5, builtin_error);
     primitive_add(vm, env, "current-time", 12, builtin_time);
     primitive_add(vm, env, "exit", 4, builtin_exit);
+    primitive_add(vm, env, "hash", 4, builtin_hash);
 
 #ifdef DEBUG
     primitive_add(vm, env, "current-environment", 19, builtin_env_cur);
@@ -776,7 +777,6 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "environment-parent", 18, builtin_env_up);
 
     primitive_add(vm, env, "gc", 2, builtin_gc);
-    primitive_add(vm, env, "hash", 4, builtin_hash);
 #endif
 
     return env;
