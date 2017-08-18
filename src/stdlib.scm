@@ -218,6 +218,20 @@
     (define (vector-empty? vec)
         (= (vector-length vec) 0))
 
+    (define (vector-append a b)
+        (if (not (and (vector? a) (vector? b)))
+            (error "vector-append: arguments must be vectors!")
+            (let ((la (vector-length a))
+                  (lb (vector-length b))
+                  (index 0))
+              (define c (make-vector (+ la lb) (undefined)))
+              (define (walk x)
+                (vector-set! c index x)
+                (set! index (+ index 1)))
+              (vector-for-each walk a)
+              (vector-for-each walk b)
+              c)))
+
     (define (test a b)
         (writeln
             (eq? a b)))
