@@ -11,7 +11,10 @@
 #define SCM_VERSION_STRING "0.1.0"
 
 // VM for executing scm code
-typedef struct vm_t vm_t;
+typedef struct _vm_t vm_t;
+
+// An environment for executing scm code
+typedef struct _env_t env_t;
 
 // Generic realloc function type (see scm_realloc_default for example)
 typedef void *(*scm_realloc_fn)(void *ptr, size_t new_size);

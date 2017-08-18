@@ -84,7 +84,8 @@ typedef struct _symbol_t {
 } symbol_t;
 
 // Environment frame
-typedef struct _env_t {
+// Should be typedef'd by now
+struct _env_t {
     ptrvalue_t p;
 
     // contains variables and their mapping in assoc list
@@ -94,7 +95,7 @@ typedef struct _env_t {
 
     // points to 'upper' env, NULL if none
     struct _env_t *up;
-} env_t;
+};
 
 // A primitive (builtin) function C type
 typedef value_t (*primitive_fn)(vm_t *vm, env_t *env, value_t args);

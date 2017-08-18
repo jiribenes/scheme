@@ -5,7 +5,8 @@
 #include <stdlib.h>  // size_t, malloc, realloc
 
 #include "config.h"
-#include "read.h"   // reader_t
+#include "read.h"  // reader_t
+#include "scheme.h"
 #include "value.h"  // ptrvalue_t, symbol_t, env_t
 
 #define MAX_NUM_TEMP 256
@@ -13,7 +14,9 @@
 // Signals a runtime error
 void error_runtime(vm_t *vm, const char *format, ...);
 
-struct vm_t {
+// A structure for the whole interpreter/VM
+// Already typedef'd in scheme.h
+struct _vm_t {
     // a linked list of all allocated values
     ptrvalue_t *head;
 
