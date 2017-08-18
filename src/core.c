@@ -371,6 +371,19 @@ static value_t builtin_read(vm_t *vm, env_t *env, value_t args) {
     return read_source(vm, line);
 }
 
+static value_t builtin_load(vm_t *vm, env_t *env, value_t args) {
+    value_t eargs = eval_list(vm, env, args);
+    arity_check(vm, "load", eargs, 1, false);
+    value_t arg = AS_CONS(eargs)->car;
+    if (!IS_STRING(arg)) {
+        error_runtime(vm, "load: argument must be a string!");
+        return UNDEFINED_VAL;
+    }
+    string_t *str = AS_STRING(arg);
+    vm->config.load_fn(vm, env, str->value);
+    return VOID_VAL;
+}
+
 /* *** core - or, and *** */
 
 // TODO: When we have better macros, replace these :)
@@ -739,6 +752,9 @@ env_t *scm_env_default(vm_t *vm) {
     primitive_add(vm, env, "display", 7, builtin_display);
     primitive_add(vm, env, "newline", 7, builtin_newline);
     primitive_add(vm, env, "read", 4, builtin_read);
+    if (vm->config.load_fn != NULL) {
+        primitive_add(vm, env, "load", 4, builtin_load);
+    }
 
     /* or/and */
     primitive_add(vm, env, "or", 2, builtin_or);
@@ -778,6 +794,11 @@ env_t *scm_env_default(vm_t *vm) {
 
     primitive_add(vm, env, "gc", 2, builtin_gc);
 #endif
+
+    // Automatically loads the stdlib if a load function is present
+    if (vm->config.load_fn != NULL) {
+        vm->config.load_fn(vm, env, "src/stdlib.scm");
+    }
 
     return env;
 }

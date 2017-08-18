@@ -46,6 +46,7 @@ static void *scm_realloc_default(void *ptr, size_t new_size) {
 void scm_config_default(scm_config_t *config) {
     config->realloc_fn = scm_realloc_default;
     config->error_fn = NULL;
+    config->load_fn = NULL;
 
     // TODO: tweak the initial and min heap sizes
     config->heap_size_initial = 512 * 1024;  // 512 kB

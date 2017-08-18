@@ -22,6 +22,9 @@ typedef void *(*scm_realloc_fn)(void *ptr, size_t new_size);
 // A function for reporting an error to the user
 typedef void (*scm_error_fn)(vm_t *vm, int line, const char *message);
 
+// A function used by scm for loading/importing scripts
+typedef void (*scm_load_fn)(vm_t *vm, env_t *env, const char *path);
+
 // Configuration struct for VM creation
 typedef struct {
     // A function for allocating, reallocating and freeing memory
@@ -29,6 +32,9 @@ typedef struct {
 
     // A function for reporting an error to the user
     scm_error_fn error_fn;
+
+    // A function for loading scripts
+    scm_load_fn load_fn;
 
     // Initial heap size
     size_t heap_size_initial;

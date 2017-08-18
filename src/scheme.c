@@ -18,22 +18,6 @@ static void error_report(vm_t *vm, int line, const char *message) {
     }
 }
 
-/* *** */
-
-static vm_t *vm_init() {
-    scm_config_t config;
-    scm_config_default(&config);
-
-    config.error_fn = error_report;
-
-    // 64 MB
-    config.heap_size_initial = 1024 * 1024 * 64;
-
-    vm_t *vm = vm_new(&config);
-
-    return vm;
-}
-
 // Returns null if file not read
 static char *file_read(const char *filename) {
     FILE *f = fopen(filename, "rb");
@@ -63,19 +47,36 @@ static char *file_read(const char *filename) {
     return buffer;
 }
 
-void library_read(vm_t *vm, env_t *env, const char *library) {
+void file_load(vm_t *vm, env_t *env, const char *path) {
 #if DEBUG
-    fprintf(stdout, "DEBUG: Reading library %s!\n", library);
+    fprintf(stdout, "DEBUG: Loading script %s!\n", path);
 #endif  // DEBUG
-    char *source = file_read(library);
+    char *source = file_read(path);
     if (source == NULL) {
-        fprintf(stderr, "ERROR: Could not find library %s!\n", library);
+        fprintf(stderr, "ERROR: Could not find script %s!\n", path);
         exit(66);  // EX_NOINPUT
     }
     value_t val = read_source(vm, source);
     eval(vm, env, val);
 
     free(source);
+}
+
+/* *** */
+
+static vm_t *vm_init() {
+    scm_config_t config;
+    scm_config_default(&config);
+
+    config.error_fn = error_report;
+    config.load_fn = file_load;
+
+    // 64 MB
+    config.heap_size_initial = 1024 * 1024 * 64;
+
+    vm_t *vm = vm_new(&config);
+
+    return vm;
 }
 
 /* *** */
@@ -89,7 +90,6 @@ void file_run(const char *filename) {
 
     vm_t *vm = vm_init();
     env_t *env = scm_env_default(vm);
-    library_read(vm, env, "src/stdlib.scm");
 
     value_t val = read_source(vm, source);
     eval(vm, env, val);
@@ -101,7 +101,6 @@ void file_run(const char *filename) {
 void repl_run() {
     vm_t *vm = vm_init();
     env_t *env = scm_env_default(vm);
-    library_read(vm, env, "src/stdlib.scm");
 
     fprintf(stdout, " _  __     \n"
                     "(_ /  |\\/|\n"
