@@ -1,121 +1,60 @@
 # Scheme
 
-This project is a tiny, readable implementation of a Scheme Lisp dialect with cca ~1800 LOC (without comments and blank lines) and ~1000 semicolons.
+This Scheme interpreter _(proper name pending)_ is a tiny, readable implementation in ~2k LoC of pedantic C99.
 
 [![Build Status](https://api.travis-ci.org/jiribenes/scheme.svg?branch=master)](https://travis-ci.org/jiribenes/scheme)
 
-## The REPL
+*Features:*
 
-Build the project and start the REPL using
-```
-make release && ./scheme.out
-```
+* Hopefully readable C99 code
+* Single-pass tree-walk interpreter
+* Easy embedding
+* Mostly S7RS compatible
+* Optional NaN tagging
+* Garbage collector (simple mark and sweep)
+* CL-like macro system (define-macro)
+* Vector type
+* Basic library
+* Hash-tables made directly in Scheme
+* Extensive tests
+
+*Planned features:*
+
+* Compiling to bytecode and running a VM
+* Tail call optimization
+* Character type
+* UTF8 strings
+* Module system
+
+## Building
+
+You can build the project by running `make` in the root directory.
+
+There is a `Makefile` you can customize and `src/config.h` for 
+disabling NaN tagging and/or garbage collection.
+
+This project is buildable with Clang, GCC, TCC and strict C99/C++89 or newer on POSIX systems.
+
+## Running
+
+### REPL
+
+After building the project, start the REPL by calling the binary `./scheme.out` without any additional arguments.
 
 There you can write simple (one-line) programs and get them evaluated immediately.
 
-## Running a script
+### Script
 
-A script has to begin with
-```scheme
-(begin 
-    <first expression>
-    <second expression>
-    ...)
-```
-For reference, see the folder examples/ in this repository
+After building the project, call the binary with exactly one argument 
+stating the path of a program *relatively to the binary*.
 
-Run scripts using
-```
-./scheme.out <path/to/script>
-```
-
-## Language
-
-This is quite old - there have been many new values and procedures added recently,
-this README will be updated soon(ish).
-
-### Values
-
-Possible values are:
-* Numbers, such as 1, 2, -3, 5.456, 7.00, 99e5
-* Strings delimited by parentheses
-* Boolean symbols - ```#t``` and ```#t``` meaning true and false respectively
-* ```()``` signifies the empty list (nil) with a false value in ```if```
-* Symbols with unique names
-* Lists - cons cells
-  * Regular lists - the cdr of the last element is ```()```, such as ```(list "hello" "hi")```
-  * Dotted lists - the cdr of the last element is not ```()```, such as ```(2 . 3)```
-
-### Basic primitives
-
-```(if <condition> <then> <otherwise>...)``` is the if loop. It evaluates ```<condition>``` and if it's true, it executes ```<then>```. Otherwise it executes ```<otherwise>```.
-
-```eq?``` returns ```#t``` iff the two given objects are same in memory.
-
-```equal?``` returns ```#t``` iff the two given objects are same in value.
-
-```>``` returns ```#t``` iff the first given number is greater than the second.
-
-```or, and``` are the predefined boolean operators.
-
-```cons?``` returns ```#t``` if the given argument is a cons cell or ```()```
-
-```+, -, *``` are the predefined numerical operators.
-
-```cons``` takes two objects and returns a new cons cell with first argument being the ```car``` and the second the ```cdr```.
-
-```list``` makes a proper list out of its arguments.
-
-```car, cdr``` are the accessors for the cons cells.
-
-```write``` writes the object to stdout.
-
-### Variables
-
-You can define a variable using ```define```.
-
-```scheme
-(define x (+ 1 (* 5 4))) ; => x = 21
-```
-
-### Functions
-
-You can create an unnamed function using ```lambda```
-
-```scheme
-(lambda (x) (+ x x))
-```
-
-If you want to name your function, you can use ```define``` directly or indirectly.
-```scheme
-(define square (lambda (x) (+ x x)))
-(define (square x) (+ x x))
-```
-
-You can call a function like a primitive:
-```scheme
-(square 5) ; => 25 
-```
-
-### Standard library
-
-The standard library is located in ```src/stdlib.scm```. It is loaded automatically and provides the following functions: ```caar, cadr, cdar, cddr, pair?, null?, bool?, not, map``` and following variables: ```true, null, false```.
+A script *has to* start with a *begin* form.
 
 Example:
-```scheme
-(map (lambda (x) (* x x)) (list 1 2 3 4)) ; # => (1 4 9 16)
+```
+./scheme.out examples/factorial.scm
 ```
 
-### Other constructs
+## Documentation
 
-```begin``` evaluates and executes all its arguments and returns the last result.
-
-```;``` starts a single line comment that ends with newline.
-
-### Debug primitives
-
-These primitives are for testing only when the program is compiled with ```make debug```. Please, do not use them, if you don't know what you're doing.
-
-```gc``` triggers the garbage collector.
-
-```env``` writes to stdout the current environment.
+See `doc` folder in root.
