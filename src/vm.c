@@ -349,14 +349,20 @@ value_t apply(vm_t *vm, env_t *env, value_t fn, value_t args) {
         error_runtime(vm, "|apply: Cannot apply to a non-list!");
         return NIL_VAL;
     }
-
     if (IS_PRIMITIVE(fn)) {
         primitive_t *prim = AS_PRIMITIVE(fn);
         return prim->fn(vm, env, args);
     } else if (IS_FUNCTION(fn)) {
         function_t *func = AS_FUNCTION(fn);
         value_t eargs = eval_list(vm, env, args);
-        return apply_func(vm, env, func, eargs);
+        if (IS_PTR(eargs)) {
+            vm_push_temp(vm, AS_PTR(eargs));
+        }
+        value_t result = apply_func(vm, env, func, eargs);
+        if (IS_PTR(eargs)) {
+            vm_pop_temp(vm);  // eargs
+        }
+        return result;
     }
 
     error_runtime(vm, "|apply: Cannot apply something else than a procedure!");
