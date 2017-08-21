@@ -1,5 +1,7 @@
 (begin ; sums numbers from 0 .. x 
   (define (sum x) 
-    (if (eq? x 0) 0 
-      (+ (sum (- x 1)) x))) 
+    (if (= x 0) 
+        0 
+        (+ x (sum (- x 1)))))
+
   (sum 10)) ; should be 55
