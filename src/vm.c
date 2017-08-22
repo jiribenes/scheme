@@ -509,8 +509,7 @@ value_t expand(vm_t *vm, env_t *env, value_t val) {
         return val;
     }
 
-    // TODO: If ever a 'AS_MACRO' is created, here is a good place to put it
-    function_t *macro = AS_FUNCTION(found);
+    function_t *macro = AS_MACRO(found);
     value_t args = AS_CONS(val)->cdr;
     return apply_func(vm, env, macro, args);
 }

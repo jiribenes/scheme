@@ -479,7 +479,6 @@ static value_t builtin_expand(vm_t *vm, env_t *env, value_t args) {
     return expand(vm, env, AS_CONS(args)->car);
 }
 
-// TODO: Can we do this a bit better?
 static value_t builtin_gensym(vm_t *vm, env_t *env, value_t args) {
     arity_check(vm, "gensym", args, 0, false);
     char buffer[16];
@@ -622,7 +621,7 @@ static value_t builtin_error(vm_t *vm, env_t *env, value_t args) {
 }
 
 static value_t builtin_time(vm_t *vm, env_t *env, value_t args) {
-    arity_check(vm, "time", args, 0, false);
+    arity_check(vm, "current-time", args, 0, false);
     return NUM_VAL((double) clock() / (CLOCKS_PER_SEC / 1000.0F));
 }
 

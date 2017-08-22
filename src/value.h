@@ -79,7 +79,7 @@ typedef struct _symbol_t {
     uint32_t len;
 
     struct _symbol_t *next;
-    // TODO: couldn't this be const/ regular char*?
+
     char name[];
 } symbol_t;
 
@@ -153,6 +153,7 @@ typedef struct {
 #define AS_SYMBOL(val) ((symbol_t *) AS_PTR(val))
 #define AS_PRIMITIVE(val) ((primitive_t *) AS_PTR(val))
 #define AS_FUNCTION(val) ((function_t *) AS_PTR(val))
+#define AS_MACRO(val) (AS_FUNCTION(val))
 #define AS_VECTOR(val) ((vector_t *) AS_PTR(val))
 #define AS_ENV(val) ((env_t *) AS_PTR(val))
 

@@ -125,8 +125,7 @@ void write(FILE *f, value_t val) {
             fprintf(f, ">");
         } else if (IS_MACRO(val)) {
             fprintf(f, "#<macro ");
-            // TODO: If we ever have a AS_MACRO C macro, use it here
-            function_t *mac = AS_FUNCTION(val);
+            function_t *mac = AS_MACRO(val);
             if (mac->name != NULL) {
                 display(f, PTR_VAL(mac->name));
             } else {

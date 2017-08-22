@@ -15,7 +15,7 @@ static void ptr_init(vm_t *vm, ptrvalue_t *ptr, ptrvalue_type_t type) {
 void ptr_free(vm_t *vm, ptrvalue_t *ptr) {
     if (ptr->type == T_STRING) {
         vm_realloc(vm, ptr, 0, 0);
-    } else if (ptr->type == T_CONS) {  // TODO: is this a good idea?
+    } else if (ptr->type == T_CONS) {
         vm_realloc(vm, ptr, 0, 0);
     } else if (ptr->type == T_SYMBOL) {
         symbol_t *ptr_sym = (symbol_t *) ptr;
@@ -168,7 +168,7 @@ string_t *string_new(vm_t *vm, const char *text, size_t len) {
 }
 
 symbol_t *symbol_new(vm_t *vm, const char *name, size_t len) {
-    if (len == 0 || name == NULL) {  // TODO: better logging
+    if (len == 0 || name == NULL) {
         error_runtime(vm, "NULL or 0-length symbols are not allowed!");
         return NULL;
     }
