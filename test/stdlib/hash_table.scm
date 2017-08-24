@@ -39,7 +39,7 @@
         (test (hash-ref shash "name") 'Jane))
 
     (let ((ht (make-hash eq?)))
-      (define (hash-add i m) (unless (= i m) 
+      (define (hash-add i m) (unless (= i m)
                                (hash-set! ht i i) (hash-add (+ i 1) m)))
       (hash-add 0 100)
       (test (hash-count ht) 100)
@@ -50,4 +50,4 @@
       (test (hash-count ht) 99)))
 
 
-        
+

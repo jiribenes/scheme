@@ -10,7 +10,7 @@
     (test (eq? -1 -1) #t)
     (test (eq? 42.5 42.5) #t)
     (test (eq? 99.999 99.999) #t)
-    
+
     (test (eq? 'a 'a) #t)
     (test (eq? 'a 'b) #f)
 

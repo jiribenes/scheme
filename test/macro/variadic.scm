@@ -1,6 +1,6 @@
 (begin
     (define x 10)
-    (test (equal? 
+    (test (equal?
             (when (> 10 0)
                 (define tmp x)
                 (set! x 42)

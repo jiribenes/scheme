@@ -1,5 +1,5 @@
 (begin
-  
+
   (define (fac x acc)
     (if (= x 0)
         acc
@@ -7,6 +7,6 @@
 
   (define (factorial n)
     (fac n 1))
-  
+
   (factorial 10))
 

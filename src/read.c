@@ -24,7 +24,8 @@ static void error_print(reader_t *reader, const char *format, ...) {
 
     va_end(contents);
 
-    reader->vm->config.error_fn(reader->vm, reader->line, reader->column, message);
+    reader->vm->config.error_fn(reader->vm, reader->line, reader->column,
+                                message);
 }
 /* *** */
 
@@ -118,7 +119,8 @@ static void next_token(reader_t *reader) {
         reader->toktype = TOK_SYMBOL;
         reader->tokstart = reader->cur;
     } else {
-        error_print(reader, "Unknown token (starts with '%c')", *reader->tokstart);
+        error_print(reader, "Unknown token (starts with '%c')",
+                    *reader->tokstart);
     }
 }
 
@@ -159,8 +161,7 @@ static void read_number(reader_t *reader) {
 
     if (errno == ERANGE) {
         // if strtod indicated that the number is too big
-        error_print(reader,
-                    "Number beginning with %c is too large!",
+        error_print(reader, "Number beginning with %c is too large!",
                     *reader->tokstart);
         reader->tokval = NUM_VAL(0);
 
@@ -256,9 +257,8 @@ static void read1(reader_t *reader) {
             // vector => #(elem1 elem2 elem3 ... )
             read_vector(reader);
         } else {
-            error_print(reader, 
-                        "Invalid token beginning with # - "
-                        "only #t, #f and #(...) are supported");
+            error_print(reader, "Invalid token beginning with # - "
+                                "only #t, #f and #(...) are supported");
         }
     } else if (reader->toktype == TOK_RPAREN) {
         error_print(reader, "Unexpected ')'");

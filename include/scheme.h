@@ -21,7 +21,8 @@ typedef void *(*scm_realloc_fn)(void *ptr, size_t new_size);
 
 // A function for reporting an error to the user
 // If line is -1, the error is a runtime error without a line
-typedef void (*scm_error_fn)(vm_t *vm, int line, int column, const char *message);
+typedef void (*scm_error_fn)(vm_t *vm, int line, int column,
+                             const char *message);
 
 // A function used by scm for loading/importing scripts
 typedef void (*scm_load_fn)(vm_t *vm, env_t *env, const char *path);

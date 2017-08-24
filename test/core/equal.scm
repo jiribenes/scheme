@@ -10,7 +10,7 @@
     (test (equal? -1 -1) #t)
     (test (equal? 42.5 42.5) #t)
     (test (equal? 99.999 99.999) #t)
-    
+
     (test (equal? 'a 'a) #t)
     (test (equal? 'a 'b) #f)
 

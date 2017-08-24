@@ -1,5 +1,5 @@
 (begin
-    (define counter 
+    (define counter
         (let ((x 0))
             (lambda ()
                 (set! x (+ x 1))

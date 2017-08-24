@@ -59,13 +59,13 @@
     (tests-start)
 
     (test-run "test/load/test.scm")
-    
+
     (test-run "test/func/variadic_lambda.scm")
     (test-run "test/func/anon.scm")
     (test-run "test/func/variadic.scm")
     (test-run "test/func/anon_no_args.scm")
     (test-run "test/func/closure.scm")
-    
+
     (test-run "test/core/multiply.scm")
     (test-run "test/core/car.scm")
     (test-run "test/core/apply.scm")
@@ -78,7 +78,7 @@
     (test-run "test/core/subtract.scm")
     (test-run "test/core/type_pred.scm")
     (test-run "test/core/add.scm")
-    
+
     (test-run "test/macro/basic.scm")
     (test-run "test/macro/variadic.scm")
     (test-run "test/macro/gensym.scm")

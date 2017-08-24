@@ -18,7 +18,7 @@
     (test (integer? 'aaa) #f)
     (test (integer? 12316954165) #t)
     (test (integer? -61551) #t)
-    
+
     (test (number? 0) #t)
     (test (number? -0) #t)
     (test (number? -42) #t)
