@@ -32,4 +32,4 @@ format:
 	clang-format -i -style=file $(HEADERS) $(SOURCES)
 
 test:
-	test/test.py
+	./$(BIN) test/test.scm

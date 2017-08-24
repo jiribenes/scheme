@@ -232,10 +232,6 @@
               (vector-for-each walk b)
               c)))
 
-    (define (test a b)
-        (writeln
-            (eq? a b)))
-
     (define (make-hash eq)
         (let ((empty (cons (void) #f))
               (capacity 0)

@@ -54,7 +54,6 @@
     (test (procedure? 'eq?) #f)
     (test (procedure? procedure?) #t)
     (test (procedure? 'a) #f)
-    (test (procedure? test) #t)
     (test (procedure? null?) #t)
     (test (procedure? "aaa") #f)
     (test (procedure? -1e9) #f)
