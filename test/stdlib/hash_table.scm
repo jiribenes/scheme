@@ -8,8 +8,8 @@
         (test (hash-exists? ht 30) #t)
         (test (hash-exists? ht -90) #f)
         (test (hash-exists? ht 'aaa) #f)
-        (test 20 (hash-ref ht 10))
-        (test 40 (hash-ref ht 30)))
+        (test (hash-ref ht 10) 20)
+        (test (hash-ref ht 30) 40))
 
     (let ((animal-sounds (make-hash eq?)))
         (test (hash-count animal-sounds) 0)

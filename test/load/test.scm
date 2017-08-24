@@ -1,4 +1,4 @@
 (begin
     (let ()
         (load "test/load/library.scm")
-        (test 20 a)))
+        (test a 20)))
