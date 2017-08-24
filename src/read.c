@@ -8,7 +8,7 @@
 #include "value.h"
 #include "vm.h"
 
-static void error_print(reader_t *reader, int line, const char *format, ...) {
+static void error_print(reader_t *reader, const char *format, ...) {
     reader->vm->has_error = true;
     if (reader->vm->config.error_fn == NULL) {
         return;
@@ -24,7 +24,7 @@ static void error_print(reader_t *reader, int line, const char *format, ...) {
 
     va_end(contents);
 
-    reader->vm->config.error_fn(reader->vm, line, message);
+    reader->vm->config.error_fn(reader->vm, reader->line, reader->column, message);
 }
 /* *** */
 
@@ -48,13 +48,14 @@ inline static bool is_symbol(char c) {
 }
 
 /* *** */
-
 static char next_char(reader_t *reader) {
     char c = *reader->cur;
     // fprintf(stdout, "Note: %c -> %c\n", *reader->cur, *(reader->cur + 1));
     reader->cur++;
+    reader->column++;
     if (c == '\n') {
         reader->line++;
+        reader->column = 1;
     }
     return c;
 }
@@ -117,8 +118,7 @@ static void next_token(reader_t *reader) {
         reader->toktype = TOK_SYMBOL;
         reader->tokstart = reader->cur;
     } else {
-        error_print(reader, reader->line, "Unknown token (starts with '%c')",
-                    *reader->tokstart);
+        error_print(reader, "Unknown token (starts with '%c')", *reader->tokstart);
     }
 }
 
@@ -159,7 +159,7 @@ static void read_number(reader_t *reader) {
 
     if (errno == ERANGE) {
         // if strtod indicated that the number is too big
-        error_print(reader, reader->line,
+        error_print(reader,
                     "Number beginning with %c is too large!",
                     *reader->tokstart);
         reader->tokval = NUM_VAL(0);
@@ -256,16 +256,16 @@ static void read1(reader_t *reader) {
             // vector => #(elem1 elem2 elem3 ... )
             read_vector(reader);
         } else {
-            error_print(reader, reader->line,
+            error_print(reader, 
                         "Invalid token beginning with # - "
                         "only #t, #f and #(...) are supported");
         }
     } else if (reader->toktype == TOK_RPAREN) {
-        error_print(reader, reader->line, "Unexpected ')'");
+        error_print(reader, "Unexpected ')'");
         next_char(reader);
         return;
     } else if (reader->toktype == TOK_DOT) {
-        error_print(reader, reader->line, "Unexpected '.'");
+        error_print(reader, "Unexpected '.'");
         next_char(reader);
         return;
     } else if (reader->toktype == TOK_SYMBOL) {
@@ -284,10 +284,10 @@ static void read_list(reader_t *reader) {
         reader->tokval = NIL_VAL;
         return;
     } else if (reader->toktype == TOK_EOF) {
-        error_print(reader, reader->line, "Unexpected EOF while parsing");
+        error_print(reader, "Unexpected EOF while parsing");
         return;
     } else if (reader->toktype == TOK_DOT) {
-        error_print(reader, reader->line, "Unexpected dot in list");
+        error_print(reader, "Unexpected dot in list");
         return;
     }
 
@@ -305,7 +305,7 @@ static void read_list(reader_t *reader) {
             next_char(reader);
             return;
         } else if (reader->toktype == TOK_EOF) {
-            error_print(reader, reader->line, "Unexpected EOF while parsing");
+            error_print(reader, "Unexpected EOF while parsing");
             return;
         } else if (reader->toktype == TOK_DOT) {
             next_char(reader);
@@ -335,6 +335,7 @@ value_t read_source(vm_t *vm, const char *source) {
     reader.source = source;
     reader.tokstart = source;
     reader.cur = source;
+    reader.column = 1;
     reader.line = 1;
     reader.tokval = VOID_VAL;
     reader.toktype = TOK_NONE;

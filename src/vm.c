@@ -29,7 +29,7 @@ void error_runtime(vm_t *vm, const char *format, ...) {
 
     va_end(contents);
 
-    vm->config.error_fn(vm, -1, message);
+    vm->config.error_fn(vm, -1, -1, message);
 }
 
 /* *** */

@@ -27,7 +27,8 @@ typedef struct {
     const char *cur;
     const char *tokstart;
 
-    int line;
+    int32_t line;
+    int32_t column;
 
     value_t tokval;
     tok_type_t toktype;

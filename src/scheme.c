@@ -10,9 +10,9 @@
 #include "vm.h"
 #include "write.h"
 
-static void error_report(vm_t *vm, int line, const char *message) {
+static void error_report(vm_t *vm, int line, int column, const char *message) {
     if (line > 0) {
-        fprintf(stderr, "ERROR @ line %d: %s\n", line, message);
+        fprintf(stderr, "ERROR @ [%d:%d]: %s\n", line, column, message);
     } else if (line == -1) {
         fprintf(stderr, "ERROR @ runtime: %s\n", message);
     }
