@@ -9,7 +9,7 @@ This Scheme interpreter _(proper name pending)_ is a tiny, readable implementati
 * Hopefully readable C99 code
 * Single-pass tree-walk interpreter
 * Easy embedding
-* Mostly S7RS compatible
+* Mostly R7RS compatible
 * Optional NaN tagging
 * Garbage collector (simple mark and sweep)
 * CL-like macro system (define-macro)
